@@ -1,0 +1,7 @@
+flask
+flask-wtf
+itsdangerous==1.1.0
+markupsafe==1.1.1
+wtforms
+flask-sqlalchemy
+flask-migrate
