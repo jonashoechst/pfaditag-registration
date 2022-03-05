@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ form._label }} Übersicht</h1>
+
+<table>
+    <tr>
+        {% for id, field in form._fields.items() if not id == "csrf_token" %}
+        <th>{{ field.label }}</th>
+        {% endfor %}
+    </tr>
+    {% for instance in data %}
+    <tr>
+        {% for id, field in form._fields.items() if not id == "csrf_token" %}
+        <td>{{ id }}: {{ instance.__dict__[id] }}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+
+</table>
+
+
+{% endblock %}

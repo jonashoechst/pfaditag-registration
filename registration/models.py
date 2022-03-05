@@ -1,33 +1,33 @@
 from datetime import datetime
 
-from app import db
+from registration import db
 
 
-class Land(db.Model):
+class land(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True)
+    groups = db.relationship('group', backref='land', lazy=True)
 
     def __repr__(self):
         return f'<Land {self.id} ({self.name})>'
 
 
-class Group(db.Model):
+class group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+
     name = db.Column(db.String(64))
-
     street = db.Column(db.String(64))
-    number = db.Column(db.String(32))
-    zip = db.Column(db.Integer)
+    zip = db.Column(db.String(5))
     city = db.Column(db.String(64))
-
     website = db.Column(db.String(64))
+
     land_id = db.Column(db.Integer, db.ForeignKey('land.id'))
 
     def __repr__(self):
         return f'<Group {self.id} ({self.name})>'
 
 
-class Event(db.Model):
+class event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(64), index=True)
 

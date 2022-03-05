@@ -18,4 +18,4 @@ app.config.update({
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-from app import routes
+from registration import routes, models

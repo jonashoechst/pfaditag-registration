@@ -1,4 +1,4 @@
-from app import app, db
+from registration import app, db
 
 app.config.update({
     "SECRET_KEY": "SomethingNotEntirelySecret",
