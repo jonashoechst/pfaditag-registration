@@ -1,7 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>{{ form._label }} bearbeiten</h1>
+
+{% if form.name.data %}
+<h1>Gruppe {{ form.name.data }} bearbeiten</h1>
+{% else %}
+<h1>Neue Gruppe anlegen</h1>
+{% endif %}
+
 
 <form method="POST" action="">
     {{ form.csrf_token }}

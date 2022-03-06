@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Übersicht Gruppen</h1>
+
+<table>
+    <tr>
+        <th>Stamm</th>
+        <th>Ort</th>
+        <th>Land</th>
+        <th>Website</th>
+        <th>Optionen</th>
+    </tr>
+    {% for group in groups %}
+    <tr>
+        <td>{{ group.name }}</td>
+        <td>{{ group.city }}</td>
+        <td>{{ group.land.name }}</td>
+        <td><a href="{{ group.website }}">{{ group.website }}</a></td>
+        <td><a href="{{ url_for('groups_edit', _id=group.id) }}"><i class="fa-solid fa-pen-to-square"></i></a></td>
+    </tr>
+    {% endfor %}
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td><a href="{{ url_for('groups_edit', _id='_new') }}"><i class="fa-solid fa-plus"></i></a></td>
+    </tr>
+</table>
+
+{% endblock %}

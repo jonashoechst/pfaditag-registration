@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="de">
 
 <head>
     {% if title %}
@@ -7,11 +7,21 @@
     {% else %}
     <title>PfadiTag</title>
     {% endif %}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css"
+        integrity="sha512-bSncow0ApIhONbz+pNI52n0trz5fMWbgteHsonaPk42JbunIeM9ee+zTYAUP1eLPky5wP0XZ7MSLAPxKkwnlzw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"
+        integrity="sha512-yFjZbTYRCJodnuyGlsKamNE/LlEaEAxSUDe5+u61mV8zzqJVFOH7TnULE2/PP/l5vKWpUNnF4VGVkXh3MjgLsg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 
 <body>
     <div>PfadiTag:
         <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('groups') }}">Gruppen</a>
+        <a href="{{ url_for('events') }}">Aktionen</a>
     </div>
     <hr>
     {% with messages = get_flashed_messages() %}

@@ -1,18 +1,18 @@
-from datetime import datetime
+import datetime
 
 from registration import db
 
 
-class land(db.Model):
+class Land(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True)
-    groups = db.relationship('group', backref='land', lazy=True)
+    groups = db.relationship('Group', backref='land', lazy=True)
 
     def __repr__(self):
         return f'<Land {self.id} ({self.name})>'
 
 
-class group(db.Model):
+class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     name = db.Column(db.String(64))
@@ -22,19 +22,21 @@ class group(db.Model):
     website = db.Column(db.String(64))
 
     land_id = db.Column(db.Integer, db.ForeignKey('land.id'))
+    groups = db.relationship('Event', backref='group', lazy=True)
 
     def __repr__(self):
         return f'<Group {self.id} ({self.name})>'
 
 
-class event(db.Model):
+class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(64), index=True)
 
+    title = db.Column(db.String(64), index=True)
     email = db.Column(db.String(64))
     tel = db.Column(db.String(32))
 
-    start = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    date = db.Column(db.Date, index=True, default=datetime.date(2022, 9, 24))
+    time = db.Column(db.Time, index=True)
     description = db.Column(db.String(2000))
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
 

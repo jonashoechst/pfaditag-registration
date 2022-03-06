@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if form.title.data %}
+<h1>Aktion {{ form.title.data }} bearbeiten</h1>
+{% else %}
+<h1>Neue Aktion anlegen</h1>
+{% endif %}
+
+<form method="POST" action="">
+    {{ form.csrf_token }}
+    {{ form.hidden_tag() }}
+    {% for id, field in form._fields.items() if not id == "csrf_token" %}
+    <p>
+        {{ field.label }}<br>
+        {{ field }}<br>
+        {% for error in field.errors %}
+        <span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+    </p>
+    {% endfor %}
+
+    <input type="submit" value="Speichern">
+</form>
+
+{% endblock %}

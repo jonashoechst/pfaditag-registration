@@ -1,34 +1,35 @@
+from datetime import date
 import flask
 from flask_wtf import FlaskForm
-from wtforms import StringField, EmailField, TextAreaField, TelField, SelectField
+from wtforms import StringField, EmailField, TextAreaField, TelField, SelectField, DateField, TimeField
 from wtforms.validators import DataRequired
 
+
 import registration
-from pprint import pprint
 
 
-class LocalEvent(FlaskForm):
-    title = StringField('title', validators=[DataRequired()])
-    email = EmailField('email')  # , validators=[DataRequired()])
-    tel = TelField('tel')
-    description = TextAreaField('description')  # , validators=[DataRequired()])
+class LandForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
 
 
-class group(FlaskForm):
-    _label = "Gruppe"
-
+class GroupForm(FlaskForm):
     name = StringField('Stammesname', validators=[DataRequired()])
     street = StringField('Straße, Nr.', validators=[DataRequired()])
     zip = StringField('PLZ', validators=[DataRequired()])
     city = StringField('Ort', validators=[DataRequired()])
     website = StringField('Website')
-    land = SelectField('VCP Land', coerce=int)
+    land_id = SelectField('VCP Land', coerce=int)
 
 
-class land(FlaskForm):
-    _label = "VCP Land"
+class EventForm(FlaskForm):
+    title = StringField('Aktionstitel', validators=[DataRequired()])
+    email = EmailField('E-Mail Adresse')
+    tel = TelField('Telefonnummer')
 
-    name = StringField('Name', validators=[DataRequired()])
+    date = DateField('Aktionstag')
+    time = TimeField('Startzeit')
+    description = TextAreaField('Beschreibung')
+    group_id = SelectField('Gruppe', coerce=int)
 
 
 @registration.app.route('/')
@@ -37,51 +38,83 @@ def index():
     return flask.render_template('index.html', title='PfadiTag 2022')
 
 
-@registration.app.route('/admin/<model_name>', methods=['GET', 'POST'])
-def list(model_name):
-    form = globals()[model_name]()
-    Model = getattr(registration.models, model_name)
-    data = Model.query.all()
+@registration.app.route('/admin/groups')
+def groups():
+    _groups = registration.models.Group.query.all()
 
-    return flask.render_template('list.html', form=form, data=data)
+    return flask.render_template('groups.html', groups=_groups)
 
 
-@registration.app.route('/admin/<model_name>/edit/<_id>', methods=['GET', 'POST'])
-def edit(model_name, _id):
-    form = globals()[model_name]()
-    Model = getattr(registration.models, model_name)
+@registration.app.route('/admin/groups/edit/<_id>', methods=['GET', 'POST'])
+def groups_edit(_id):
+    form = GroupForm()
 
     # create new group if keyword is given
     if _id == "new":
-        model = Model()
+        model = registration.models.Group()
         registration.db.session.add(model)
     else:
-        model = Model.query.get(_id)
+        model = registration.models.Group.query.get(_id)
         if model is None:
-            return flask.redirect(flask.url_for('edit', model_name=model_name, _id="new"))
+            return flask.redirect(flask.url_for('groups_edit', _id="new"))
 
-    # initialize choices for select fields
-    for field_id, field in form._fields.items():
-        if isinstance(field, SelectField):
-            key = [key for key in Model.__table__.foreign_keys if key.parent.key.startswith(field_id)][0]
-            SelectModel = getattr(registration.models, key.column.table.name)
-            field.choices = [(str(x.id), x.name) for x in SelectModel.query.all()]
+    form.land_id.choices = [(g.id, g.name) for g in registration.models.Land.query.all()]
 
     # validate post data
     if form.validate_on_submit():
         # update fields in model
         for field_id, field in form._fields.items():
-            # if field_id in model.__dict__:
             setattr(model, field_id, field.data)
 
         registration.db.session.commit()
-        flask.flash(f"{form._label} wurde gespeichert.")
+        flask.flash(f"Gruppe {model.name} wurde gespeichert.")
 
-        return flask.redirect(flask.url_for('edit', model_name=model_name, _id=model.id))
+        return flask.redirect(flask.url_for('groups'))
 
     # initialize form values
     for field_id, field in form._fields.items():
         if field_id in model.__dict__:
             field.data = model.__dict__[field_id]
 
-    return flask.render_template('edit.html', form=form)
+    return flask.render_template('groups_edit.html', form=form, _id=_id)
+
+
+@registration.app.route('/admin/events')
+def events():
+    _events = registration.models.Event.query.all()
+
+    return flask.render_template('events.html', events=_events)
+
+
+@registration.app.route('/admin/events/edit/<_id>', methods=['GET', 'POST'])
+def events_edit(_id):
+    form = EventForm()
+
+    # create new group if keyword is given
+    if _id == "new":
+        event = registration.models.Event()
+        registration.db.session.add(event)
+    else:
+        event = registration.models.Event.query.get(_id)
+        if event is None:
+            return flask.redirect(flask.url_for('events_edit', _id="new"))
+
+    form.group_id.choices = [(g.id, g.name) for g in registration.models.Group.query.all()]
+
+    # validate post data
+    if form.validate_on_submit():
+        # update fields in model
+        for field_id, field in form._fields.items():
+            setattr(event, field_id, field.data)
+
+        registration.db.session.commit()
+        flask.flash(f"Aktion {event.title} wurde gespeichert.")
+
+        return flask.redirect(flask.url_for('events'))
+
+    # initialize form values
+    for field_id, field in form._fields.items():
+        if field_id in event.__dict__:
+            field.data = event.__dict__[field_id]
+
+    return flask.render_template('events_edit.html', form=form, _id=_id)
