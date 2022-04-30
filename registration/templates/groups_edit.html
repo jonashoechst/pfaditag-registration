@@ -1,28 +1,16 @@
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
 
 {% block content %}
+<div class="container">
 
-{% if form.name.data %}
-<h1>Gruppe {{ form.name.data }} bearbeiten</h1>
-{% else %}
-<h1>Neue Gruppe anlegen</h1>
-{% endif %}
+    {% if form.name.data %}
+    <h1>Gruppe bearbeiten</h1>
+    {% else %}
+    <h1>Neue Gruppe anlegen</h1>
+    {% endif %}
 
+    {{ wtf.quick_form(form) }}
 
-<form method="POST" action="">
-    {{ form.csrf_token }}
-    {{ form.hidden_tag() }}
-    {% for id, field in form._fields.items() if not id == "csrf_token" %}
-    <p>
-        {{ field.label }}<br>
-        {{ field }}<br>
-        {% for error in field.errors %}
-        <span style="color: red;">[{{ error }}]</span>
-        {% endfor %}
-    </p>
-    {% endfor %}
-
-    <input type="submit" value="Speichern">
-</form>
-
+</div>
 {% endblock %}

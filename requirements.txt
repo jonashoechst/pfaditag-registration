@@ -5,3 +5,4 @@ markupsafe==1.1.1
 wtforms
 flask-sqlalchemy
 flask-migrate
+flask-bootstrap

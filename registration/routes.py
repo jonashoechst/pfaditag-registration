@@ -1,7 +1,7 @@
 from datetime import date
 import flask
 from flask_wtf import FlaskForm
-from wtforms import StringField, EmailField, TextAreaField, TelField, SelectField, DateField, TimeField
+from wtforms import StringField, EmailField, TextAreaField, TelField, SelectField, DateField, TimeField, SubmitField
 from wtforms.validators import DataRequired
 
 
@@ -20,6 +20,10 @@ class GroupForm(FlaskForm):
     website = StringField('Website')
     land_id = SelectField('VCP Land', coerce=int)
 
+    submit = SubmitField('Speichern')
+    abort = SubmitField('Abbrechen')
+    delete = SubmitField('Löschen')
+
 
 class EventForm(FlaskForm):
     title = StringField('Aktionstitel', validators=[DataRequired()])
@@ -30,6 +34,10 @@ class EventForm(FlaskForm):
     time = TimeField('Startzeit')
     description = TextAreaField('Beschreibung')
     group_id = SelectField('Gruppe', coerce=int)
+
+    submit = SubmitField('Speichern')
+    abort = SubmitField('Abbrechen')
+    delete = SubmitField('Löschen')
 
 
 @registration.app.route('/')
@@ -51,30 +59,40 @@ def groups_edit(_id):
 
     # create new group if keyword is given
     if _id == "new":
-        model = registration.models.Group()
-        registration.db.session.add(model)
+        group = registration.models.Group()
+        registration.db.session.add(group)
     else:
-        model = registration.models.Group.query.get(_id)
-        if model is None:
+        group = registration.models.Group.query.get(_id)
+        if group is None:
             return flask.redirect(flask.url_for('groups_edit', _id="new"))
 
     form.land_id.choices = [(g.id, g.name) for g in registration.models.Land.query.all()]
 
-    # validate post data
-    if form.validate_on_submit():
-        # update fields in model
-        for field_id, field in form._fields.items():
-            setattr(model, field_id, field.data)
-
-        registration.db.session.commit()
-        flask.flash(f"Gruppe {model.name} wurde gespeichert.")
-
+    if form.abort.data:
         return flask.redirect(flask.url_for('groups'))
+
+    if form.delete.data:
+        registration.db.session.delete(group)
+        registration.db.session.commit()
+        flask.flash(f"Gruppe '{group.name}' erfolgreich gelöscht.", "success")
+        return flask.redirect(flask.url_for('groups'))
+
+    if form.submit.data:
+        # validate post data
+        if form.validate_on_submit():
+            # update fields in model
+            for field_id, field in form._fields.items():
+                setattr(group, field_id, field.data)
+
+            registration.db.session.commit()
+            flask.flash(f"Gruppe '{group.name}' wurde gespeichert.", "success")
+
+            return flask.redirect(flask.url_for('groups'))
 
     # initialize form values
     for field_id, field in form._fields.items():
-        if field_id in model.__dict__:
-            field.data = model.__dict__[field_id]
+        if field_id in group.__dict__:
+            field.data = group.__dict__[field_id]
 
     return flask.render_template('groups_edit.html', form=form, _id=_id)
 
@@ -101,16 +119,26 @@ def events_edit(_id):
 
     form.group_id.choices = [(g.id, g.name) for g in registration.models.Group.query.all()]
 
-    # validate post data
-    if form.validate_on_submit():
-        # update fields in model
-        for field_id, field in form._fields.items():
-            setattr(event, field_id, field.data)
-
-        registration.db.session.commit()
-        flask.flash(f"Aktion {event.title} wurde gespeichert.")
-
+    if form.abort.data:
         return flask.redirect(flask.url_for('events'))
+
+    if form.delete.data:
+        registration.db.session.delete(event)
+        registration.db.session.commit()
+        flask.flash(f"Aktion '{event.title}' erfolgreich gelöscht.", "success")
+        return flask.redirect(flask.url_for('events'))
+
+    if form.submit.data:
+        # validate post data
+        if form.validate_on_submit():
+            # update fields in model
+            for field_id, field in form._fields.items():
+                setattr(event, field_id, field.data)
+
+            registration.db.session.commit()
+            flask.flash(f"Aktion '{event.title}' erfolgreich gespeichert.", "success")
+
+            return flask.redirect(flask.url_for('events'))
 
     # initialize form values
     for field_id, field in form._fields.items():
