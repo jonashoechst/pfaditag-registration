@@ -1,9 +1,67 @@
-{% extends "base.html" %}
+{% extends "base_leaflet.html" %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    #map {
+        height: 1000px;
+        font-size: 9pt;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-
 <div class="container">
-    <h1>PfadiTag 2022</h1>
+    <h1>{{ title }}</h1>
 
+    <div id="map"></div>
 </div>
+
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    var map = L.map('map').setView([50.9, 10.5], 7);
+    var locator = L.control.locate({ locateOptions: { maxZoom: 11 } }).addTo(map);
+
+    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        maxZoom: 18,
+        id: 'mapbox/light-v10',
+        tileSize: 512,
+        zoomOffset: -1,
+        accessToken: 'pk.eyJ1IjoiaG9lY2hzdCIsImEiOiJjazVueDhyMWkwenpuM2RydzltNjhraDAzIn0.HntghYG9IBZvVd0bUJEY9Q'
+    }).addTo(map);
+
+    var eventStyle = L.VectorMarkers.icon({ icon: 'circle', markerColor: 'var(--primary-color)'});
+    var groupStyle = L.VectorMarkers.icon({ icon: 'circle', markerColor: 'var(--secondary-color)'});
+
+    // create marker for every event
+    {% for event in events %}
+    var marker_event_{{ event.id }} = L.marker([{{ event.lat }}, {{ event.lon }}], { icon: eventStyle }).addTo(map);
+    marker_event_{{ event.id }}.bindPopup(`
+<h3>{{ event.title }}</h3>
+<div>Stamm {{ event.group.name }}, {{ event.group.city }}</div>
+<div><b>Wann? </b>{{ event.date.strftime('%A, %d.%m.%Y') }}, {{event.time.strftime('%H:%M')}} Uhr</div>
+<div>
+{% for p in event.description.split('\n') %}
+    <p>{{p}}</p>
+{% endfor %}
+</div
+{% if event.email %}
+<div><b>E-Mail: </b><a href='mailto:{{ event.email }}'>{{ event.email }}</a></div>
+{% endif %}
+
+{% if event.tel %}
+<div><b>Telefon: </b><a href='tel:{{ event.tel.replace(" ", "") }}' target='_blank'>{{ event.tel }}</a></div>
+{% endif %}
+
+{% if event.group.website %}
+<div><b>Website: </b><a href='{{ event.group.website }}' target='_blank'>{{ event.group.website }}</a></div>
+{% endif %}
+`);
+    {% endfor %}
+</script>
 {% endblock %}

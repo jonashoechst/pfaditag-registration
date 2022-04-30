@@ -1,16 +1,83 @@
-{% extends "base.html" %}
+{% extends "base_leaflet.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    #map {
+        height: 500px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container">
+    <div class="row header">
+        <div class="col-xs-12">
+            <h1>
+                {% if form.title.data %}
+                Aktion bearbeiten
+                {% else %}
+                Neue Aktion anlegen
+                {% endif %}
+            </h1>
+        </div>
+    </div>
 
-    {% if form.title.data %}
-    <h1>Aktion bearbeiten</h1>
-    {% else %}
-    <h1>Neue Aktion anlegen</h1>
-    {% endif %}
-
-    {{ wtf.quick_form(form) }}
+    <div class="row">
+        <div class="col-sm-6 first-column">
+            {{ wtf.quick_form(form) }}
+        </div>
+        <div class="col-sm-6 second-column">
+            <div id="map"></div>
+        </div>
+    </div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // initialize map
+    var map = L.map('map')
+    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        maxZoom: 18,
+        id: 'mapbox/light-v10',
+        tileSize: 512,
+        zoomOffset: -1,
+        accessToken: 'pk.eyJ1IjoiaG9lY2hzdCIsImEiOiJjazVueDhyMWkwenpuM2RydzltNjhraDAzIn0.HntghYG9IBZvVd0bUJEY9Q'
+    }).addTo(map);
+    var locator = L.control.locate({ locateOptions: { maxZoom: 9 } }).addTo(map);
+
+    var marker;
+
+    // add marker if lat/lon is set
+    lat = $('#lat').val();
+    lng = $('#lon').val();
+
+    if (lat && lng) {
+        marker = L.marker([lat, lng]).addTo(map);
+        map.setView([lat, lng], 11);
+    } else {
+        map.setView([51.3, 10.7], 6);
+        locator.start();
+    }
+
+    // allow user to click on map to set lat/lon
+    map.on('click', function (e) {
+        // update marker position or create new one
+        if (!window.marker) {
+            window.marker = L.marker(e.latlng).addTo(map);
+        } else {
+            window.marker.setLatLng(e.latlng);
+        }
+
+        // write lat/lon to form
+        $('#lat').val(e.latlng.lat);
+        $('#lon').val(e.latlng.lng);
+    });
+
+</script>
 {% endblock %}

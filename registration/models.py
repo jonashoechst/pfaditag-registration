@@ -35,6 +35,9 @@ class Event(db.Model):
     email = db.Column(db.String(64))
     tel = db.Column(db.String(32))
 
+    lat = db.Column(db.Numeric(8, 6))
+    lon = db.Column(db.Numeric(9, 6))
+
     date = db.Column(db.Date, index=True, default=datetime.date(2022, 9, 24))
     time = db.Column(db.Time, index=True)
     description = db.Column(db.String(2000))

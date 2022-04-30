@@ -1,7 +1,7 @@
 from datetime import date
 import flask
 from flask_wtf import FlaskForm
-from wtforms import StringField, EmailField, TextAreaField, TelField, SelectField, DateField, TimeField, SubmitField
+from wtforms import *
 from wtforms.validators import DataRequired
 
 
@@ -35,6 +35,9 @@ class EventForm(FlaskForm):
     description = TextAreaField('Beschreibung')
     group_id = SelectField('Gruppe', coerce=int)
 
+    lat = HiddenField()
+    lon = HiddenField()
+
     submit = SubmitField('Speichern')
     abort = SubmitField('Abbrechen')
     delete = SubmitField('Löschen')
@@ -43,7 +46,9 @@ class EventForm(FlaskForm):
 @registration.app.route('/')
 @registration.app.route('/index')
 def index():
-    return flask.render_template('index.html', title='PfadiTag 2022')
+    _events = registration.models.Event.query.all()
+    _groups = registration.models.Group.query.all()
+    return flask.render_template('index.html', title='PfadiTag 2022', events=_events, groups=_groups)
 
 
 @registration.app.route('/admin/groups')

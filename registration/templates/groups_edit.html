@@ -3,14 +3,21 @@
 
 {% block content %}
 <div class="container">
-
-    {% if form.name.data %}
-    <h1>Gruppe bearbeiten</h1>
-    {% else %}
-    <h1>Neue Gruppe anlegen</h1>
-    {% endif %}
-
-    {{ wtf.quick_form(form) }}
-
+    <div class="row header">
+        <div class="col-xs-12">
+            <h1>
+                {% if form.name.data %}
+                Gruppe bearbeiten
+                {% else %}
+                Neue Gruppe anlegen
+                {% endif %}
+            </h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6 first-column">
+            {{ wtf.quick_form(form) }}
+        </div>
+    </div>
 </div>
 {% endblock %}
