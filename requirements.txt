@@ -1,8 +1,6 @@
-flask
-flask-wtf
-itsdangerous==1.1.0
-markupsafe==1.1.1
+flask>=2.1.2
 wtforms
-flask-sqlalchemy
-flask-migrate
-flask-bootstrap
+flask-wtf>=1.0.1
+flask-sqlalchemy>=2.5.1
+flask-migrate>=3.1.0
+flask-bootstrap>=3.3.7.1

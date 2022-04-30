@@ -1,11 +1,12 @@
-from datetime import date
 import flask
 from flask_wtf import FlaskForm
 from wtforms import *
 from wtforms.validators import DataRequired
 
+from . import models
+from .models import db
 
-import registration
+admin_bp = flask.Blueprint('admin', __name__, url_prefix='/admin', static_folder='static')
 
 
 class LandForm(FlaskForm):
@@ -43,44 +44,36 @@ class EventForm(FlaskForm):
     delete = SubmitField('Löschen')
 
 
-@registration.app.route('/')
-@registration.app.route('/index')
-def index():
-    _events = registration.models.Event.query.all()
-    _groups = registration.models.Group.query.all()
-    return flask.render_template('index.html', title='PfadiTag 2022', events=_events, groups=_groups)
-
-
-@registration.app.route('/admin/groups')
+@admin_bp.route('/groups')
 def groups():
-    _groups = registration.models.Group.query.all()
+    _groups = models.Group.query.all()
 
     return flask.render_template('groups.html', groups=_groups)
 
 
-@registration.app.route('/admin/groups/edit/<_id>', methods=['GET', 'POST'])
+@admin_bp.route('/groups/edit/<_id>', methods=['GET', 'POST'])
 def groups_edit(_id):
     form = GroupForm()
 
     # create new group if keyword is given
     if _id == "new":
-        group = registration.models.Group()
-        registration.db.session.add(group)
+        group = models.Group()
+        db.session.add(group)
     else:
-        group = registration.models.Group.query.get(_id)
+        group = models.Group.query.get(_id)
         if group is None:
-            return flask.redirect(flask.url_for('groups_edit', _id="new"))
+            return flask.redirect(flask.url_for('admin.groups_edit', _id="new"))
 
-    form.land_id.choices = [(g.id, g.name) for g in registration.models.Land.query.all()]
+    form.land_id.choices = [(g.id, g.name) for g in models.Land.query.all()]
 
     if form.abort.data:
-        return flask.redirect(flask.url_for('groups'))
+        return flask.redirect(flask.url_for('admin.groups'))
 
     if form.delete.data:
-        registration.db.session.delete(group)
-        registration.db.session.commit()
+        db.session.delete(group)
+        db.session.commit()
         flask.flash(f"Gruppe '{group.name}' erfolgreich gelöscht.", "success")
-        return flask.redirect(flask.url_for('groups'))
+        return flask.redirect(flask.url_for('admin.groups'))
 
     if form.submit.data:
         # validate post data
@@ -89,10 +82,10 @@ def groups_edit(_id):
             for field_id, field in form._fields.items():
                 setattr(group, field_id, field.data)
 
-            registration.db.session.commit()
+            db.session.commit()
             flask.flash(f"Gruppe '{group.name}' wurde gespeichert.", "success")
 
-            return flask.redirect(flask.url_for('groups'))
+            return flask.redirect(flask.url_for('admin.groups'))
 
     # initialize form values
     for field_id, field in form._fields.items():
@@ -102,36 +95,36 @@ def groups_edit(_id):
     return flask.render_template('groups_edit.html', form=form, _id=_id)
 
 
-@registration.app.route('/admin/events')
+@admin_bp.route('/events')
 def events():
-    _events = registration.models.Event.query.all()
+    _events = models.Event.query.all()
 
     return flask.render_template('events.html', events=_events)
 
 
-@registration.app.route('/admin/events/edit/<_id>', methods=['GET', 'POST'])
+@admin_bp.route('/events/edit/<_id>', methods=['GET', 'POST'])
 def events_edit(_id):
     form = EventForm()
 
     # create new group if keyword is given
     if _id == "new":
-        event = registration.models.Event()
-        registration.db.session.add(event)
+        event = models.Event()
+        db.session.add(event)
     else:
-        event = registration.models.Event.query.get(_id)
+        event = models.Event.query.get(_id)
         if event is None:
-            return flask.redirect(flask.url_for('events_edit', _id="new"))
+            return flask.redirect(flask.url_for('admin.events_edit', _id="new"))
 
-    form.group_id.choices = [(g.id, g.name) for g in registration.models.Group.query.all()]
+    form.group_id.choices = [(g.id, g.name) for g in models.Group.query.all()]
 
     if form.abort.data:
-        return flask.redirect(flask.url_for('events'))
+        return flask.redirect(flask.url_for('admin.events'))
 
     if form.delete.data:
-        registration.db.session.delete(event)
-        registration.db.session.commit()
+        db.session.delete(event)
+        db.session.commit()
         flask.flash(f"Aktion '{event.title}' erfolgreich gelöscht.", "success")
-        return flask.redirect(flask.url_for('events'))
+        return flask.redirect(flask.url_for('admin.events'))
 
     if form.submit.data:
         # validate post data
@@ -140,10 +133,10 @@ def events_edit(_id):
             for field_id, field in form._fields.items():
                 setattr(event, field_id, field.data)
 
-            registration.db.session.commit()
+            db.session.commit()
             flask.flash(f"Aktion '{event.title}' erfolgreich gespeichert.", "success")
 
-            return flask.redirect(flask.url_for('events'))
+            return flask.redirect(flask.url_for('admin.events'))
 
     # initialize form values
     for field_id, field in form._fields.items():

@@ -1,10 +1,7 @@
-from registration import app, db
-
-app.config.update({
-    "SECRET_KEY": "SomethingNotEntirelySecret",
-})
+from registration import db, create_app
 
 
-@app.shell_context_processor
-def make_shell_context():
-    return {'db': db}
+# app = create_app()
+
+# if __name__ == "__main__":
+#     app.run(host="localhost")
