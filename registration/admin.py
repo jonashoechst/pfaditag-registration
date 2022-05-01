@@ -1,7 +1,26 @@
 import flask
 from flask_wtf import FlaskForm
-from wtforms import *
-from wtforms.validators import DataRequired
+from flask_login import current_user, login_required
+from wtforms import (
+    StringField,
+    EmailField,
+    TelField,
+    SubmitField,
+    TextAreaField,
+    SelectField,
+    DateField,
+    TimeField,
+    HiddenField,
+    PasswordField,
+)
+from wtforms.validators import (
+    DataRequired,
+    Email,
+    URL,
+    Length,
+    Optional,
+    EqualTo,
+)
 
 from . import models
 from .models import db
@@ -18,17 +37,16 @@ class GroupForm(FlaskForm):
     street = StringField('Straße, Nr.', validators=[DataRequired()])
     zip = StringField('PLZ', validators=[DataRequired()])
     city = StringField('Ort', validators=[DataRequired()])
-    website = StringField('Website')
+    website = StringField('Website', validators=[URL()])
     land_id = SelectField('VCP Land', coerce=int)
 
     submit = SubmitField('Speichern')
-    abort = SubmitField('Abbrechen')
     delete = SubmitField('Löschen')
 
 
 class EventForm(FlaskForm):
     title = StringField('Aktionstitel', validators=[DataRequired()])
-    email = EmailField('E-Mail Adresse')
+    email = EmailField('E-Mail Adresse', validators=[Email()])
     tel = TelField('Telefonnummer')
 
     date = DateField('Aktionstag')
@@ -40,18 +58,26 @@ class EventForm(FlaskForm):
     lon = HiddenField()
 
     submit = SubmitField('Speichern')
-    abort = SubmitField('Abbrechen')
     delete = SubmitField('Löschen')
 
 
 @admin_bp.route('/groups')
+@login_required
 def groups():
-    _groups = models.Group.query.all()
+    _groups = []
 
-    return flask.render_template('groups.html', groups=_groups)
+    if current_user.is_superuser:
+        _groups += models.Group.query.all()
+    if current_user.is_manager_land:
+        _groups += models.Group.query.filter(models.Group.land_id == current_user.manage_land_id).all()
+    if current_user.is_manager_group:
+        _groups += models.Group.query.filter(models.Group.id == current_user.manage_group_id).all()
+
+    return flask.render_template('groups.html', groups=list(dict.fromkeys((_groups))))
 
 
 @admin_bp.route('/groups/edit/<_id>', methods=['GET', 'POST'])
+@login_required
 def groups_edit(_id):
     form = GroupForm()
 
@@ -64,10 +90,7 @@ def groups_edit(_id):
         if group is None:
             return flask.redirect(flask.url_for('admin.groups_edit', _id="new"))
 
-    form.land_id.choices = [(g.id, g.name) for g in models.Land.query.all()]
-
-    if form.abort.data:
-        return flask.redirect(flask.url_for('admin.groups'))
+    form.land_id.choices = [(0, "")] + [(g.id, g.name) for g in models.Land.query.all()]
 
     if form.delete.data:
         db.session.delete(group)
@@ -92,17 +115,28 @@ def groups_edit(_id):
         if field_id in group.__dict__:
             field.data = group.__dict__[field_id]
 
-    return flask.render_template('groups_edit.html', form=form, _id=_id)
+    _title = f"Gruppe '{group.name}' bearbeiten" if _id != "new" else "Neue Gruppe anlegen"
+
+    return flask.render_template('generic_form.html', form=form, _id=_id, title=_title)
 
 
 @admin_bp.route('/events')
+@login_required
 def events():
-    _events = models.Event.query.all()
+    _events = []
 
-    return flask.render_template('events.html', events=_events)
+    if current_user.is_superuser:
+        _events += models.Event.query.all()
+    if current_user.is_manager_land:
+        _events += models.Event.query.join(models.Group).filter(models.Group.land_id == current_user.manage_land_id).all()
+    if current_user.is_manager_group:
+        _events += models.Event.query.filter_by(group_id=current_user.manage_group_id).all()
+
+    return flask.render_template('events.html', events=list(dict.fromkeys((_events))))
 
 
 @admin_bp.route('/events/edit/<_id>', methods=['GET', 'POST'])
+@login_required
 def events_edit(_id):
     form = EventForm()
 
@@ -115,10 +149,7 @@ def events_edit(_id):
         if event is None:
             return flask.redirect(flask.url_for('admin.events_edit', _id="new"))
 
-    form.group_id.choices = [(g.id, g.name) for g in models.Group.query.all()]
-
-    if form.abort.data:
-        return flask.redirect(flask.url_for('admin.events'))
+    form.group_id.choices = [(0, "")] + [(g.id, g.name) for g in models.Group.query.all()]
 
     if form.delete.data:
         db.session.delete(event)

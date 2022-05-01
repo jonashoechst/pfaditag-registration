@@ -1,40 +1,36 @@
 {% extends "base.html" %}
 
 {% block content %}
+<h1>Übersicht Gruppen</h1>
 
-<div class="container mt-5">
-    <h1>Übersicht Gruppen</h1>
-
-    <table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th scope="col">Stamm</th>
-                <th scope="col">Ort</th>
-                <th scope="col">Land</th>
-                <th scope="col">Website</th>
-                <th scope="col">Optionen</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for group in groups %}
-            <tr>
-                <th scope="row">{{ group.name }}</th>
-                <td>{{ group.city }}</td>
-                <td>{{ group.land.name }}</td>
-                <td><a href="{{ group.website }}">{{ group.website }}</a></td>
-                <td><a href="{{ url_for('admin.groups_edit', _id=group.id) }}"><i class="fa-solid fa-pen-to-square"></i></a>
-                </td>
-            </tr>
-            {% endfor %}
-            <tr>
-                <th></th>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td><a href="{{ url_for('admin.groups_edit', _id='_new') }}"><i class="fa-solid fa-plus"></i></a></td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th scope="col">Stamm</th>
+            <th scope="col">Ort</th>
+            <th scope="col">Land</th>
+            <th scope="col">Website</th>
+            <th scope="col">Optionen</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for group in groups %}
+        <tr>
+            <th scope="row">{{ group.name }}</th>
+            <td>{{ group.city }}</td>
+            <td>{{ group.land.name }}</td>
+            <td><a href="{{ group.website }}">{{ group.website }}</a></td>
+            <td><a href="{{ url_for('admin.groups_edit', _id=group.id) }}"><i class="fa-solid fa-pen-to-square"></i></a>
+            </td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <th></th>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td><a href="{{ url_for('admin.groups_edit', _id='_new') }}"><i class="fa-solid fa-plus"></i></a></td>
+        </tr>
+    </tbody>
+</table>
 {% endblock %}

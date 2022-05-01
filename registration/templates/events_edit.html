@@ -1,5 +1,5 @@
 {% extends "base_leaflet.html" %}
-{% import "bootstrap/form.html" as wtf %}
+{% import "bootstrap5/form.html" as wtf %}
 
 {% block styles %}
 {{ super() }}
@@ -11,28 +11,25 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row header">
-        <div class="col-xs-12">
-            <h1>
-                {% if form.title.data %}
-                Aktion bearbeiten
-                {% else %}
-                Neue Aktion anlegen
-                {% endif %}
-            </h1>
-        </div>
+<div class="row header">
+    <div class="col-xs-12">
+        <h1>
+            {% if form.title.data %}
+            Aktion bearbeiten
+            {% else %}
+            Neue Aktion anlegen
+            {% endif %}
+        </h1>
     </div>
+</div>
 
-    <div class="row">
-        <div class="col-sm-6 first-column">
-            {{ wtf.render_form(form) }}
-        </div>
-        <div class="col-sm-6 second-column">
-            <div id="map"></div>
-        </div>
+<div class="row">
+    <div class="col-sm-6 first-column">
+        {{ wtf.render_form(form, button_map={'submit':'success', 'delete': 'danger'}) }}
     </div>
-
+    <div class="col-sm-6 second-column">
+        <div id="map"></div>
+    </div>
 </div>
 {% endblock %}
 

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% import "bootstrap5/form.html" as wtf %}
+
+{% block content %}
+<div class="row header">
+    <div class="col-xs-12">
+        <h1>{{ title }}</h1>
+        <h5>{{ subtitle }}</h5>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-6 first-column">
+        {{ wtf.render_form(form, button_map={'submit':'success', 'delete': 'danger'}) }}
+    </div>
+    <div class="col-sm-6 second-column">
+    </div>
+</div>
+{% endblock %}
