@@ -5,7 +5,7 @@ import locale
 
 from flask import Flask
 from flask_migrate import Migrate
-from flask_bootstrap import Bootstrap
+from flask_bootstrap import Bootstrap5
 
 locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
 logging.basicConfig(level=logging.DEBUG)
@@ -17,7 +17,7 @@ def create_app():
     app = Flask(__name__)
     app.config.from_prefixed_env()
 
-    Bootstrap(app)
+    Bootstrap5(app)
 
     from registration.models import db
     db.init_app(app)

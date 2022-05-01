@@ -1,5 +1,5 @@
 {% extends "base_leaflet.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/form.html" as wtf %}
 
 {% block styles %}
 {{ super() }}
@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container mt-5">
     <div class="row header">
         <div class="col-xs-12">
             <h1>
@@ -26,7 +26,7 @@
 
     <div class="row">
         <div class="col-sm-6 first-column">
-            {{ wtf.quick_form(form) }}
+            {{ wtf.render_form(form) }}
         </div>
         <div class="col-sm-6 second-column">
             <div id="map"></div>

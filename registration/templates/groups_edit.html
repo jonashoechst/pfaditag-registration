@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/form.html" as wtf %}
 
 {% block content %}
-<div class="container">
+<div class="container mt-5">
     <div class="row header">
         <div class="col-xs-12">
             <h1>
@@ -16,7 +16,7 @@
     </div>
     <div class="row">
         <div class="col-sm-6 first-column">
-            {{ wtf.quick_form(form) }}
+            {{ wtf.render_form(form) }}
         </div>
     </div>
 </div>
