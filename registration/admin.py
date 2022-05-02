@@ -10,20 +10,18 @@ from wtforms import (
     SelectField,
     DateField,
     TimeField,
-    HiddenField,
-    PasswordField,
 )
 from wtforms.validators import (
     DataRequired,
-    Email,
     URL,
-    Length,
     Optional,
-    EqualTo,
+    Email,
 )
 
 from . import models
 from .models import db
+
+current_user: models.User
 
 admin_bp = flask.Blueprint('admin', __name__, url_prefix='/admin', static_folder='static')
 
@@ -34,46 +32,43 @@ class LandForm(FlaskForm):
 
 class GroupForm(FlaskForm):
     name = StringField('Stammesname', validators=[DataRequired()])
-    street = StringField('Straße, Nr.', validators=[DataRequired()])
-    zip = StringField('PLZ', validators=[DataRequired()])
+    street = StringField('Straße, Nr.', validators=[Optional()])
+    zip = StringField('PLZ', validators=[Optional()])
     city = StringField('Ort', validators=[DataRequired()])
-    website = StringField('Website', validators=[URL()])
-    land_id = SelectField('VCP Land', coerce=int)
+    website = StringField('Website', validators=[Optional(), URL(False)])
+    land_id = SelectField('VCP Land', validators=[DataRequired()], coerce=int)
 
     submit = SubmitField('Speichern')
     delete = SubmitField('Löschen')
 
 
 class EventForm(FlaskForm):
+    group_id = SelectField('Stamm', validators=[DataRequired()], coerce=int)
     title = StringField('Aktionstitel', validators=[DataRequired()])
-    email = EmailField('E-Mail Adresse', validators=[Email()])
-    tel = TelField('Telefonnummer')
+    email = EmailField('E-Mail Adresse', validators=[Optional(), Email()])
+    tel = TelField('Telefonnummer', validators=[Optional()])
 
-    date = DateField('Aktionstag')
-    time = TimeField('Startzeit')
-    description = TextAreaField('Beschreibung')
-    group_id = SelectField('Gruppe', coerce=int)
+    date = DateField('Aktionstag', validators=[DataRequired()])
+    time = TimeField('Startzeit', validators=[DataRequired()])
+    description = TextAreaField('Beschreibung', validators=[Optional()])
 
-    lat = HiddenField()
-    lon = HiddenField()
+    lat = StringField("Treffpunkt (lat)")
+    lon = StringField("Treffpunkt (long)")
 
     submit = SubmitField('Speichern')
     delete = SubmitField('Löschen')
 
 
+def redirect_url(default='public.index'):
+    return flask.request.args.get('next') or \
+        flask.request.referrer or \
+        flask.url_for(default)
+
+
 @admin_bp.route('/groups')
 @login_required
 def groups():
-    _groups = []
-
-    if current_user.is_superuser:
-        _groups += models.Group.query.all()
-    if current_user.is_manager_land:
-        _groups += models.Group.query.filter(models.Group.land_id == current_user.manage_land_id).all()
-    if current_user.is_manager_group:
-        _groups += models.Group.query.filter(models.Group.id == current_user.manage_group_id).all()
-
-    return flask.render_template('groups.html', groups=list(dict.fromkeys((_groups))))
+    return flask.render_template('groups.html')
 
 
 @admin_bp.route('/groups/edit/<_id>', methods=['GET', 'POST'])
@@ -83,30 +78,45 @@ def groups_edit(_id):
 
     # create new group if keyword is given
     if _id == "new":
-        group = models.Group()
-        db.session.add(group)
+        if current_user.is_superuser:
+            group = models.Group()
+            db.session.add(group)
+        elif current_user.is_manager_land and current_user.manage_land:
+            group = models.Group(land_id=current_user.manage_land.id)
+            db.session.add(group)
+        else:
+            flask.flash('Du bist nicht berechtigt, einen neuen Stamm anzulegen.', 'danger')
+            return flask.redirect(redirect_url('admin.groups'))
     else:
         group = models.Group.query.get(_id)
-        if group is None:
-            return flask.redirect(flask.url_for('admin.groups_edit', _id="new"))
 
-    form.land_id.choices = [(0, "")] + [(g.id, g.name) for g in models.Land.query.all()]
+        # check if user is allows to edit event
+        if group not in current_user.query_groups():
+            flask.flash("Du bist nicht berechtigt, diese Gruppe zu bearbeiten.", "danger")
+            return flask.redirect(redirect_url('admin.groups'))
 
+    # form.land_id.choices = models.Land.query.all()
+    form.land_id.choices = [(l.id, l.name) for l in current_user.query_lands()]
+    if group.land and group.land not in current_user.query_lands():
+        form.land_id.choices.append((group.land_id, group.land.name))
+
+    # POST: delete group
     if form.delete.data:
+        for event in group.events:
+            db.session.delete(event)
         db.session.delete(group)
         db.session.commit()
-        flask.flash(f"Gruppe '{group.name}' erfolgreich gelöscht.", "success")
+        flask.flash(f"Stamm '{group.name}' erfolgreich gelöscht.", "success")
         return flask.redirect(flask.url_for('admin.groups'))
 
+    # POST: save group
     if form.submit.data:
-        # validate post data
         if form.validate_on_submit():
-            # update fields in model
             for field_id, field in form._fields.items():
                 setattr(group, field_id, field.data)
 
             db.session.commit()
-            flask.flash(f"Gruppe '{group.name}' wurde gespeichert.", "success")
+            flask.flash(f"Stamm '{group.name}' wurde gespeichert.", "success")
 
             return flask.redirect(flask.url_for('admin.groups'))
 
@@ -115,7 +125,7 @@ def groups_edit(_id):
         if field_id in group.__dict__:
             field.data = group.__dict__[field_id]
 
-    _title = f"Gruppe '{group.name}' bearbeiten" if _id != "new" else "Neue Gruppe anlegen"
+    _title = f"Stamm {group.name} bearbeiten" if _id != "new" else "Neuen Stamm anlegen"
 
     return flask.render_template('generic_form.html', form=form, _id=_id, title=_title)
 
@@ -123,16 +133,7 @@ def groups_edit(_id):
 @admin_bp.route('/events')
 @login_required
 def events():
-    _events = []
-
-    if current_user.is_superuser:
-        _events += models.Event.query.all()
-    if current_user.is_manager_land:
-        _events += models.Event.query.join(models.Group).filter(models.Group.land_id == current_user.manage_land_id).all()
-    if current_user.is_manager_group:
-        _events += models.Event.query.filter_by(group_id=current_user.manage_group_id).all()
-
-    return flask.render_template('events.html', events=list(dict.fromkeys((_events))))
+    return flask.render_template('events.html')
 
 
 @admin_bp.route('/events/edit/<_id>', methods=['GET', 'POST'])
@@ -146,30 +147,40 @@ def events_edit(_id):
         db.session.add(event)
     else:
         event = models.Event.query.get(_id)
-        if event is None:
-            return flask.redirect(flask.url_for('admin.events_edit', _id="new"))
 
-    form.group_id.choices = [(0, "")] + [(g.id, g.name) for g in models.Group.query.all()]
+        # check if user is allows to edit event
+        if event not in current_user.query_events():
+            flask.flash(f"Du bist nicht berechtigt, diese Aktion zu bearbeiten.", "danger")
+            return flask.redirect(redirect_url('admin.events'))
 
+    form.group_id.choices = [(g.id, g.name) for g in current_user.query_groups()]
+
+    # POST: delete
     if form.delete.data:
         db.session.delete(event)
         db.session.commit()
         flask.flash(f"Aktion '{event.title}' erfolgreich gelöscht.", "success")
         return flask.redirect(flask.url_for('admin.events'))
 
+    # POST: submit
     if form.submit.data:
-        # validate post data
         if form.validate_on_submit():
             # update fields in model
             for field_id, field in form._fields.items():
-                setattr(event, field_id, field.data)
+                if field_id in ["lat", "lon"]:
+                    try:
+                        setattr(event, field_id, float(field.data))
+                    except ValueError:
+                        setattr(event, field_id, None)
+                else:
+                    setattr(event, field_id, field.data)
 
             db.session.commit()
-            flask.flash(f"Aktion '{event.title}' erfolgreich gespeichert.", "success")
+            flask.flash(f"Aktion '{event.title}' wurde gespeichert.", "success")
 
-            return flask.redirect(flask.url_for('admin.events'))
+            return flask.redirect(redirect_url('admin.events'))
 
-    # initialize form values
+    # GET: initialize form values
     for field_id, field in form._fields.items():
         if field_id in event.__dict__:
             field.data = event.__dict__[field_id]

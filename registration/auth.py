@@ -39,7 +39,7 @@ class SignupForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired(), Length(min=8, message='Das Passwort muss mindestens 8 Zeichen haben.')])
     confirm = PasswordField('Password (wiederholen)', validators=[DataRequired(), EqualTo('password', message='Die Passwörter stimmen nicht überein.')])
 
-    group_id = SelectField('Manager für Stamm', coerce=int, description="Wähle eine Gruppe aus, für die du Aktionen verwalten möchtest. Der Zugriff muss noch bestätigt werden.")
+    group_id = SelectField('Manager für Stamm', coerce=int, description="Wähle einen Stamm aus, für die du Aktionen verwalten möchtest. Der Zugriff muss noch bestätigt werden.")
     land_id = SelectField('Länderkoodinator:in', coerce=int, description="Wähle ein Land aus, für das du die Koodinator-Rechte haben möchtest. Der Zugriff muss noch bestätigt werden.")
 
     submit = SubmitField('Registrieren')
@@ -82,14 +82,14 @@ def login():
     )
 
 
-@auth_bp.route("/logout")
+@ auth_bp.route("/logout")
 def logout():
     flask_login.logout_user()
     flask.flash("Logout erfolgreich.", 'success')
     return flask.redirect(flask.url_for('auth.login'))
 
 
-@auth_bp.route('/signup', methods=['GET', 'POST'])
+@ auth_bp.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = SignupForm()
 
@@ -121,14 +121,14 @@ def signup():
     )
 
 
-@login_manager.user_loader
+@ login_manager.user_loader
 def load_user(user_id):
     if user_id is not None:
         return User.query.get(user_id)
     return None
 
 
-@login_manager.unauthorized_handler
+@ login_manager.unauthorized_handler
 def unauthorized():
     flask.flash('Du musst angemeldet sein, um diese Seite aufrufen zu können.', 'info')
     return flask.redirect(flask.url_for('auth.login'))

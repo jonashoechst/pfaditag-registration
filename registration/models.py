@@ -1,4 +1,5 @@
 import datetime
+from typing import List
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
@@ -10,7 +11,7 @@ db = SQLAlchemy()
 class Land(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True)
-    groups = db.relationship('Group', backref='land', lazy=True)
+    groups = db.relationship('Group', backref='land')
 
     def __repr__(self):
         return f'<Land {self.id} ({self.name})>'
@@ -26,7 +27,7 @@ class Group(db.Model):
     website = db.Column(db.String(64))
 
     land_id = db.Column(db.Integer, db.ForeignKey('land.id'))
-    groups = db.relationship('Event', backref='group', lazy=True)
+    events = db.relationship('Event', backref='group')
 
     def __repr__(self):
         return f'<Group {self.id} ({self.name})>'
@@ -57,7 +58,9 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(100), nullable=False, unique=False)
 
     manage_land_id = db.Column(db.Integer, db.ForeignKey('land.id'), nullable=True)
+    manage_land = db.relationship('Land')
     manage_group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
+    manage_group = db.relationship('Group')
 
     # permissions
     is_superuser = db.Column(db.Boolean, default=False)
@@ -75,3 +78,46 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return f'<User {self.id} ({self.name})>'
+
+    def query_groups(self) -> List[Group]:
+        groups = []
+
+        if self.is_manager_group and self.manage_group_id:
+            groups.append(self.manage_group)
+        if self.is_manager_land and self.manage_land_id:
+            for group in self.manage_land.groups:
+                if group not in groups:
+                    groups.append(group)
+        if self.is_superuser:
+            for group in Group.query.all():
+                if group not in groups:
+                    groups.append(group)
+
+        return groups
+
+    def query_events(self) -> List[Event]:
+        events = []
+
+        if self.is_manager_group and self.manage_group_id:
+            events += self.manage_group.events
+        if self.is_manager_land and self.manage_land_id:
+            for group in self.manage_land.groups:
+                events += group.events
+        if self.is_superuser:
+            for event in Event.query.all():
+                if event not in events:
+                    events.append(event)
+
+        return events
+
+    def query_lands(self) -> List[Land]:
+        lands = []
+
+        if self.is_manager_land and self.manage_land_id:
+            lands.append(self.manage_land)
+        if self.is_superuser:
+            for land in Land.query.all():
+                if land not in lands:
+                    lands.append(land)
+
+        return lands

@@ -15,25 +15,28 @@
         </tr>
     </thead>
     <tbody>
-        {% for event in events %}
+        {% for event in current_user.query_events() %}
         <tr>
             <th scope="row">{{ event.title }}</th>
             <td>{{ event.group.name }}</td>
             <td>{{ event.group.city }}</td>
             <td>{{ event.group.land.name }}</td>
             <td><a href="mailto:{{ event.email }}">{{ event.email }}</a></td>
-            <td><a href="{{ url_for('admin.events_edit', _id=event.id) }}"><i class="fa-solid fa-pen-to-square"></i></a>
+            <td>
+                <a href="{{ url_for('admin.events_edit', _id=event.id) }}"><i class="fa-solid fa-pen-to-square"></i></a>
             </td>
         </tr>
         {% endfor %}
+        {% if current_user.is_superuser or current_user.is_manager_group or current_user.is_manager_land %}
         <tr>
             <th></th>
             <td></td>
             <td></td>
             <td></td>
             <td></td>
-            <td><a href="{{ url_for('admin.events_edit', _id='_new') }}"><i class="fa-solid fa-plus"></i></a></td>
+            <td><a href="{{ url_for('admin.events_edit', _id='new') }}"><i class="fa-solid fa-plus"></i></a></td>
         </tr>
+        {% endif %}
     </tbody>
 
 </table>
