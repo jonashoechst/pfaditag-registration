@@ -20,6 +20,7 @@ from wtforms.validators import (
 
 from . import models
 from .models import db
+from .public import redirect_url
 
 current_user: models.User
 
@@ -59,16 +60,13 @@ class EventForm(FlaskForm):
     delete = SubmitField('Löschen')
 
 
-def redirect_url(default='public.index'):
-    return flask.request.args.get('next') or \
-        flask.request.referrer or \
-        flask.url_for(default)
-
-
 @admin_bp.route('/groups')
 @login_required
 def groups():
-    return flask.render_template('groups.html')
+    if not current_user.has_permissions:
+        flask.flash("Du hast noch keine Berechtigungen erteilt bekommen.")
+
+    return flask.render_template('admin/groups.html')
 
 
 @admin_bp.route('/groups/edit/<_id>', methods=['GET', 'POST'])
@@ -133,7 +131,10 @@ def groups_edit(_id):
 @admin_bp.route('/events')
 @login_required
 def events():
-    return flask.render_template('events.html')
+    if not current_user.has_permissions:
+        flask.flash("Du hast noch keine Berechtigungen erteilt bekommen.")
+
+    return flask.render_template('admin/events.html')
 
 
 @admin_bp.route('/events/edit/<_id>', methods=['GET', 'POST'])
@@ -185,4 +186,4 @@ def events_edit(_id):
         if field_id in event.__dict__:
             field.data = event.__dict__[field_id]
 
-    return flask.render_template('events_edit.html', form=form, _id=_id)
+    return flask.render_template('admin/events_edit.html', form=form, _id=_id)

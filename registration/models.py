@@ -12,6 +12,7 @@ class Land(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True)
     groups = db.relationship('Group', backref='land')
+    users = db.relationship('User', backref='land')
 
     def __repr__(self):
         return f'<Land {self.id} ({self.name})>'
@@ -102,7 +103,9 @@ class User(UserMixin, db.Model):
             events += self.manage_group.events
         if self.is_manager_land and self.manage_land_id:
             for group in self.manage_land.groups:
-                events += group.events
+                for event in group.events:
+                    if event not in events:
+                        events.append(event)
         if self.is_superuser:
             for event in Event.query.all():
                 if event not in events:
@@ -121,3 +124,21 @@ class User(UserMixin, db.Model):
                     lands.append(land)
 
         return lands
+
+    def query_users(self) -> List:
+        users = [self]
+
+        if self.is_manager_land and self.manage_land_id:
+            for user in self.manage_land.users:
+                if user not in users:
+                    users.append(user)
+        if self.is_superuser:
+            for user in User.query.all():
+                if user not in users:
+                    users.append(user)
+
+        return users
+
+    @property
+    def has_permissions(self) -> bool:
+        return (self.is_superuser or self.is_manager_land or self.is_manager_group)

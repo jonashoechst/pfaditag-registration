@@ -20,6 +20,16 @@ INFO  [alembic.runtime.migration] Running upgrade 588a003602ed -> cf3b00d56bd6, 
 
 ´´´
 
+## Query LAT/LON from addr
+
+````js
+    {% for group in groups %}
+    $.get('https://nominatim.openstreetmap.org/search?format=json&q={{ group.street }}, {{ group.zip }} {{ group.city }}', function(data){
+        var marker_group_{{ group.id }} = L.marker([data[0].lat, data[0].lon], { icon: groupStyle }).addTo(map);
+    });
+    {% endfor %}
+```
+
 ## Shoutouts
 
 - [The Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world) by Miguel Grinberg

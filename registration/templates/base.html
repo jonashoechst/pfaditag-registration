@@ -37,15 +37,25 @@
                         {{ current_user.name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-lg-end" aria-labelledby="navbarDropdown">
+                            <h6 class="dropdown-header">Rolle: 
+                            {% if current_user.is_superuser %}
+                                Superuser
+                            {% elif current_user.is_manager_land and current_user.manage_land %}
+                                Landeskoodinator:in {{ current_user.manage_land.name }}
+                            {% elif current_user.is_manager_group and current_user.manage_group %}
+                                Stammeskoodinator:in {{ current_user.manage_group.name }}
+                            {% endif %}
+                            </h6>
+                            <li><a class="dropdown-item" href="{{url_for('auth.users')}}">Übersicht Accounts</a></li>
                             <li><a class="dropdown-item" href="{{url_for('admin.groups')}}">Übersicht Stämme</a></li>
                             <li><a class="dropdown-item" href="{{url_for('admin.events')}}">Übersicht Aktionen</a></li>
-                            <li><a class="dropdown-item" href="{{url_for('admin.events_edit', _id='new')}}">Neue Aktionen anlegen</a></li>
                             {% if current_user.is_manager_group and current_user.manage_group %}
                                 <div class="dropdown-divider"></div>
                                 <h6 class="dropdown-header">Stamm {{current_user.manage_group.name}}</h6>
                                 <li><a class="dropdown-item" href="{{url_for('admin.groups_edit', _id=current_user.manage_group_id)}}">Stamm bearbeiten</a></li>
                             {% endif %}
                             <div class="dropdown-divider"></div>
+                            <li><a class="dropdown-item" href="{{url_for('auth.user', _id=current_user.id)}}">Account bearbeiten</a></li>
                             <li><a class="dropdown-item" href="{{url_for('auth.logout')}}">Logout</a></li>
                         </ul>
                     {% else %}
@@ -53,7 +63,7 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-lg-end" aria-labelledby="navbarDropdown">
                             <li><a class="dropdown-item" href="{{url_for('auth.login')}}">Login</a></li>
-                            <li><a class="dropdown-item" href="{{url_for('auth.signup')}}">Registrieren</a></li>
+                            <li><a class="dropdown-item" href="{{url_for('auth.user', _id='new')}}">Registrieren</a></li>
                         </ul>
                     {% endif %}
                     </li>
