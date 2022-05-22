@@ -230,6 +230,10 @@ def user(_id):
 
             # create new user
             if _id == "new":
+                if User.query.get(form.id.data):
+                    flask.flash(f"Der Account {form.id.data} existiert bereits.", 'warning')
+                    return flask.redirect(flask.url_for('auth.user', _id="new"))
+
                 user.id = form.id.data
                 db.session.add(user)
                 db.session.commit()
