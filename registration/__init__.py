@@ -7,12 +7,14 @@ from flask import Flask
 from flask_migrate import Migrate
 from flask_bootstrap import Bootstrap5
 from flask_login import LoginManager
+from flask_mail import Mail
 
 locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
 logging.basicConfig(level=logging.DEBUG)
 
 migrate = Migrate()
 login_manager = LoginManager()
+mail = Mail()
 
 def create_app():
     app = Flask(__name__)
@@ -24,6 +26,8 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    mail.init_app(app)
+
 
     with app.app_context():
         from registration.admin import admin_bp

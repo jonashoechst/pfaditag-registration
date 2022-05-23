@@ -1,6 +1,9 @@
 import datetime
 import flask
+import secrets
 from flask_login import login_required, current_user, login_user, logout_user
+from flask_mail import Message
+from flask import current_app, render_template
 
 from flask_wtf import FlaskForm
 from wtforms import (
@@ -20,7 +23,7 @@ from wtforms.validators import (
 )
 
 
-from . import login_manager
+from . import login_manager, mail
 from .models import (
     db,
     User,
@@ -41,26 +44,73 @@ class ProfileForm(FlaskForm):
         Email(message='Bitte gib eine valide E-Mail Adresse an.'),
         DataRequired(),
     ])
-    name = StringField('Name', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=8, message='Das Passwort muss mindestens 8 Zeichen haben.')])
-    confirm = PasswordField('Password (wiederholen)', validators=[DataRequired(), EqualTo('password', message='Die Passwörter stimmen nicht überein.')])
-    is_superuser = BooleanField('Superuser', description="Superuser-Rechte erlauben es, auf alles zuzugreifen.")
+    name = StringField(
+        'Name',
+        validators=[DataRequired()],
+    )
+    password = PasswordField(
+        'Password',
+        validators=[DataRequired(), Length(min=8, message='Das Passwort muss mindestens 8 Zeichen haben.')],
+    )
+    confirm = PasswordField(
+        'Password (wiederholen)',
+        validators=[DataRequired(),
+                    EqualTo('password', message='Die Passwörter stimmen nicht überein.')],
+    )
+    is_superuser = BooleanField(
+        'Superuser',
+        description="Superuser-Rechte erlauben es, auf alles zuzugreifen.",
+    )
 
-    manage_land_id = SelectField('Länderkoodinator:in', coerce=int,
-                                 description="Wähle ein Land aus, für das du die Koodinator-Rechte haben möchtest. Der Zugriff muss noch bestätigt werden.")
-    is_manager_land = BooleanField('Freigabe Land', description="Länderkoodinator-Rechte erlauben es, auf Länder zuzugreifen.")
-    manage_group_id = SelectField('Manager für Stamm', coerce=int,
-                                  description="Wähle einen Stamm aus, für die du Aktionen verwalten möchtest. Der Zugriff muss noch bestätigt werden.")
-    is_manager_group = BooleanField('Freigabe Stamm', description="Stammeskoodinator-Rechte erlauben es, auf den Stamm zuzugreifen.")
+    manage_land_id = SelectField(
+        'Länderkoodinator:in',
+        coerce=int,
+        description="Wähle ein Land aus, für das du die Koodinator-Rechte haben möchtest. Der Zugriff muss noch bestätigt werden.",
+    )
+    is_manager_land = BooleanField(
+        'Freigabe Land',
+        description="Länderkoodinator-Rechte erlauben es, auf Länder zuzugreifen.",
+    )
+    manage_group_id = SelectField(
+        'Manager für Stamm',
+        coerce=int,
+        description="Wähle einen Stamm aus, für die du Aktionen verwalten möchtest. Der Zugriff muss noch bestätigt werden.",
+    )
+    is_manager_group = BooleanField(
+        'Freigabe Stamm',
+        description="Stammeskoodinator-Rechte erlauben es, auf den Stamm zuzugreifen.",
+    )
 
     submit = SubmitField('Speichern')
     delete = SubmitField('Löschen')
 
 
 class LoginForm(FlaskForm):
-    id = StringField('E-Mail Adresse', validators=[DataRequired(), Email(message='Bitte gib eine valide E-Mail Adresse an.')])
-    password = PasswordField('Password', validators=[DataRequired()])
+    id = StringField(
+        'E-Mail Adresse',
+        validators=[DataRequired(), Email(message='Bitte gib eine valide E-Mail Adresse an.')],
+    )
+    password = PasswordField(
+        'Password', validators=[],
+    )
     submit = SubmitField('Login')
+    reset = SubmitField("Passwort vergessen?")
+
+
+class PasswordResetForm(FlaskForm):
+    id = StringField(
+        'E-Mail Adresse',
+        validators=[DataRequired(), Email(message='Bitte gib die E-Mail Adresse deines Accounts an.')],
+    )
+    password = PasswordField(
+        'Password',
+        validators=[DataRequired(), Length(min=8, message='Das Passwort muss mindestens 8 Zeichen haben.')]
+    )
+    confirm = PasswordField(
+        'Password (wiederholen)',
+        validators=[DataRequired(), EqualTo('password', message='Die Passwörter stimmen nicht überein.')],
+    )
+    submit = SubmitField('Passwort zurücksetzen')
 
 
 def disable_field(field: Field, disabled=True):
@@ -82,8 +132,18 @@ def login():
         return flask.redirect(next_page)
 
     form = LoginForm()
-    # Validate login attempt
-    if form.validate_on_submit():
+
+    # if reset password
+    if form.reset.data and form.validate_on_submit():
+        user = User.query.filter_by(id=form.id.data).first()
+        if user:
+            return flask.redirect(flask.url_for('auth.reset', username=form.id.data))
+
+        flask.flash("Es existiert kein Benutzer mit dieser E-Mail Adresse.", 'alert')
+        return flask.redirect(flask.url_for('auth.login'))
+
+    # if submit: validate login attempt
+    if form.submit.data and form.validate_on_submit():
         user = User.query.filter_by(id=form.id.data).first()
         if user and user.check_password(password=form.password.data):
             login_user(user)
@@ -100,6 +160,71 @@ def login():
         'generic_form.html',
         form=form,
         title='Login',
+    )
+
+
+@auth_bp.route('/reset/<username>', methods=['GET', 'POST'])
+def reset(username):
+    # Bypass if user is logged in
+    if current_user.is_authenticated:
+        flask.flash("Du bist bereits eingeloggt.", 'alert')
+        return flask.redirect(flask.url_for('public.index'))
+
+    # Get user object and token
+    user = User.query.filter_by(id=username).first()
+    token = flask.request.args.get('token')
+
+    # Validate reset attempt
+    if not user:
+        flask.flash('Benutzer nicht gefunden.', 'danger')
+        return flask.redirect(flask.url_for('auth.login'))
+
+    form = PasswordResetForm()
+    form.id.data = username
+
+    # if token exits and is valid: allow reset
+    if token and user.verify_token(token):
+        # if form is valid / posted
+        if form.validate_on_submit():
+            user.set_password(form.password.data)
+            db.session.commit()
+            flask.flash('Passwort erfolgreich geändert.', 'success')
+            return flask.redirect(flask.url_for('auth.login'))
+
+        # return passwort enter form
+        return flask.render_template(
+            'generic_form.html',
+            form=form,
+            title='Passwort zurücksetzen',
+        )
+
+    form._fields.pop("password")
+    form._fields.pop("confirm")
+
+    # Validate reset attempt
+    if form.validate_on_submit():
+        if user:
+            user.set_token()
+            db.session.commit()
+
+            msg = Message(
+                subject=f"[{current_app.config['APP_TITLE']}] Passwort zurücksetzen",
+                sender=f"{current_app.config['APP_TITLE']} <{current_app.config['MAIL_USERNAME']}>",
+                recipients=[user.id],
+            )
+            msg.body = render_template("mail/reset.txt", user=user)
+            mail.send(msg)
+
+            flask.flash('E-Mail zum Zurücksetzen des Passwortes wurde gesendet.', 'success')
+            return flask.redirect(flask.url_for('auth.reset', username=username))
+
+        flask.flash('Passwort konnte nicht zurückgesetzt werden.', 'danger')
+        return flask.redirect(flask.url_for('auth.reset', username=username))
+
+    return flask.render_template(
+        'generic_form.html',
+        form=form,
+        title='Passwort zurücksetzen',
     )
 
 

@@ -1,4 +1,5 @@
 import datetime
+import secrets
 from typing import List
 
 from flask_sqlalchemy import SQLAlchemy
@@ -70,11 +71,15 @@ class User(UserMixin, db.Model):
 
     created_on = db.Column(db.DateTime, index=False, unique=False, nullable=True)
     last_login = db.Column(db.DateTime, index=False, unique=False, nullable=True)
+    token = db.Column(db.String(32), unique=False, nullable=True)
+    token_expiration = db.Column(db.DateTime, index=False, unique=False, nullable=True)
 
     def set_password(self, password):
         self.password = generate_password_hash(password, method='sha256')
 
     def check_password(self, password):
+        if not password:
+            return False
         return check_password_hash(self.password, password)
 
     def __repr__(self):
@@ -138,6 +143,22 @@ class User(UserMixin, db.Model):
                     users.append(user)
 
         return users
+
+    def set_token(self, validity: datetime.timedelta = datetime.timedelta(days=1)) -> str:
+        self.token = secrets.token_urlsafe(32)
+        self.token_expiration = datetime.datetime.now() + validity
+
+        return self.token
+
+    def reset_token(self):
+        self.set_token(validity=datetime.timedelta(0))
+
+    def verify_token(self, token) -> bool:
+        if self.token and self.token_expiration:
+            if self.token == token and self.token_expiration > datetime.datetime.now():
+                return True
+
+        return False
 
     @property
     def has_permissions(self) -> bool:
