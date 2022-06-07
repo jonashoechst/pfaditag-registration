@@ -12,9 +12,15 @@ def redirect_url(default='public.index'):
         flask.url_for(default)
 
 
-@public_bp.route('/')
 @public_bp.route('/index')
+@public_bp.route('/')
 def index():
     _events = models.Event.query.all()
     _groups = models.Group.query.all()
     return flask.render_template('index.html', title=current_app.config["APP_TITLE"], events=_events, groups=_groups)
+
+
+@public_bp.route('/event/<int:event_id>')
+def event(event_id):
+    event = models.Event.query.get(event_id)
+    return flask.render_template('event.html', title=current_app.config["APP_TITLE"], event=event)

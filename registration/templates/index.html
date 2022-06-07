@@ -37,14 +37,14 @@
     {% for event in events %}
     var marker_event_{{ event.id }} = L.marker([{{ event.lat }}, {{ event.lon }}], { icon: eventStyle }).addTo(map);
     marker_event_{{ event.id }}.bindPopup(`
-<h3>{{ event.title }}</h3>
+<h3>{{ event.title }} <a href="{{ url_for('public.event', event_id=event.id) }}"><i class="fa-solid fa-link"></i></a></h3>
 <div>Stamm {{ event.group.name }}, {{ event.group.city }}</div>
 <div><b>Wann? </b>{{ event.date.strftime('%A, %d.%m.%Y') }}, {{event.time.strftime('%H:%M')}} Uhr</div>
 <div>
 {% for p in event.description.split('\n') %}
     <p>{{p}}</p>
 {% endfor %}
-</div
+</div>
 {% if event.email %}
 <div><b>E-Mail: </b><a href='mailto:{{ event.email }}'>{{ event.email }}</a></div>
 {% endif %}
