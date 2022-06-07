@@ -1,0 +1,9 @@
+{% extends "mail/base.txt" %}
+
+{% block content %}
+Du oder jemand anderes hat einen Account auf {{ url_for('public.index', _external=True) }} für dich angelegt. 
+
+Ein neuer Account hat noch keine Rechte für Stämme oder Länder. Wir haben aber einen Superuser und die Ansprechpartner aus deinem Land informiert, damit sie dir Zugriff geben. Falls du nichts mehr hörst, frage gerne nach!
+
+Dein Profil kannst du hier einsehen und auch wieder löschen: {{ url_for('auth.user', _id=user.id, _external=True) }}
+{% endblock %}

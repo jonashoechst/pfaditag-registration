@@ -63,13 +63,13 @@ class ProfileForm(FlaskForm):
     )
 
     manage_land_id = SelectField(
-        'Länderkoodinator:in',
+        'Landeskoodinator:in',
         coerce=int,
         description="Wähle ein Land aus, für das du die Koodinator-Rechte haben möchtest. Der Zugriff muss noch bestätigt werden.",
     )
     is_manager_land = BooleanField(
         'Freigabe Land',
-        description="Länderkoodinator-Rechte erlauben es, auf Länder zuzugreifen.",
+        description="Landeskoodinator:in-Rechte erlauben es, auf Länder zuzugreifen.",
     )
     manage_group_id = SelectField(
         'Manager für Stamm',
@@ -291,11 +291,14 @@ def user(_id):
 
             # if the current user is logged in, check permissions
             if current_user.is_authenticated:
+                permissions_altered = False
+
                 # superuser privilege can only be altered by other superusers
                 if form.is_superuser.data != user.is_superuser:
                     if current_user == user:
                         flask.flash("Du kannst deine eigenen Rechte nur bearbeiten, wenn du weitergehende Rechte hast.", 'warning')
                     elif current_user.is_superuser:
+                        permissions_altered = True
                         user.is_superuser = form.is_superuser.data
                     else:
                         flask.flash("Du hast keine Berechtigung, dem Account Superuser-Rechte zu erteilen oder zu entziehen.", 'warning')
@@ -303,10 +306,12 @@ def user(_id):
                 # land manager privilege can be altered by superusers
                 if form.is_manager_land.data != user.is_manager_land:
                     if current_user.is_superuser:
+                        permissions_altered = True
                         user.is_manager_land = form.is_manager_land.data
                     elif current_user == user:
-                        flask.flash("Du kannst deine eigenen Rechte nur bearbeiten, wenn du weitergehende Rechte hast", 'warning')
+                        flask.flash("Du kannst deine eigenen Rechte nur bearbeiten, wenn du weitergehende Rechte hast.", 'warning')
                     elif current_user.is_manager_land and current_user.manage_land == user.manage_land:
+                        permissions_altered = True
                         user.is_manager_land = form.is_manager_land.data
                     else:
                         flask.flash(f"Du hast keine Berechtigung, Rechte für das Land {user.manage_land.name} zu vergeben.", 'warning')
@@ -314,6 +319,7 @@ def user(_id):
                 # updated managed land
                 if form.manage_land_id.data != user.manage_land_id:
                     user.manage_land_id = form.manage_land_id.data
+                    permissions_altered = True
 
                     # reset permission if land changed
                     if current_user.is_superuser:
@@ -327,19 +333,22 @@ def user(_id):
                 # group manager privilege can be altered by superusers or land managers
                 if form.is_manager_group.data != user.is_manager_group:
                     if current_user.is_superuser:
+                        permissions_altered = True
                         user.is_manager_group = form.is_manager_group.data
                     elif current_user.is_manager_land and current_user.manage_land == user.manage_land:
+                        permissions_altered = True
                         user.is_manager_group = form.is_manager_group.data
                     elif current_user == user:
-                        flask.flash("Du kannst deine eigenen Rechte nur bearbeiten, wenn du weitergehende Rechte hast", 'warning')
+                        flask.flash("Du kannst deine eigenen Rechte nur bearbeiten, wenn du weitergehende Rechte hast.", 'warning')
                     elif current_user.is_manager_group and current_user.manage_group == user.manage_group:
+                        permissions_altered = True
                         user.is_manager_group = form.is_manager_group.data
                     else:
                         flask.flash(f"Du hast keine Berechtigung, Rechte für die Gruppe {user.manage_group.name} zu vergeben.", 'warning')
-                        flask.flash(f"{current_user.is_manager_land} / {current_user.manage_land} / {user.manage_land}")
 
                 # updated managed group
                 if form.manage_group_id.data != user.manage_group_id:
+                    permissions_altered = True
                     user.manage_group_id = form.manage_group_id.data
 
                     # remove permission, if group changed
@@ -353,6 +362,17 @@ def user(_id):
                         flask.flash("Durch die Änderung der Gruppe wurde die Freigabe entzogen.", 'warning')
                         user.is_manager_group = False
 
+                if permissions_altered:
+                    msg = Message(
+                        subject=f"[{current_app.config['APP_TITLE']}] Rechte angepasst",
+                        sender=f"{current_app.config['APP_TITLE']} <{current_app.config['MAIL_USERNAME']}>",
+                        recipients=[user.id],
+                        cc=[u.id for u in user.query_managers()],
+                        bcc=[u.id for u in User.query.filter(User.is_superuser)],
+                    )
+                    msg.body = render_template("mail/permissions_altered.txt", user=user)
+                    mail.send(msg)
+
             # create new user
             if _id == "new":
                 if User.query.get(form.id.data):
@@ -360,11 +380,24 @@ def user(_id):
                     return flask.redirect(flask.url_for('auth.user', _id="new"))
 
                 user.id = form.id.data
+                user.manage_group_id = form.manage_group_id.data
+                user.manage_land_id = form.manage_land_id.data
+
                 db.session.add(user)
                 db.session.commit()
 
+                msg = Message(
+                    subject=f"[{current_app.config['APP_TITLE']}] Neuer Account",
+                    sender=f"{current_app.config['APP_TITLE']} <{current_app.config['MAIL_USERNAME']}>",
+                    recipients=[user.id],
+                    cc=[u.id for u in user.query_managers()],
+                    bcc=[u.id for u in User.query.filter(User.is_superuser)],
+                )
+                msg.body = render_template("mail/hello.txt", user=user)
+                mail.send(msg)
+
                 flask.flash(f"Account {user.id} wurde angelegt.", "success")
-                return flask.redirect(flask.url_for('auth.user', _id=user.id))
+                return flask.redirect(flask.url_for('auth.login', _id=user.id))
 
             # save account
             db.session.commit()

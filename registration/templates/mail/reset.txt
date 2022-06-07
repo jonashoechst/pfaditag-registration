@@ -1,8 +1,7 @@
-Hallo {{ user.name }},
-            
+{% extends "mail/base.txt" %}
+
+{% block content %}
 Du oder jemand anderes möchte dein Passwort zurücksetzen. Um das zu bestätigen und dein Passwort zurückzusetzen, klicke bitte auf den folgenden Link:
 
 {{ url_for('auth.reset', username=user.id, token=user.token, _external=True) }}
-
-Gut Pfad
-das {{ config['APP_TITLE'] }}-Team
+{% endblock %}

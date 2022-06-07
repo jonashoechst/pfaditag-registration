@@ -20,6 +20,12 @@ class Land(db.Model):
     def __repr__(self):
         return f'<Land {self.id} ({self.name})>'
 
+    def query_managers(self):
+        return User.query.filter(
+            (User.is_superuser) |
+            (User.is_manager_land & (User.manage_land_id == self.id))
+        )
+
 
 class Region(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -57,6 +63,12 @@ class Group(db.Model):
     @property
     def display_name(self):
         return f'{self.id}, Land {self.land.name}, Stamm {self.name}, {self.city}'
+
+    def query_managers(self):
+        return User.query.filter(
+            (User.is_superuser) |
+            (User.is_manager_land & (User.manage_land_id == self.land_id))
+        )
 
 
 class Event(db.Model):
@@ -112,6 +124,7 @@ class User(UserMixin, db.Model):
         return f'<User {self.id} ({self.name})>'
 
     def query_groups(self) -> List[Group]:
+        '''Returns a list of groups the user can manage'''
         groups = []
 
         if self.is_manager_group and self.manage_group_id:
@@ -128,6 +141,7 @@ class User(UserMixin, db.Model):
         return groups
 
     def query_events(self) -> List[Event]:
+        '''Returns a list of events that the user is allowed to manage'''
         events = []
 
         if self.is_manager_group and self.manage_group_id:
@@ -145,6 +159,7 @@ class User(UserMixin, db.Model):
         return events
 
     def query_lands(self) -> List[Land]:
+        '''Returns a list of lands the user can manage'''
         lands = []
 
         if self.is_manager_land and self.manage_land_id:
@@ -157,6 +172,7 @@ class User(UserMixin, db.Model):
         return lands
 
     def query_users(self) -> List:
+        '''Returns as list of users this user can manage'''
         users = [self]
 
         if self.is_manager_land and self.manage_land_id:
@@ -169,6 +185,15 @@ class User(UserMixin, db.Model):
                     users.append(user)
 
         return users
+
+    def query_managers(self) -> List:
+        '''Returns a list of users that can manage this user'''
+        return User.query.filter(
+            # all managers of the same land
+            (User.is_manager_land & (User.manage_land_id == self.manage_land_id)) |
+            # all managers of the group's land
+            (User.is_manager_land & (User.manage_land_id == self.manage_group.land_id))
+        )
 
     def set_token(self, validity: datetime.timedelta = datetime.timedelta(days=1)) -> str:
         self.token = secrets.token_urlsafe(32)
@@ -186,12 +211,12 @@ class User(UserMixin, db.Model):
 
         return False
 
-    @property
+    @ property
     def has_permissions(self) -> bool:
         return (self.is_superuser or self.is_manager_land or self.is_manager_group)
 
 
-@event.listens_for(Group.__table__, 'after_create')
+@ event.listens_for(Group.__table__, 'after_create')
 def create_departments(*args, **kwargs):
     with open("etc/group_list.csv") as group_list:
         group_reader = csv.reader(group_list, dialect='excel', delimiter=';')

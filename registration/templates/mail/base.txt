@@ -1,0 +1,5 @@
+Hallo {{ user.name }},  
+{% block content %}
+{% endblock %}
+Gut Pfad
+das {{ config['APP_TITLE'] }}-Team
