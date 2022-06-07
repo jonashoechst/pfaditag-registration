@@ -7,3 +7,4 @@ Bootstrap-Flask>=2.0.2
 flask-login>=0.6.0
 email_validator>=1.2.0
 flask-mail>=0.9.1
+python-dotenv>=0.20.0
