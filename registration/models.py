@@ -1,22 +1,37 @@
+import csv
 import datetime
 import secrets
 from typing import List
 
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import event
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
-db = SQLAlchemy()
+from . import db
 
 
 class Land(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True)
-    groups = db.relationship('Group', backref='land')
-    users = db.relationship('User', backref='land')
+    groups = db.relationship('Group', back_populates='land')
+    regions = db.relationship('Region', back_populates='land')
+    users = db.relationship('User', back_populates='manage_land')
 
     def __repr__(self):
         return f'<Land {self.id} ({self.name})>'
+
+
+class Region(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), index=True)
+
+    land_id = db.Column(db.Integer, db.ForeignKey('land.id'))
+    land = db.relationship("Land", back_populates="regions")
+
+    groups = db.relationship('Group', back_populates='region')
+
+    def __repr__(self):
+        return f'<Region {self.id} ({self.name})>'
 
 
 class Group(db.Model):
@@ -29,10 +44,19 @@ class Group(db.Model):
     website = db.Column(db.String(64))
 
     land_id = db.Column(db.Integer, db.ForeignKey('land.id'))
-    events = db.relationship('Event', backref='group')
+    land = db.relationship("Land", back_populates="groups")
+
+    region_id = db.Column(db.Integer, db.ForeignKey('region.id'))
+    region = db.relationship("Region", back_populates="groups")
+
+    events = db.relationship('Event', back_populates='group')
 
     def __repr__(self):
         return f'<Group {self.id} ({self.name})>'
+
+    @property
+    def display_name(self):
+        return f'{self.id}, Land {self.land.name}, Stamm {self.name}, {self.city}'
 
 
 class Event(db.Model):
@@ -48,7 +72,9 @@ class Event(db.Model):
     date = db.Column(db.Date, index=True, default=datetime.date(2022, 9, 24))
     time = db.Column(db.Time, index=True, default=datetime.time(00, 00))
     description = db.Column(db.String(2000))
+
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
+    group = db.relationship("Group", back_populates="events")
 
     def __repr__(self):
         return f'<Event {self.id} ({self.title})>'
@@ -163,3 +189,47 @@ class User(UserMixin, db.Model):
     @property
     def has_permissions(self) -> bool:
         return (self.is_superuser or self.is_manager_land or self.is_manager_group)
+
+
+@event.listens_for(Group.__table__, 'after_create')
+def create_departments(*args, **kwargs):
+    with open("etc/group_list.csv") as group_list:
+        group_reader = csv.reader(group_list, dialect='excel', delimiter=';')
+        next(group_reader)
+        for _id, _land, _region, _name, _ort, *_ in group_reader:
+            try:
+                _name = _name.removeprefix("VCP ")
+                _name = _name.removeprefix("Stamm ")
+                _name = _name.strip()
+
+                group = Group(
+                    id=int(_id),
+                    name=_name.strip(),
+                    zip=_ort[:5],
+                    city=_ort[6:],
+                    land_id=int(_id[:2]),
+                    region_id=int(_id[:4]),
+                )
+                db.session.add(group)
+
+                if Land.query.filter_by(id=group.land_id).count() == 0:
+                    land = Land(
+                        id=group.land_id,
+                        name=_land.strip(),
+                    )
+                    db.session.add(land)
+
+                if Region.query.filter_by(id=group.region_id).count() == 0:
+                    region = Region(
+                        id=group.region_id,
+                        name=_region.strip(),
+                        land_id=group.land_id,
+                    )
+                    db.session.add(region)
+
+                db.session.commit()
+
+            except ValueError:
+                pass
+
+    db.session.commit()

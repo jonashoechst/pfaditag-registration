@@ -273,7 +273,7 @@ def user(_id):
             flask.flash(f"Du hast keine Berechtigung, diesen Account zu bearbeiten. {current_user.query_users()}", 'alert')
             return flask.redirect(redirect_url())
 
-    form.manage_group_id.choices = [(0, "")] + [(g.id, g.name) for g in Group.query.all()]
+    form.manage_group_id.choices = [(0, "")] + [(g.id, g.display_name) for g in Group.query.all()]
     form.manage_land_id.choices = [(0, "")] + [(l.id, l.name) for l in Land.query.all()]
 
     # POST: delete user

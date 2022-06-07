@@ -154,7 +154,7 @@ def events_edit(_id):
             flask.flash(f"Du bist nicht berechtigt, diese Aktion zu bearbeiten.", "danger")
             return flask.redirect(redirect_url('admin.events'))
 
-    form.group_id.choices = [(g.id, g.name) for g in current_user.query_groups()]
+    form.group_id.choices = [(g.id, g.display_name) for g in current_user.query_groups()]
 
     # POST: delete
     if form.delete.data:

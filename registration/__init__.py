@@ -7,6 +7,7 @@ from flask import Flask
 from flask_migrate import Migrate
 from flask_bootstrap import Bootstrap5
 from flask_login import LoginManager
+from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 
 locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
@@ -15,6 +16,8 @@ logging.basicConfig(level=logging.DEBUG)
 migrate = Migrate()
 login_manager = LoginManager()
 mail = Mail()
+db = SQLAlchemy()
+
 
 def create_app():
     app = Flask(__name__)
@@ -22,7 +25,6 @@ def create_app():
 
     Bootstrap5(app)
 
-    from registration.models import db
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
@@ -39,4 +41,5 @@ def create_app():
         from registration.auth import auth_bp
         app.register_blueprint(auth_bp)
 
+        db.create_all()
         return app

@@ -19,7 +19,7 @@
             <th scope="row">{{ group.name }}</th>
             <td>{{ group.city }}</td>
             <td>{{ group.land.name }}</td>
-            <td><a href="{{ group.website }}">{{ group.website }}</a></td>
+            <td><a href="{{ group.website if group.website }}" target="_blank">{{ group.website if group.website }}</a></td>
             <td><a href="{{ url_for('admin.groups_edit', _id=group.id) }}"><i class="fa-solid fa-pen-to-square"></i></a>
             </td>
         </tr>
