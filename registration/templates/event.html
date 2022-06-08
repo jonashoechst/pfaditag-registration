@@ -14,9 +14,6 @@
     <div class="col-sm-6 first-column">
         <h1>
             {{ event.title }}
-            {% if current_user.is_authenticated and event in current_user.query_events() %}
-                <a href="{{ url_for('admin.events_edit', _id=event.id) }}"><i class="fa-solid fa-pen-to-square"></i></a>
-            {% endif %}
         </h1>
         <h3>Stamm {{ event.group.name }}, {{ event.group.city }}</h3>
 

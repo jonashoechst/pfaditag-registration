@@ -62,7 +62,11 @@ class Group(db.Model):
 
     @property
     def display_name(self):
-        return f'{self.id}, Land {self.land.name}, Stamm {self.name}, {self.city}'
+        return f'{self.land.name}, Stamm {self.name}, {self.city} ({self.id})'
+
+    @property
+    def short_name(self):
+        return f'Stamm {self.name}, {self.city}'
 
     def query_managers(self):
         return User.query.filter(

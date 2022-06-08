@@ -1,7 +1,8 @@
+import datetime
 import flask
+import icalendar
 from . import models
 from flask import current_app
-
 
 public_bp = flask.Blueprint('public', __name__, url_prefix='', static_folder='static')
 
@@ -18,3 +19,39 @@ def index():
 def event(event_id):
     event = models.Event.query.get(event_id)
     return flask.render_template('event.html', title=current_app.config["APP_TITLE"], event=event)
+
+
+@public_bp.route('/event/<int:event_id>.ics')
+def event_ics(event_id):
+    event = models.Event.query.get(event_id)
+
+    cal_event = icalendar.Event()
+
+    cal_event.add('summary', event.title)
+    cal_event.add('dtstart',  datetime.datetime.combine(event.date, event.time))
+    cal_event.add('dtend', datetime.datetime.combine(event.date, event.time))
+    cal_event.add('dtstamp', datetime.datetime.now())
+    cal_event['description'] = event.description + "\n"
+
+    if event.email:
+        cal_event['description'] += "\nE-Mail: " + event.email
+    if event.tel:
+        cal_event['description'] += "\nTelefon: " + event.tel
+    if event.group.website:
+        cal_event['description'] += "\nWebsite: " + event.group.website
+
+    cal_event['organizer'] = icalendar.vCalAddress(f"mailto:{event.email}")
+    cal_event['organizer'].params['cn'] = icalendar.vText(event.group.short_name)
+
+    cal_event['location'] = icalendar.vText(event.group.city)
+    cal_event['geo'] = f"{event.lat},{event.lon}"
+
+    cal_event['url'] = icalendar.vUri(flask.url_for('public.event', event_id=event.id, _external=True))
+
+    cal = icalendar.Calendar()
+    cal.add_component(cal_event)
+
+    response = flask.Response(cal.to_ical(), mimetype='text/calendar')
+    response.headers["Content-Disposition"] = f"attachment; filename={event.title}.ics"
+
+    return response
