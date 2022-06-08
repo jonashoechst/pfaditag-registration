@@ -55,16 +55,23 @@
     var marker;
 
     // add marker if lat/lon is set
-    lat = $('#lat').val();
-    lng = $('#lon').val();
-
-    if (lat && lng) {
-        marker = L.marker([lat, lng], { icon: eventStyle }).addTo(map);
-        map.setView([lat, lng], 11);
-    } else {
-        map.setView([51.3, 10.7], 6);
-        locator.start();
+    function update_marker() {
+        lat = $('#lat').val();
+        lng = $('#lon').val();
+        
+        if (lat && lng) {
+            if (marker) {
+                marker.setLatLng([lat, lng]);
+            } else {
+                marker = L.marker([lat, lng], { icon: eventStyle }).addTo(map);
+            }
+            zoom = map.getZoom();
+            map.setView([lat, lng], map.getZoom() ? map.getZoom() : 13);
+        } else {
+            map.setView([51.3, 10.7], 6);
+        }
     }
+    update_marker()
 
     // allow user to click on map to set lat/lon
     map.on('click', function (e) {
@@ -79,6 +86,10 @@
         $('#lat').val(e.latlng.lat);
         $('#lon').val(e.latlng.lng);
     });
+
+    // update marker position on form change
+    $('#lat').on('input', update_marker);
+    $('#lon').on('input', update_marker);
 
 </script>
 {% endblock %}

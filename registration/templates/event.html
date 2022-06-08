@@ -20,23 +20,7 @@
         </h1>
         <h3>Stamm {{ event.group.name }}, {{ event.group.city }}</h3>
 
-        <div><b>Wann? </b>{{ event.date.strftime('%A, %d.%m.%Y') }}, {{event.time.strftime('%H:%M')}} Uhr</div>
-        <div>
-        {% for p in event.description.split('\n') %}
-            <p>{{p}}</p>
-        {% endfor %}
-        </div>
-        {% if event.email %}
-        <div><b>E-Mail: </b><a href='mailto:{{ event.email }}'>{{ event.email }}</a></div>
-        {% endif %}
-
-        {% if event.tel %}
-        <div><b>Telefon: </b><a href='tel:{{ event.tel.replace(" ", "") }}' target='_blank'>{{ event.tel }}</a></div>
-        {% endif %}
-
-        {% if event.group.website %}
-        <div><b>Website: </b><a href='{{ event.group.website }}' target='_blank'>{{ event.group.website }}</a></div>
-        {% endif %}
+        {% include 'event_details.html' %}
     </div>
     <div class="col-sm-6 second-column">
         <div class="my-3 h-100">
