@@ -4,7 +4,7 @@
 {{ super() }}
 <style>
     #map {
-        height: 500px;
+        min-height: 400px;
     }
 </style>
 {% endblock %}
@@ -12,7 +12,12 @@
 {% block content %}
 <div class="row">
     <div class="col-sm-6 first-column">
-        <h1>{{ event.title }}</h1>
+        <h1>
+            {{ event.title }}
+            {% if current_user.is_authenticated and event in current_user.query_events() %}
+                <a href="{{ url_for('admin.events_edit', _id=event.id) }}"><i class="fa-solid fa-pen-to-square"></i></a>
+            {% endif %}
+        </h1>
         <h3>Stamm {{ event.group.name }}, {{ event.group.city }}</h3>
 
         <div><b>Wann? </b>{{ event.date.strftime('%A, %d.%m.%Y') }}, {{event.time.strftime('%H:%M')}} Uhr</div>
@@ -34,7 +39,9 @@
         {% endif %}
     </div>
     <div class="col-sm-6 second-column">
-        <div id="map"></div>
+        <div class="my-3 h-100">
+            <div id="map" class="h-100"></div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -56,7 +63,6 @@
 
     var eventStyle = L.VectorMarkers.icon({ icon: 'circle', markerColor: 'var(--primary-color)'});
     var marker = L.marker([{{ event.lat }}, {{ event.lon }}], { icon: eventStyle }).addTo(map);
-
-    locator.start();
+    map.setView([{{ event.lat }}, {{ event.lon }}], 13);
 </script>
 {% endblock %}

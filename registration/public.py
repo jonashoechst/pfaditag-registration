@@ -6,12 +6,6 @@ from flask import current_app
 public_bp = flask.Blueprint('public', __name__, url_prefix='', static_folder='static')
 
 
-def redirect_url(default='public.index'):
-    return flask.request.args.get('next') or \
-        flask.request.referrer or \
-        flask.url_for(default)
-
-
 @public_bp.route('/index')
 @public_bp.route('/')
 def index():

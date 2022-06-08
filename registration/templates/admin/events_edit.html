@@ -5,7 +5,7 @@
 {{ super() }}
 <style>
     #map {
-        height: 500px;
+        min-height: 400px;
     }
 </style>
 {% endblock %}
@@ -16,6 +16,7 @@
         <h1>
             {% if form.title.data %}
             Aktion bearbeiten
+            <a href="{{ url_for('public.event', event_id=_id) }}"><i class="fa-solid fa-link"></i></a>
             {% else %}
             Neue Aktion anlegen
             {% endif %}
@@ -28,7 +29,9 @@
         {{ wtf.render_form(form, button_map={'submit':'success', 'delete': 'danger'}) }}
     </div>
     <div class="col-sm-6 second-column">
-        <div id="map"></div>
+        <div class="my-3 h-100">
+            <div id="map" class="h-100"></div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -48,6 +51,7 @@
     }).addTo(map);
     var locator = L.control.locate({ locateOptions: { maxZoom: 9 } }).addTo(map);
 
+    var eventStyle = L.VectorMarkers.icon({ icon: 'circle', markerColor: 'var(--primary-color)'});
     var marker;
 
     // add marker if lat/lon is set
@@ -55,7 +59,7 @@
     lng = $('#lon').val();
 
     if (lat && lng) {
-        marker = L.marker([lat, lng]).addTo(map);
+        marker = L.marker([lat, lng], { icon: eventStyle }).addTo(map);
         map.setView([lat, lng], 11);
     } else {
         map.setView([51.3, 10.7], 6);
@@ -66,7 +70,7 @@
     map.on('click', function (e) {
         // update marker position or create new one
         if (!window.marker) {
-            window.marker = L.marker(e.latlng).addTo(map);
+            window.marker = L.marker(e.latlng, { icon: eventStyle }).addTo(map);
         } else {
             window.marker.setLatLng(e.latlng);
         }

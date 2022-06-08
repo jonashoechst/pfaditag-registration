@@ -10,6 +10,7 @@ from wtforms import (
     SelectField,
     DateField,
     TimeField,
+    HiddenField,
 )
 from wtforms.validators import (
     DataRequired,
@@ -20,7 +21,6 @@ from wtforms.validators import (
 
 from . import models
 from .models import db
-from .public import redirect_url
 
 current_user: models.User
 
@@ -47,14 +47,28 @@ class EventForm(FlaskForm):
     group_id = SelectField('Stamm', validators=[DataRequired()], coerce=int)
     title = StringField('Aktionstitel', validators=[DataRequired()])
     email = EmailField('E-Mail Adresse', validators=[Optional(), Email()])
-    tel = TelField('Telefonnummer', validators=[Optional()])
+    tel = TelField(
+        'Telefonnummer',
+        validators=[Optional()],
+        description="Die E-Mail Adresse und Telefonnummer werden öffentlich angezeigt."
+    )
 
     date = DateField('Aktionstag', validators=[DataRequired()])
     time = TimeField('Startzeit', validators=[DataRequired()])
-    description = TextAreaField('Beschreibung', validators=[Optional()])
+    description = TextAreaField(
+        'Beschreibung',
+        validators=[Optional()],
+        render_kw={'rows': '12'},
+        description="Versuche einen kurzen Text zu schreiben, der die Aktion beschreibt und auch nicht-Pfadfindern gut erklärt, was ihr macht."
+    )
 
-    lat = StringField("Treffpunkt (lat)")
-    lon = StringField("Treffpunkt (long)")
+    lat = StringField(
+        "Treffpunkt (Latitude)",
+    )
+    lon = StringField(
+        "Treffpunkt (Longitude)",
+        description="Die Koordinaten des Treffpunktes kannst du durch klicken auf die Karte eingeben.",
+    )
 
     submit = SubmitField('Speichern')
     delete = SubmitField('Löschen')
@@ -84,14 +98,14 @@ def groups_edit(_id):
             db.session.add(group)
         else:
             flask.flash('Du bist nicht berechtigt, einen neuen Stamm anzulegen.', 'danger')
-            return flask.redirect(redirect_url('admin.groups'))
+            return flask.redirect(flask.request.referrer or flask.url_for('admin.groups'))
     else:
         group = models.Group.query.get(_id)
 
         # check if user is allows to edit event
         if group not in current_user.query_groups():
             flask.flash("Du bist nicht berechtigt, diese Gruppe zu bearbeiten.", "danger")
-            return flask.redirect(redirect_url('admin.groups'))
+            return flask.redirect(flask.request.referrer or flask.url_for('admin.groups'))
 
     # form.land_id.choices = models.Land.query.all()
     form.land_id.choices = [(l.id, l.name) for l in current_user.query_lands()]
@@ -151,8 +165,8 @@ def events_edit(_id):
 
         # check if user is allows to edit event
         if event not in current_user.query_events():
-            flask.flash(f"Du bist nicht berechtigt, diese Aktion zu bearbeiten.", "danger")
-            return flask.redirect(redirect_url('admin.events'))
+            flask.flash("Du bist nicht berechtigt, diese Aktion zu bearbeiten.", "danger")
+            return flask.redirect(flask.request.referrer or flask.url_for('admin.events'))
 
     form.group_id.choices = [(g.id, g.display_name) for g in current_user.query_groups()]
 
@@ -179,7 +193,7 @@ def events_edit(_id):
             db.session.commit()
             flask.flash(f"Aktion '{event.title}' wurde gespeichert.", "success")
 
-            return flask.redirect(redirect_url('admin.events'))
+            return flask.redirect(flask.url_for('admin.events_edit', _id=event.id))
 
     # GET: initialize form values
     for field_id, field in form._fields.items():

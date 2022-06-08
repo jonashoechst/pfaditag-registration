@@ -46,17 +46,21 @@
                                 Stammeskoodinator:in {{ current_user.manage_group.name }}
                             {% endif %}
                             </h6>
-                            <li><a class="dropdown-item" href="{{url_for('auth.users')}}">Übersicht Accounts</a></li>
-                            <li><a class="dropdown-item" href="{{url_for('admin.groups')}}">Übersicht Stämme</a></li>
-                            <li><a class="dropdown-item" href="{{url_for('admin.events')}}">Übersicht Aktionen</a></li>
+                            <li><a class="dropdown-item" href="{{url_for('auth.users')}}"><i class="fa-solid fa-users"></i> Übersicht Accounts</a></li>
+                            <li><a class="dropdown-item" href="{{url_for('admin.groups')}}"><i class="fa-solid fa-group-arrows-rotate"></i> Übersicht Stämme</a></li>
+                            <li><a class="dropdown-item" href="{{url_for('admin.events')}}"><i class="fa-solid fa-calendar-days"></i> Übersicht Aktionen</a></li>
                             {% if current_user.is_manager_group and current_user.manage_group %}
                                 <div class="dropdown-divider"></div>
                                 <h6 class="dropdown-header">Stamm {{current_user.manage_group.name}}</h6>
-                                <li><a class="dropdown-item" href="{{url_for('admin.groups_edit', _id=current_user.manage_group_id)}}">Stamm bearbeiten</a></li>
+                                <li><a class="dropdown-item" href="{{url_for('admin.groups_edit', _id=current_user.manage_group_id)}}"><i class="fa-solid fa-pen-to-square"></i> Stamm bearbeiten</a></li>
+                                {% for event in current_user.manage_group.events %}
+                                    <li><a class="dropdown-item" href="{{url_for('admin.events_edit', _id=event.id)}}"><i class="fa-solid fa-calendar-day"></i> Aktion '{{ event.title }}' bearbeiten</a></li>
+                                {% endfor %}
+                                <li><a class="dropdown-item" href="{{url_for('admin.events_edit', _id='new')}}"><i class="fa-solid fa-plus"></i> Neue Aktion</a></li>
                             {% endif %}
                             <div class="dropdown-divider"></div>
-                            <li><a class="dropdown-item" href="{{url_for('auth.user', _id=current_user.id)}}">Account bearbeiten</a></li>
-                            <li><a class="dropdown-item" href="{{url_for('auth.logout')}}">Logout</a></li>
+                            <li><a class="dropdown-item" href="{{url_for('auth.user', _id=current_user.id)}}"><i class="fa-solid fa-user"></i> Account bearbeiten</a></li>
+                            <li><a class="dropdown-item" href="{{url_for('auth.logout')}}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a></li>
                         </ul>
                     {% else %}
                         Account

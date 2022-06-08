@@ -31,8 +31,6 @@ from .models import (
     Land,
 )
 
-from .public import redirect_url
-
 # Blueprint Configuration
 auth_bp = flask.Blueprint('auth', __name__, static_folder='static')
 current_user: User
@@ -242,7 +240,7 @@ def user(_id):
 
     if not current_user and _id != "new":
         flask.flash("Du bist nicht eingeloggt.", 'alert')
-        return flask.redirect(redirect_url())
+        return flask.redirect(flask.url_for('auth.login'))
 
     # create new profile if keyword is given
     if _id == "new":
@@ -271,7 +269,7 @@ def user(_id):
 
         if user not in current_user.query_users():
             flask.flash(f"Du hast keine Berechtigung, diesen Account zu bearbeiten. {current_user.query_users()}", 'alert')
-            return flask.redirect(redirect_url())
+            return flask.redirect(flask.url_for('admin.accounts'))
 
     form.manage_group_id.choices = [(0, "")] + [(g.id, g.display_name) for g in Group.query.all()]
     form.manage_land_id.choices = [(0, "")] + [(l.id, l.name) for l in Land.query.all()]
@@ -402,7 +400,7 @@ def user(_id):
             # save account
             db.session.commit()
             flask.flash(f"Account {user.id} wurde gespeichert.", "success")
-            return flask.redirect(redirect_url())
+            return flask.redirect(flask.url_for('auth.user', _id=user.id))
 
     # initialize form values
     for field_id, field in dict(form._fields).items():
