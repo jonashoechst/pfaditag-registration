@@ -10,7 +10,6 @@ from wtforms import (
     SelectField,
     DateField,
     TimeField,
-    HiddenField,
 )
 from wtforms.validators import (
     DataRequired,
@@ -142,15 +141,6 @@ def groups_edit(_id):
     return flask.render_template('generic_form.html', form=form, _id=_id, title=_title)
 
 
-@admin_bp.route('/events')
-@login_required
-def events():
-    if not current_user.has_permissions:
-        flask.flash("Du hast noch keine Berechtigungen erteilt bekommen.")
-
-    return flask.render_template('admin/events.html')
-
-
 @admin_bp.route('/events/edit/<_id>', methods=['GET', 'POST'])
 @login_required
 def events_edit(_id):
@@ -166,7 +156,7 @@ def events_edit(_id):
         # check if user is allows to edit event
         if event not in current_user.query_events():
             flask.flash("Du bist nicht berechtigt, diese Aktion zu bearbeiten.", "danger")
-            return flask.redirect(flask.request.referrer or flask.url_for('admin.events'))
+            return flask.redirect(flask.request.referrer or flask.url_for('public.events'))
 
     form.group_id.choices = [(g.id, g.display_name) for g in current_user.query_groups()]
 
@@ -175,7 +165,7 @@ def events_edit(_id):
         db.session.delete(event)
         db.session.commit()
         flask.flash(f"Aktion '{event.title}' erfolgreich gelöscht.", "success")
-        return flask.redirect(flask.url_for('admin.events'))
+        return flask.redirect(flask.url_for('public.events'))
 
     # POST: submit
     if form.submit.data:

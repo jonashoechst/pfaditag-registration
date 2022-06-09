@@ -24,23 +24,4 @@
     </div>
 {% endif %}
 
-<div class="btn-group my-3">
-    <a href="{{ url_for('public.event', event_id=event.id) }}" class="btn btn-outline-primary"><i class="fa-solid fa-link"></i></a>
-    <a href="{{ url_for('public.event_ics', event_id=event.id) }}" class="btn btn-outline-primary"><i class="fa-solid fa-calendar"></i></a>
-</div>
-<div class="btn-group my-3">
-    {% if event.email %}
-        <a href="mailto:{{ event.email }}" class="btn btn-outline-primary"><i class="fa-solid fa-at"></i></a>
-    {% endif %}
-    {% if event.tel %}
-        <a href='tel:{{ event.tel.replace(" ", "") }}' class="btn btn-outline-primary"><i class="fa-solid fa-phone"></i></a>
-    {% endif %}
-    {% if event.group.website %}
-        <a href="{{ event.group.website }}" target="_blank" class="btn btn-outline-primary"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    {% endif %}
-</div>
-    {% if current_user.is_authenticated and event in current_user.query_events() %}
-<div class="btn-group my-3">
-    <a href="{{ url_for('admin.events_edit', _id=event.id) }}" class="btn btn-outline-primary"><i class="fa-solid fa-pen-to-square"></i></a>
-</div>
-    {% endif %}
+{% include 'buttons/event_buttons.html' %}

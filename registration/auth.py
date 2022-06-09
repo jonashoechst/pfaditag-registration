@@ -32,7 +32,7 @@ from .models import (
 )
 
 # Blueprint Configuration
-auth_bp = flask.Blueprint('auth', __name__, static_folder='static')
+auth_bp = flask.Blueprint('auth', __name__, url_prefix='/auth', static_folder='static')
 current_user: User
 
 
@@ -413,20 +413,20 @@ def user(_id):
     return flask.render_template('generic_form.html', form=form, _id=_id, title=_title)
 
 
-@ auth_bp.route('/users')
-@ login_required
+@auth_bp.route('/users')
+@login_required
 def users():
     return flask.render_template("auth/users.html")
 
 
-@ login_manager.user_loader
+@login_manager.user_loader
 def load_user(user_id):
     if user_id is not None:
         return User.query.get(user_id)
     return None
 
 
-@ login_manager.unauthorized_handler
+@login_manager.unauthorized_handler
 def unauthorized():
     flask.flash('Du musst angemeldet sein, um diese Seite aufrufen zu können.', 'info')
     return flask.redirect(flask.url_for('auth.login'))

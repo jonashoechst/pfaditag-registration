@@ -1,0 +1,10 @@
+<div class="btn-group">
+    {% if group.website %}
+    <a href="{{group.website}}" class="btn btn-outline-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+    {% endif %}
+</div>
+{% if group in current_user.query_groups() %}
+<div class="btn-group">
+    <a href="{{ url_for('admin.groups_edit', _id=group.id) }}" class="btn btn-outline-secondary"><i class="fa-solid fa-pen-to-square"></i></a>
+</div>
+{% endif %}

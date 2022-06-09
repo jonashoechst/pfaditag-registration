@@ -66,7 +66,7 @@ class Group(db.Model):
 
     @property
     def short_name(self):
-        return f'Stamm {self.name}, {self.city}'
+        return f'{self.name}, {self.city}'
 
     def query_managers(self):
         return User.query.filter(

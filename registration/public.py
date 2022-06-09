@@ -3,6 +3,7 @@ import flask
 import icalendar
 from . import models
 from flask import current_app
+from flask_login import current_user
 
 public_bp = flask.Blueprint('public', __name__, url_prefix='', static_folder='static')
 
@@ -13,6 +14,16 @@ def index():
     _events = models.Event.query.all()
     _groups = models.Group.query.all()
     return flask.render_template('index.html', title=current_app.config["APP_TITLE"], events=_events, groups=_groups)
+
+
+@public_bp.route('/events')
+def events():
+    if current_user.is_authenticated:
+        events = current_user.query_events()
+    else:
+        events = models.Event.query.all()
+
+    return flask.render_template('admin/events.html', events=events)
 
 
 @public_bp.route('/event/<int:event_id>')
@@ -41,7 +52,7 @@ def event_ics(event_id):
         cal_event['description'] += "\nWebsite: " + event.group.website
 
     cal_event['organizer'] = icalendar.vCalAddress(f"mailto:{event.email}")
-    cal_event['organizer'].params['cn'] = icalendar.vText(event.group.short_name)
+    cal_event['organizer'].params['cn'] = icalendar.vText(f"Stamm {event.group.short_name}")
 
     cal_event['location'] = icalendar.vText(event.group.city)
     cal_event['geo'] = f"{event.lat},{event.lon}"
