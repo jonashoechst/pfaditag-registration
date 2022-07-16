@@ -14,7 +14,7 @@
             <link rel="stylesheet" href="{{url_for('.static', filename='pfaditag.css')}}">
         {% endblock %}
 
-        <title>{% block title %}PfadiTag{{ " | "+title if title else "" }}{% endblock %}</title>
+        <title>{% block title %}{{ config['APP_TITLE'] }}{{ " | "+title if title else "" }}{% endblock %}</title>
         {% endblock %}
     </head>
     <body class="d-flex flex-column h-100">
@@ -79,30 +79,58 @@
         {% endblock %}
 
         <main class="flex-shrink-0">
-        <div class="container mt-5">
-        {% block messages %}
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category if category in ['success', 'danger', 'warning', 'info', 'light', 'dark', 'secondary'] else 'info'  }}"
-            role="alert">
-            {{ message }}
-        </div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
+
+        {% block opener %}
         {% endblock %}
 
-        <!-- Your page content -->
-        {% block content %}
-        {% endblock %}
-        </div>
+            <div class="container mt-5">
+
+            {% block messages %}
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="alert alert-{{ category if category in ['success', 'danger', 'warning', 'info', 'light', 'dark', 'secondary'] else 'info'  }}"
+                            role="alert">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            {% endblock %}
+
+            <!-- Your page content -->
+            {% block content %}
+            {% endblock %}
+            </div>
         </main>
 
         {% block footer %}
         <footer class="footer mt-auto py-3 bg-light">
             <div class="container">
-                <span class="text-muted">&copy; VCP e.V.</span>
+                <div class="row my-3 align-items-center h-100">
+                    <div class="col-sm py-2">
+                        <span>&copy; VCP e.V.</span>
+                    </div>
+                    <div class="col-sm py-2">
+                        <a href="">Impressum</a><br>
+                        <a href="">Datenschutzerklärung</a>
+                    </div>
+                    <div class="col-sm py-2">
+                        <a href="https://www.youtube.com/user/VCPde"><i class="fa-brands fa-youtube lead"></i></a>
+                        <a href="https://vimeo.com/vcp"><i class="fa-brands fa-vimeo lead"></i></a>
+                        <a href="https://www.facebook.com/vcp.de"><i class="fa-brands fa-facebook lead"></i></a>
+                        <a href="https://www.instagram.com/vcp_de/"><i class="fa-brands fa-instagram lead"></i></a>
+                        <a href="https://www.vcp.de/"><i class="fa fa-globe lead"></i></a>
+                        <a href="mailto:hallo@pfaditag.de"><i class="fa fa-envelope lead"></i></a>
+                    </div>
+                    <div class="col-sm py-2">
+                        <div class="container">
+                            <a href="https://www.vcp.de" target="_blank">
+                                <img src="static/VCP-WBM_VCP-Blau_RGB-crop.svg" style="width: 100%;">
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </footer>
         {% endblock %}

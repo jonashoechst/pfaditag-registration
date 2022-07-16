@@ -9,10 +9,52 @@
 </style>
 {% endblock %}
 
-{% block content %}
-<h1>{{ title }}</h1>
+{% block opener %}
+<section class="colored-block primary py-5" style="background-image: url('static/hero-2-bg.png'); background-repeat: no-repeat; background-position: right;">
+    <div class="container h-100" id="opener">
+        <div class="row align-items-center h-100">
+            <div class="col-sm-6 mx-auto">
+                <div class="container">
+                    <h1 class="display-4">{{ config['APP_TITLE'] }}</h1>
+                    <h2>... auf ins Abenteuer!</h2>
+                    <p class="lead">23. - 25. September 2022</p>
+                    <a class="btn btn-light" href="#intro">Pfadfinder*innen?</a>
+                </div>
+            </div>
+            <div class="col-sm-6 mx-auto">
+                <img src="static/heldin.png" class="img-fluid">
+            </div>
+        </div>
+        <div class="container p-3">
+            <p class="text-center lead">
+            Beim PfadiTag öffnen die Pfadfinderstämme des Verbandes Christlicher Pfadfinderinnen und Pfadfinder ihre Türen und laden Kinder & Jugendliche ein Pfadfinden auszuprobieren!
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}
 
-<div id="map"></div>
+{% block content %}
+<div id="intro" class="container py-5">
+    <div class="row align-items-center h-100">
+        <div class="col-sm-4 p-0">
+            <h1 class="text-break">Pfadfinder*innen?</h1>
+            <p>Draußen sein, gemeinsam kochen, am Feuer sitzen, unter Sternen einschlafen – das ist Pfadfinden.</p>
+        </div>
+        <div class="col-sm-8 p-0">
+            <div class="ratio ratio-16x9 pr-0">
+                <iframe src="https://www.youtube.com/embed/tiSduOOPS-c" title="YouTube video" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<div id="events" class="container p-0">
+    <h1 class="py-3">Aktionen zum Mitmachen</h1>
+    <div id="map" class="my-3"></div>
+</div>
 {% endblock %}
 
 {% block scripts %}
