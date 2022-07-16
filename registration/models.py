@@ -227,8 +227,8 @@ def create_departments(*args, **kwargs):
         next(group_reader)
         for _id, _land, _region, _name, _ort, *_ in group_reader:
             try:
-                _name = _name.removeprefix("VCP ")
-                _name = _name.removeprefix("Stamm ")
+                _name = _name[4:] if _name.startswith("VCP ") else _name
+                _name = _name[6:] if _name.startswith("Stamm ") else _name
                 _name = _name.strip()
 
                 group = Group(
