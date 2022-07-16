@@ -284,6 +284,9 @@ def user(_id):
     # POST: save user
     if form.submit.data:
         if form.validate_on_submit():
+            form.manage_group_id.data = form.manage_group_id.data if form.manage_group_id.data else None
+            form.manage_land_id.data = form.manage_land_id.data if form.manage_land_id.data else None
+
             user.name = form.name.data
             user.set_password(form.password.data)
 
@@ -377,9 +380,12 @@ def user(_id):
                     flask.flash(f"Der Account {form.id.data} existiert bereits.", 'warning')
                     return flask.redirect(flask.url_for('auth.user', _id="new"))
 
+                if User.query.count() == 0:
+                    user.is_superuser = True
+
                 user.id = form.id.data
-                user.manage_group_id = form.manage_group_id.data if form.manage_group_id.data else None
-                user.manage_land_id = form.manage_land_id.data if form.manage_land_id.data else None
+                user.manage_group_id = form.manage_group_id.data
+                user.manage_land_id = form.manage_land_id.data
 
                 db.session.add(user)
                 db.session.commit()
