@@ -1,2 +1,4 @@
 registration.pid
 ENV
+registration/__pycache__
+venv
