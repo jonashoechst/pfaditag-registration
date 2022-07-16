@@ -1,5 +1,6 @@
 import csv
 import datetime
+import logging
 import secrets
 from typing import List
 
@@ -129,6 +130,7 @@ class User(UserMixin, db.Model):
 
     def query_groups(self) -> List[Group]:
         '''Returns a list of groups the user can manage'''
+        logging.debug("%s.query_groups()", self)
         groups = []
 
         if self.is_manager_group and self.manage_group_id:
@@ -146,6 +148,7 @@ class User(UserMixin, db.Model):
 
     def query_events(self) -> List[Event]:
         '''Returns a list of events that the user is allowed to manage'''
+        logging.debug("%s.query_events()", self)
         events = []
 
         if self.is_manager_group and self.manage_group_id:
@@ -164,6 +167,7 @@ class User(UserMixin, db.Model):
 
     def query_lands(self) -> List[Land]:
         '''Returns a list of lands the user can manage'''
+        logging.debug("%s.query_lands()", self)
         lands = []
 
         if self.is_manager_land and self.manage_land_id:
@@ -177,6 +181,7 @@ class User(UserMixin, db.Model):
 
     def query_users(self) -> List:
         '''Returns as list of users this user can manage'''
+        logging.debug("%s.query_users()", self)
         users = [self]
 
         if self.is_manager_land and self.manage_land_id:
@@ -192,6 +197,7 @@ class User(UserMixin, db.Model):
 
     def query_managers(self) -> List:
         '''Returns a list of users that can manage this user'''
+        logging.debug("%s.query_managers()", self)
         if self.manage_group_id:
             return User.query.filter(
                 # all managers of the same land
@@ -224,6 +230,28 @@ class User(UserMixin, db.Model):
     @ property
     def has_permissions(self) -> bool:
         return (self.is_superuser or self.is_manager_land or self.is_manager_group)
+
+    def has_group_permission(self, group: Group):
+        '''Returns a boolean indicating the user has permissions to access the group'''
+        if self.is_superuser:
+            return True
+        if self.is_manager_land and self.manage_land_id == group.land_id:
+            return True
+        if self.is_manager_group and self.manage_group_id == group.id:
+            return True
+
+        return False
+
+    def has_event_permission(self, event: Event):
+        '''Returns a boolean indicating the user has permissions to access the group'''
+        if self.is_superuser:
+            return True
+        if self.is_manager_land and self.manage_land == event.group.land_id:
+            return True
+        if self.is_manager_group and self.manage_group_id == event.group_id:
+            return True
+
+        return False
 
 
 @ event.listens_for(Group.__table__, 'after_create')

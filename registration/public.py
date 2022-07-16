@@ -12,24 +12,34 @@ public_bp = flask.Blueprint('public', __name__, url_prefix='', static_folder='st
 @public_bp.route('/')
 def index():
     _events = models.Event.query.all()
-    _groups = models.Group.query.all()
-    return flask.render_template('index.html', title=current_app.config["APP_TITLE"], events=_events, groups=_groups)
+    return flask.render_template(
+        'index.html',
+        events=_events,
+    )
 
 
 @public_bp.route('/events')
 def events():
     if current_user.is_authenticated:
-        events = current_user.query_events()
+        _events = current_user.query_events()
     else:
-        events = models.Event.query.all()
+        _events = models.Event.query.all()
 
-    return flask.render_template('admin/events.html', events=events)
+    return flask.render_template(
+        'admin/events.html',
+        title="Aktionen",
+        events=_events,
+    )
 
 
 @public_bp.route('/event/<int:event_id>')
 def event(event_id):
     event = models.Event.query.get(event_id)
-    return flask.render_template('event.html', title=current_app.config["APP_TITLE"], event=event)
+    return flask.render_template(
+        'event.html',
+        title=event.title,
+        event=event,
+    )
 
 
 @public_bp.route('/event/<int:event_id>.ics')

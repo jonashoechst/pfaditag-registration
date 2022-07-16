@@ -20,7 +20,9 @@
             <td>{{ group.zip }} {{ group.city }}</td>
             <td>{{ group.land.name }}</td>
             <td class="align-middle">
-
+            {% for event in group.events %}
+                <a href="{{ url_for('admin.events_edit', _id=event.id) }}">{{ event.title }}</a>
+            {% endfor %}
             </td>
             <td class="text-end">{% include 'buttons/group_buttons.html' %}</td>
         </tr>

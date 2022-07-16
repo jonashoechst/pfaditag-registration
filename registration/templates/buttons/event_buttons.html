@@ -13,7 +13,7 @@
         <a href="{{ event.group.website }}" target="_blank" class="btn btn-outline-primary"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
     {% endif %}
 </div>
-{% if current_user.is_authenticated and event in current_user.query_events() %}
+{% if current_user.is_authenticated and current_user.has_event_permission(event) %}
     <div class="btn-group my-3">
         <a href="{{ url_for('admin.events_edit', _id=event.id) }}" class="btn btn-outline-secondary"><i class="fa-solid fa-pen-to-square"></i></a>
     </div>

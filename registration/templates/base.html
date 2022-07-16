@@ -14,7 +14,7 @@
             <link rel="stylesheet" href="{{url_for('.static', filename='pfaditag.css')}}">
         {% endblock %}
 
-        <title>{% block title %}PfadiTag {{ title }}{% endblock %}</title>
+        <title>{% block title %}PfadiTag{{ " | "+title if title else "" }}{% endblock %}</title>
         {% endblock %}
     </head>
     <body class="d-flex flex-column h-100">
