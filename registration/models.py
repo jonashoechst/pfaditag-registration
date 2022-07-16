@@ -196,7 +196,7 @@ class User(UserMixin, db.Model):
             # all managers of the same land
             (User.is_manager_land & (User.manage_land_id == self.manage_land_id)) |
             # all managers of the group's land
-            (User.is_manager_land & (User.manage_land_id == self.manage_group.land_id))
+            (User.is_manager_land & self.manage_group & (User.manage_land_id == self.manage_group.land_id))
         )
 
     def set_token(self, validity: datetime.timedelta = datetime.timedelta(days=1)) -> str:

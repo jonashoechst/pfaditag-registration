@@ -378,8 +378,8 @@ def user(_id):
                     return flask.redirect(flask.url_for('auth.user', _id="new"))
 
                 user.id = form.id.data
-                user.manage_group_id = form.manage_group_id.data
-                user.manage_land_id = form.manage_land_id.data
+                user.manage_group_id = form.manage_group_id.data if form.manage_group_id.data else None
+                user.manage_land_id = form.manage_land_id.data if form.manage_land_id.data else None
 
                 db.session.add(user)
                 db.session.commit()
