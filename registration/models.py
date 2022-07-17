@@ -88,6 +88,9 @@ class Event(db.Model):
 
     date = db.Column(db.Date, index=True, default=datetime.date(2022, 9, 24))
     time = db.Column(db.Time, index=True, default=datetime.time(00, 00))
+    date_end = db.Column(db.Date, index=True, default=datetime.date(2022, 9, 24))
+    time_end = db.Column(db.Time, index=True, default=datetime.time(00, 00))
+
     description = db.Column(db.String(2000))
 
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'))

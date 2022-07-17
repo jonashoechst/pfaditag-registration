@@ -45,15 +45,20 @@ class GroupForm(FlaskForm):
 class EventForm(FlaskForm):
     group_id = SelectField('Stamm', validators=[DataRequired()], coerce=int)
     title = StringField('Aktionstitel', validators=[DataRequired()])
-    email = EmailField('E-Mail Adresse', validators=[Optional(), Email()])
+    email = EmailField(
+        'E-Mail Adresse',
+        validators=[Optional(), Email()],
+        description="Die E-Mail Adresse und Telefonnummer werden öffentlich angezeigt."
+    )
     tel = TelField(
         'Telefonnummer',
         validators=[Optional()],
-        description="Die E-Mail Adresse und Telefonnummer werden öffentlich angezeigt."
     )
 
     date = DateField('Aktionstag', validators=[DataRequired()])
     time = TimeField('Startzeit', validators=[DataRequired()])
+    date_end = DateField('Aktionstag (Ende)')
+    time_end = TimeField('Endzeit', validators=[DataRequired()])
     description = TextAreaField(
         'Beschreibung',
         validators=[Optional()],
@@ -63,10 +68,10 @@ class EventForm(FlaskForm):
 
     lat = StringField(
         "Treffpunkt (Latitude)",
+        description="Die Koordinaten des Treffpunktes kannst du durch klicken auf die Karte eingeben.",
     )
     lon = StringField(
         "Treffpunkt (Longitude)",
-        description="Die Koordinaten des Treffpunktes kannst du durch klicken auf die Karte eingeben.",
     )
 
     submit = SubmitField('Speichern')

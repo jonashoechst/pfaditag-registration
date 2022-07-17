@@ -66,7 +66,7 @@ def event_ics(event_id):
 
     cal_event.add('summary', event.title)
     cal_event.add('dtstart',  datetime.datetime.combine(event.date, event.time))
-    cal_event.add('dtend', datetime.datetime.combine(event.date, event.time))
+    cal_event.add('dtend', datetime.datetime.combine(event.date_end, event.time_end))
     cal_event.add('dtstamp', datetime.datetime.now())
     cal_event['description'] = event.description + "\n"
 
