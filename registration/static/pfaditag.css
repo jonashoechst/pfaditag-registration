@@ -1,19 +1,5 @@
-:root {
-    --primary-color: #9f79fc;
-    --secondary-color: #e493e4;
-    --tertiary-color: #fff;
-}
-
 .colored-block {
     width: 100%;
     color: #fff;
-}
-.primary { 
-    background: #9f79fc; 
-}
-.secondary { 
-    background: #e493e4; 
-}
-.tertiary { 
-    background: #fff; 
+    background: #9f79fc;
 }

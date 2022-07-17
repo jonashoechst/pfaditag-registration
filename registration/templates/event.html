@@ -42,7 +42,7 @@
     }).addTo(map);
     var locator = L.control.locate({ locateOptions: { maxZoom: 9 } }).addTo(map);
 
-    var eventStyle = L.VectorMarkers.icon({ icon: 'circle', markerColor: 'var(--primary-color)'});
+    var eventStyle = L.VectorMarkers.icon({ icon: 'circle', markerColor: 'var(--bs-primary)'});
     var marker = L.marker([{{ event.lat }}, {{ event.lon }}], { icon: eventStyle }).addTo(map);
     map.setView([{{ event.lat }}, {{ event.lon }}], 13);
 </script>

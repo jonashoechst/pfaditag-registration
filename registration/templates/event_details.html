@@ -7,15 +7,12 @@
 {% if event.email %}
 <div><b>E-Mail: </b><a href='mailto:{{ event.email }}'>{{ event.email }}</a></div>
 {% endif %}
-
 {% if event.tel %}
 <div><b>Telefon: </b><a href='tel:{{ event.tel.replace(" ", "") }}' target='_blank'>{{ event.tel }}</a></div>
 {% endif %}
-
 {% if event.group.website %}
 <div><b>Website: </b><a href='{{ event.group.website }}' target='_blank'>{{ event.group.website }}</a></div>
 {% endif %}
-
 {% if event.lat and event.lon %}
 <div><b>Navigation: </b>
     <a href='http://maps.apple.com/?q={{ event.title }}&ll={{ event.lat }},{{ event.lon }}' target='_blank'>Apple Karten</a> |
@@ -23,5 +20,4 @@
     <a href='https://bing.com/maps/default.aspx?ss={{ event.lat }},{{ event.lon }}' target='_blank'>Bing Maps</a>
     </div>
 {% endif %}
-
 {% include 'buttons/event_buttons.html' %}

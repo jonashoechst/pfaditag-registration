@@ -7,11 +7,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
         {% block styles %}
-            <!-- Bootstrap CSS -->
-            {{ bootstrap.load_css() }}
+            <link rel="stylesheet" href="{{url_for('.static', filename='pfaditag.css')}}">
+            <link rel="stylesheet" href="{{url_for('.static', filename='bootstrap.min.css')}}"/>
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
             <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-            <link rel="stylesheet" href="{{url_for('.static', filename='pfaditag.css')}}">
         {% endblock %}
 
         <title>{% block title %}{{ config['APP_TITLE'] }}{{ " | "+title if title else "" }}{% endblock %}</title>
@@ -83,7 +82,7 @@
         {% block opener %}
         {% endblock %}
 
-            <div class="container mt-5">
+            <div class="container my-5">
 
             {% block messages %}
                 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -103,6 +102,9 @@
             {% endblock %}
             </div>
         </main>
+
+        {% block closer %}
+        {% endblock %}
 
         {% block footer %}
         <footer class="footer mt-auto py-3 bg-light">
@@ -126,7 +128,7 @@
                     <div class="col-sm py-2">
                         <div class="container">
                             <a href="https://www.vcp.de" target="_blank">
-                                <img src="static/VCP-WBM_VCP-Blau_RGB-crop.svg" style="width: 100%;">
+                                <img src="{{url_for('.static', filename='VCP-WBM_VCP-Blau_RGB-crop.svg')}}" style="width: 100%;">
                             </a>
                         </div>
                     </div>
