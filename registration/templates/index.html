@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block opener %}
-<section class="colored-block py-5" style="background-image: url('static/hero-2-bg.png'); background-repeat: no-repeat; background-position: right;">
+<section class="colored-block p-5" style="background-image: url('static/hero-2-bg.png'); background-repeat: no-repeat; background-position: right;">
     <div class="container h-100" id="opener">
         <div class="row align-items-center h-100">
             <div class="col-sm-6 mx-auto">
@@ -18,7 +18,7 @@
                     <h1 class="display-4">{{ config['APP_TITLE'] }}</h1>
                     <h2>... auf ins Abenteuer!</h2>
                     <p class="lead">23. - 25. September 2022</p>
-                    <a class="btn btn-secondary" href="#trailer">Pfadfinder*innen?</a>
+                    <a class="btn btn-secondary text-white" href="#trailer">Pfadfinder*innen?</a>
                 </div>
             </div>
             <div class="col-sm-6 mx-auto">
@@ -35,45 +35,45 @@
 {% endblock %}
 
 {% block content %}
-<div id="trailer" class="container py-5">
+<div id="trailer" class="container p-3">
     <div class="row align-items-center h-100">
-        <div class="col-sm-4 ps-0">
+        <div class="col-sm-4 p-3">
             <h1 class="text-break">Pfadfinder*innen?</h1>
             <p>Draußen sein, gemeinsam kochen, am Feuer sitzen, unter Sternen einschlafen – das ist Pfadfinden.</p>
-            <a class="btn btn-primary" href="#detail">PfadiTag 2022</a>
+            <a class="btn btn-primary text-white" href="#detail">PfadiTag 2022</a>
         </div>
-        <div class="col-sm-8 pe-0">
-            <div class="ratio ratio-16x9 pr-0">
+        <div class="col-sm-8 p-3">
+            <div class="ratio ratio-16x9">
                 <iframe src="https://www.youtube-nocookie.com/embed/tiSduOOPS-c" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
         </div>
     </div>
 </div>
 
-<div id="detail" class="container py-5">
+<div id="detail" class="container p-3">
     <div class="row align-items-center h-100">
-        <div class="col-sm-8 ps-0">
+        <div class="col-sm-8 p-3">
             <p>Mehr Eigenverantwortung und Selbstbewusstsein, ein friedliches Miteinander, der sorgsame Umgang mit der Natur sowie der Verzicht auf Smartphone, Laptop und Co. – das Konzept Pfadfinden kann eine unglaubliche Bereicherung für Kinder und Jugendliche sein. Weit verbreitet ist es aber noch nicht.</p>
             <p>Mit dem "PfadiTag" will der Verband Christlicher Pfadfinderinnen und Pfadfinder (VCP) nun mehr Aufmerksamkeit erreichen. Schon 2020 und 2021 beteiligten sich fast alle der 30 hessischen Stämme (Ortsgruppen).</p>
             <p>Am Wochenende vom 23. bis 25. September 2022 geht es in die dritte Runde, diesmal mit allen Stämmen in Deutschland. Unter dem Motto "Auf ins Abenteuer!" organisieren die Gruppen individuelle Aktionen, von Geländespielen über Singerunden bis hin zum Ganztagesprogramm.</p>
             <p>Auf dieser Website sind alle Aktionen, die im Rahmen des PfadiTag 2022 stattfinden aufgezeigt. Zur Anmeldung bei einer Aktion gibt es Kontaktdaten direkt zu den Personen vor Ort.</p>
         </div>
-        <div class="col-sm-4 float-end pe-0">
+        <div class="col-sm-4 float-end p-3">
                 <h1 class="text-end">PfadiTag 2022</h1>
                 <p class="text-end">Aktionen von Gruppen vor Ort in ganz Deutschland - schau dich um!</p>
-                <a class="btn btn-primary float-end" href="#events">Aktion finden</a>
+                <a class="btn btn-primary text-white float-end" href="#events">Aktion finden</a>
         </div>
     </div>
 </div>
 
-<div id="events" class="container p-0">
+<div id="events" class="container p-3">
     <h1 class="pt-3">Aktionen zum Mitmachen</h1>
     <div id="map" class="my-3"></div>
 </div>
 {% endblock %}
 
 {% block closer %}
-<section class="colored-block py-5">
+<section class="colored-block py-3">
     <div class="container h-100" id="closer">
         <div class="row align-items-center h-100">
             <div class="col-sm mx-auto">
@@ -86,7 +86,7 @@
             <div class="input-group mb-3">
                 <input type="text" class="form-control" placeholder="Hallo Liebe Pfadfinder, ..." disabled>
                 <div class="input-group-append">
-                    <a class="btn btn-secondary" href="mailto:hallo@pfaditag.de?subject=%5BPfadiTag%202022%5D%20Fragen&body=Hallo%20Liebe%20Pfadfinder%2C%0D%0A%0D%0A">E-Mail schreiben</a>
+                    <a class="btn btn-secondary text-white" href="mailto:hallo@pfaditag.de?subject=%5BPfadiTag%202022%5D%20Fragen&body=Hallo%20Liebe%20Pfadfinder%2C%0D%0A%0D%0A">E-Mail schreiben</a>
                 </div>
             </div>
             </div>
