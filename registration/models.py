@@ -212,7 +212,7 @@ class User(UserMixin, db.Model):
         )
 
     def set_token(self, validity: datetime.timedelta = datetime.timedelta(days=1)) -> str:
-        self.token = secrets.token_urlsafe(32)
+        self.token = secrets.token_urlsafe(24)
         self.token_expiration = datetime.datetime.now() + validity
 
         return self.token
