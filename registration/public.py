@@ -18,6 +18,22 @@ def index():
     )
 
 
+@public_bp.route('/impressum')
+def impressum():
+    return flask.render_template(
+        'impressum.html',
+        title="Impressum",
+    )
+
+
+@public_bp.route('/datenschutz')
+def datenschutz():
+    return flask.render_template(
+        'datenschutz.html',
+        title="Datenschutzerklärung",
+    )
+
+
 @public_bp.route('/events')
 def events():
     if current_user.is_authenticated:
