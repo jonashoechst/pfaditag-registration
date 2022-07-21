@@ -34,6 +34,14 @@ def datenschutz():
     )
 
 
+@public_bp.route('/faq')
+def faq():
+    return flask.render_template(
+        'faq.html',
+        title="Häufig gestellte Fragen (FAQ)",
+    )
+
+
 @public_bp.route('/events')
 def events():
     if current_user.is_authenticated:

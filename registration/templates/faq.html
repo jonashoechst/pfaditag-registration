@@ -1,0 +1,195 @@
+{% extends "base_leaflet.html" %}
+
+{% block content %}
+
+<div class="container-fluid flex-fill">
+
+<h1>{{ title }}</h1>
+
+<h2 class="my-3">Für Eltern und Interessierte</h2>
+
+<div class="accordion my-3">
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#faq-public-0">
+            Was ist der PfadiTag?
+            </button>
+        </h2>
+        <div id="faq-public-0" class="accordion-collapse collapse">
+            <div class="accordion-body">
+                <p>Der PfadiTag ist eine Aktion, bei dem Pfadfindergruppen aus ihren Heimen, Hinterhöfen und Zeltlagern heraustreten und <b>der Welt zeigen, was Pfadfinder*innen eigentlich machen</b>.</p>
+                <p>Die einzelnen Gruppen vor Ort (auch Stämme genannt) bieten Aktionen an, bei denen Kinder & Jugendliche Pfadfinden kennen lernen können und mitmachen können. Die Aktionen sind von den Stämmen organisiert und werden hier auf der Aktionswebsite gesammelt dargestellt.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#faq-public-1">
+            Wie kann ich mich zu einer Aktion anmelden?
+            </button>
+        </h2>
+        <div id="faq-public-1" class="accordion-collapse collapse">
+            <div class="accordion-body">
+                <p>Wenn du eine Aktion in deiner Nähe gefunden hast, bei der du mitmachen möchtest, findest du neben der Beschreibung auch Kontaktdaten. Am besten du <b>rufst bei der angegebenen Telefonnummer</b> an und sagst gleich bescheid, dass du bzw. dein Kind bei der Aktion mitmachen möchten. Alternativ kannst du auch eine E-Mail schreiben. </p>
+                <p>Wichtig: Du brauchst dich nicht hier auf der Seite zu registrieren, das ist nur für die Gruppen, die Aktionen anbieten nötig.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#faq-public-2">
+            Es wird keine Aktion in meiner Nähe angezeigt, kann ich trotzdem Pfadfinder*in werden?
+            </button>
+        </h2>
+        <div id="faq-public-2" class="accordion-collapse collapse">
+            <div class="accordion-body">
+            <p>Klar! Leider bieten nicht alle Gruppen beim PfadiTag eine Aktion an. Der PfadiTag ist vom Verband Christlicher Pfadfinderinnen und Pfadfinder (VCP) organisiert und wir bieten auf unserer Website eine <a href="https://www.vcp.de/kontakt/staemme-vor-ort/" target="_blank">Suche nach Pfadfindergruppen in der Nähe</a> an, über die du vielleicht eine Gruppe findest.</p>
+            <p><a href="https://www.vcp.de/kontakt/staemme-vor-ort/" class="btn btn-primary text-white">Gruppe finden</a></p>
+            <p>Falls du hier noch nicht fündig geworden bist, kannst du es auch bei den anderen Verbänden im Ring deutscher Pfadfinder*innenverbände versuchen: 
+                <ul>
+                    <li><a href="https://www.pfadfinden.de/kontakt/gruppen-vor-ort/" target="_blank">Bund der Pfadfinderinnen und Pfadfinder</a></li>
+                    <li><a href="https://dpsg.de/de/stammessuche-20" target="_blank">Deutsche Pfadfinderschaft Sankt Georg</a></li>
+                    <li>Bund Muslimischer Pfadfinderinnen und Pfadfinder Deutschland, Kontakt per Mail: <a href="mailto:vorstand@moslemische-pfadfinder.de">
+        vorstand@moslemische-pfadfinder.de</a></li>
+                </ul>
+            </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#faq-public-3">
+            Was kostet Pfadfinden?
+            </button>
+        </h2>
+        <div id="faq-public-3" class="accordion-collapse collapse">
+            <div class="accordion-body">
+                <p>Die Aktionen beim PfadiTag sind <b>kostenlos</b>. Und auch die Gruppenstunden kosten nicht, denn unsere <b>Arbeit vor Ort wird durch ehrenamtliche Pfadfinder*innen getragen</b>, die häufig als Kinder selbst auch Pfadfinder*innen waren.</p>
+                <p>Der Verband Christlicher Pfadfinderinnen und Pfadfinder (VCP) ist ein gemeinnütziger eingetragener Verein (e.V.) und kümmert sich als Dachverband um Organisation, politische und kirchliche Vertretung, Ausbildung von Mitarbeitenden und vieles mehr. Unsere <b>Mitglieder*innen sind daher im VCP angemeldet</b>, der Jahresbeitrag kostet 64€ pro Jahr (zzgl. eines kleinen Anteils für das VCP Land). Es gibt außerdem einen Familenbeitrag und einen Sozialbeitrag.</p>
+                <p>Früher oder später geht es dann auch auf Lager & Fahrten, für die natürlich separate Lagerbeiträge fällig werden. Da diese Veranstaltung überwiegend ehrenamtlich organisiert sind, sind die <b>Kosten aber häufig viel niedriger als bei vergleichbaren kommerziellen Anbietern</b> von Jugendfreizeiten.</p>
+                
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<h2>Für Gruppen und Stämme</h2>
+
+<div class="accordion">
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#faq-intern-0">
+            Welche Aktion ist für den PfadiTag geeignet?
+            </button>
+        </h2>
+        <div id="faq-intern-0" class="accordion-collapse collapse">
+            <div class="accordion-body">
+                <p>Den PfadiTag nutzt ihr in eurem Stamm für <b>eine Aktion, die gut zu euch passt</b>. Entweder ihr macht den klassischen <i>Tag der offenen Jurte</i>, ladet zur Singerunde am Abend ein, beteiligt euch am Gemeindefest, dass sowieso an diesem Wochenende stattfindet oder geht in die Innenstadt und spielt 10 Runden <i>Funky Chicken</i> – da kann sowieso niemand an euch vorbei.</p>
+                <p>Wichtig ist, dass ihr einen <b>authentischen Blick auf Pfadfinden</b> ermöglicht, denn ihr wollt euren Teilnehmer*innen ja zeigen, was wir so machen. Zur Inspiration könnt ihr euch auch die anderen Aktionen anschauen. </p>
+                <p>Hier ein paar naheliegende Ideen, die ihr ohne viel Aufwand machen könnt:
+                    <ul>
+                        <li>Feuer & Stockbrot</li>
+                        <li>Kohte aufbauen</li>
+                        <li>Lieder singen</li>
+                        <li>Wickingerschach spielen</li>
+                        <li>Einen Postenlauf mit mehreren Pfadi-Elementen: Trangia aufbauen, Petroleumlampe anzünden, Knoten lernen, ...</li>
+                        <li>Gemeinsam Kochen</li>
+                        <li>...</li>
+                    </ul>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#faq-intern-1">
+            Wie kann ich eine Aktion eintragen?
+            </button>
+        </h2>
+        <div id="faq-intern-1" class="accordion-collapse collapse">
+            <div class="accordion-body">
+                <p>Lege dir bitte zunächst einen <b>Account</b> hier auf der Website an. Das geht in dem du oben rechts auf <i>Account</i> und dann auf <i>Registrieren</i> klickst, oder hier:</p>
+                <p><a href="{{url_for('auth.user', _id='new')}}" class="btn btn-success text-white">Registrieren</a></p>
+                <p>Danach erhälst du und die Ansprechpersonen aus deinem VCP Land eine E-Mail, mit der Information, dass du für deinen Stamm freigeschaltet werden musst. Sobald du <b>freigeschaltet</b> worden bist, kannst du dich hier auf der Website anmelden und eine neue Aktion anlegen.</p>
+                <p>Dazu musst du dich zunächst anmelden und siehst dann im Menü rechts oben einen Button "<i class="fa-solid fa-plus"></i> Neue Aktion", alternativ kannst du auch hier klicken:</p>
+                <p><a href="{{url_for('admin.events_edit', _id='new')}}" class="btn btn-success text-white"><i class="fa-solid fa-plus"></i> Neue Aktion</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#faq-intern-2">
+            Wie funktioniert das mit der Werbung?
+            </button>
+        </h2>
+        <div id="faq-intern-2" class="accordion-collapse collapse">
+            <div class="accordion-body">
+                <p>Es gibt <b>zwei grundsätzliche Wege</b>, auf denen Werbung für den PfadiTag gemacht wird. Zum einen gibt es die <b>zentral vom PfadiTag-Team koordinierte Werbung</b>, zum Beispiel Zeitungsartikel, geschaltete Werbung oder Anfragen für TV-Berichterstattung.</p>
+                <p>Die zweite und viel wichtiger Säule der Werbung seid <b>ihr mit euren Gruppen</b>. Dafür gibt es Werbematerialien, die ihr bestellen könnt, unter anderem Poster / Plakate, Sticker, Stundenpläne (pünktlich zum Schulanfang) und Flyer.<p>
+                <p>Ihr könnt außerdem die gesamte Vielfalt der von euch genutzten Möglichkeiten für Werbung perfekt ausnutzen:
+                    <ul>
+                        <li>Lokalzeitungen und Gemeindeblättchen</li>
+                        <li>Influencer vor Ort, z.B. Personen aus dem Kirchenvorstand oder gut vernetzte Eltern</li>
+                        <li>Social Media Kanäle des Stammes</li>
+                        <li>Facebook-Gruppen des Ortes oder Stadtteils</li>
+                        <li>eBay Kleinanzeigen</li>
+                        <li>Auslage in Cafés, Kiosken und Schreibwarenläden (Stundenpläne)</li>
+                        <li>Flyer verteilen rund um das Stammesheim</li>
+                        <li>...</li>
+                    </ul>
+                </p>
+                <p>Je mehr und vielfältigere Werbung ihr macht, desto mehr Zulauf werdet ihr zu eurer Aktion bekommen. Nehmt es selbst in die Hand - so wie wir es bei den Pfadis mit fast allem machen!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#faq-intern-3">
+            Wo bekomme ich die Werbematerialien her?
+            </button>
+        </h2>
+        <div id="faq-intern-3" class="accordion-collapse collapse">
+            <div class="accordion-body">
+                <p>
+                </p>
+            </div>
+        </div>
+    </div>
+    -->
+
+</div>
+
+</div>
+
+{% endblock %}
+
+{% block closer %}
+<section class="footer colored-block py-3">
+    <div class="container h-100" id="closer">
+        <div class="row align-items-center h-100">
+            <div class="col-sm mx-auto">
+                <div class="container">
+                    <h1>Noch Fragen?</h1>
+                    <p class="text-center lead">... dann schreib uns!</p>
+                </div>
+            </div>
+            <div class="col-sm mx-auto">
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" placeholder="Hallo Liebe Pfadfinder, ..." disabled>
+                <div class="input-group-append">
+                    <a class="btn btn-secondary text-white" href="mailto:hallo@pfaditag.de?subject=%5BPfadiTag%202022%5D%20Fragen&body=Hallo%20Liebe%20Pfadfinder%2C%0D%0A%0D%0A">E-Mail schreiben</a>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
