@@ -1,3 +1,4 @@
+import datetime
 import flask
 from flask_wtf import FlaskForm
 from flask_login import current_user, login_required
@@ -175,6 +176,13 @@ def events_edit(_id):
     # POST: submit
     if form.submit.data:
         if form.validate_on_submit():
+            # check if event ends after start
+            dt_start = datetime.datetime.combine(form.date.data, form.time.data)
+            dt_end = datetime.datetime.combine(form.date_end.data, form.time_end.data)
+            if dt_end <= dt_start:
+                flask.flash("Das Ende der Aktion liegt vor dem Beginn. Die Aktion konnte nicht gespeichert werden.", "danger")
+                return flask.render_template('admin/events_edit.html', form=form, _id=_id)
+
             # update fields in model
             for field_id, field in form._fields.items():
                 if field_id in ["lat", "lon"]:
