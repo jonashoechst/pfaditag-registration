@@ -44,6 +44,7 @@ class ProfileForm(FlaskForm):
     ])
     name = StringField(
         'Name',
+        description="Bitte Vor- und Nachname angeben, damit wir euch zuordnen können.",
         validators=[DataRequired()],
     )
     password = PasswordField(
@@ -60,6 +61,15 @@ class ProfileForm(FlaskForm):
         description="Superuser-Rechte erlauben es, auf alles zuzugreifen.",
     )
 
+    manage_group_id = SelectField(
+        'Stammeskoodinator:in',
+        coerce=int,
+        description="Wähle einen Stamm aus, für die du Aktionen verwalten möchtest. Der Zugriff muss noch bestätigt werden.",
+    )
+    is_manager_group = BooleanField(
+        'Freigabe Stamm',
+        description="Stammeskoodinator-Rechte erlauben es, auf den Stamm zuzugreifen.",
+    )
     manage_land_id = SelectField(
         'Landeskoodinator:in',
         coerce=int,
@@ -68,15 +78,6 @@ class ProfileForm(FlaskForm):
     is_manager_land = BooleanField(
         'Freigabe Land',
         description="Landeskoodinator:in-Rechte erlauben es, auf Länder zuzugreifen.",
-    )
-    manage_group_id = SelectField(
-        'Manager für Stamm',
-        coerce=int,
-        description="Wähle einen Stamm aus, für die du Aktionen verwalten möchtest. Der Zugriff muss noch bestätigt werden.",
-    )
-    is_manager_group = BooleanField(
-        'Freigabe Stamm',
-        description="Stammeskoodinator-Rechte erlauben es, auf den Stamm zuzugreifen.",
     )
 
     submit = SubmitField('Speichern')
