@@ -42,9 +42,9 @@
                             {% if current_user.is_superuser %}
                                 Superuser
                             {% elif current_user.is_manager_land and current_user.manage_land %}
-                                Landeskoodinator:in {{ current_user.manage_land.name }}
+                                Landeskoodinator*in {{ current_user.manage_land.name }}
                             {% elif current_user.is_manager_group and current_user.manage_group %}
-                                Stammeskoodinator:in {{ current_user.manage_group.name }}
+                                Stammeskoodinator*in {{ current_user.manage_group.name }}
                             {% endif %}
                             </h6>
                             <li><a class="dropdown-item" href="{{url_for('auth.users')}}"><i class="fa-solid fa-users"></i> Übersicht Accounts</a></li>

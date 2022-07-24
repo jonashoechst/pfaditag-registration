@@ -58,11 +58,11 @@ class ProfileForm(FlaskForm):
     )
     is_superuser = BooleanField(
         'Superuser',
-        description="Superuser-Rechte erlauben es, auf alles zuzugreifen.",
+        description="Superuser-Rechte erlauben es, auf alle Inhalte zuzugreifen.",
     )
 
     manage_group_id = SelectField(
-        'Stammeskoodinator:in',
+        'Stammeskoodinator*in',
         coerce=int,
         description="Wähle einen Stamm aus, für die du Aktionen verwalten möchtest. Der Zugriff muss noch bestätigt werden.",
     )
@@ -71,13 +71,13 @@ class ProfileForm(FlaskForm):
         description="Stammeskoodinator-Rechte erlauben es, auf den Stamm zuzugreifen.",
     )
     manage_land_id = SelectField(
-        'Landeskoodinator:in',
+        'Landeskoodinator*in',
         coerce=int,
-        description="Wähle ein Land aus, für das du die Koodinator-Rechte haben möchtest. Der Zugriff muss noch bestätigt werden.",
+        description="Wähle ein Land aus, für das du die Rechte haben möchtest. Der Zugriff muss noch bestätigt werden.",
     )
     is_manager_land = BooleanField(
         'Freigabe Land',
-        description="Landeskoodinator:in-Rechte erlauben es, auf Länder zuzugreifen.",
+        description="Landeskoodinator*in-Rechte erlauben es, auf das Land zuzugreifen.",
     )
 
     submit = SubmitField('Speichern')

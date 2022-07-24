@@ -3,8 +3,8 @@
 {% block content %}
 Deine Berechtigungen wurden durch {{ current_user.name }} ({{ current_user.id }}) angepasst. Du hast folgende Rollen:
 {% if user.is_superuser %}- Superuser{% endif %}
-{% if user.is_manager_land and user.manage_land %}- Landeskoodinator:in {{ user.manage_land.name }}{% endif %}
-{% if user.is_manager_group and user.manage_group %}- Stammeskoodinator:in {{ user.manage_group.display_name }}{% endif %}
+{% if user.is_manager_land and user.manage_land %}- Landeskoodinator*in {{ user.manage_land.name }}{% endif %}
+{% if user.is_manager_group and user.manage_group %}- Stammeskoodinator*in {{ user.manage_group.display_name }}{% endif %}
 
 Falls etwas nicht stimmt, kannst du deine Rollen in deinem Profil bearbeiten: {{ url_for('auth.user', _id=user.id, _external=True) }}
 {% endblock %}
