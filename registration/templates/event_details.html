@@ -1,4 +1,5 @@
-<div><b>Wann? </b>{{ event.date.strftime('%A, %d.%m.%Y') }}, {{event.time.strftime('%H:%M')}} Uhr</div>
+<div><b>Beginn: </b>{{ event.date.strftime('%A, %d.%m.%Y') }}, {{event.time.strftime('%H:%M')}} Uhr</div>
+<div><b>Ende: </b>{{ event.date_end.strftime('%A, %d.%m.%Y') }}, {{event.time_end.strftime('%H:%M')}} Uhr</div>
 <div>
 {% for p in event.description.split('\n') %}
     <p>{{p}}</p>
