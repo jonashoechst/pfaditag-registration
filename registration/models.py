@@ -92,6 +92,7 @@ class Event(db.Model):
     time_end = db.Column(db.Time, index=True, default=datetime.time(00, 00))
 
     description = db.Column(db.String(2000))
+    photo = db.Column(db.LargeBinary(16*1024**2))
 
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
     group = db.relationship("Group", back_populates="events")

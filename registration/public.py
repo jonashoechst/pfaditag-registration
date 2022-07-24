@@ -2,7 +2,6 @@ import datetime
 import flask
 import icalendar
 from . import models
-from flask import current_app
 from flask_login import current_user
 
 public_bp = flask.Blueprint('public', __name__, url_prefix='', static_folder='static')
@@ -64,6 +63,16 @@ def event(event_id):
         title=event.title,
         event=event,
     )
+
+
+@public_bp.route('/event/photo/<int:event_id>')
+def event_photo(event_id):
+    event = models.Event.query.get(event_id)
+    if not event.photo:
+        return flask.abort(404)
+    response = flask.make_response(event.photo)
+    response.headers['Content-Type'] = 'image'
+    return response
 
 
 @public_bp.route('/event/<int:event_id>.ics')

@@ -17,6 +17,9 @@
         </h1>
         <h3>Stamm {{ event.group.short_name }}</h3>
 
+        {% if event.photo %}
+        <div><img src="{{ url_for('public.event_photo', event_id=event.id) }}" class="img-fluid py-3"></div>
+        {% endif %}
         {% include 'event_details.html' %}
     </div>
     <div class="col-sm-6 second-column">

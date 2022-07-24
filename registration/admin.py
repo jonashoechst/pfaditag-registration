@@ -1,6 +1,7 @@
 import datetime
 import flask
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed, FileSize
 from flask_login import current_user, login_required
 from wtforms import (
     StringField,
@@ -66,6 +67,13 @@ class EventForm(FlaskForm):
         render_kw={'rows': '12'},
         description="Versuche einen kurzen Text zu schreiben, der die Aktion beschreibt und auch nicht-Pfadfindern gut erklärt, was ihr macht."
     )
+    photo = FileField("Aktionsfoto",
+                      description="Für jede Aktion kann ein Foto hochgeladen werden, ein Neues ersetzt das Alte.",
+                      validators=[
+                          FileAllowed(['jpg', "JPG", 'png', 'PNG', 'jpeg', "JPEG", "gif", "GIF"], 'Hier können nur Bilder hochgeladen werden (jpg, png, gif).'),
+                          FileSize(16*1024**2, 0, "Hochgeladene Fotos dürfen 16 MB nicht überschreiten.")
+                      ],
+                      )
 
     lat = StringField(
         "Treffpunkt (Latitude)",
@@ -180,7 +188,7 @@ def events_edit(_id):
             dt_start = datetime.datetime.combine(form.date.data, form.time.data)
             dt_end = datetime.datetime.combine(form.date_end.data, form.time_end.data)
             if dt_end <= dt_start:
-                flask.flash("Das Ende der Aktion liegt vor dem Beginn. Die Aktion konnte nicht gespeichert werden.", "danger")
+                flask.flash("Das Ende der Aktion liegt vor deren Beginn. Die Aktion konnte nicht gespeichert werden.", "danger")
                 return flask.render_template('admin/events_edit.html', form=form, _id=_id)
 
             # update fields in model
@@ -190,6 +198,10 @@ def events_edit(_id):
                         setattr(event, field_id, float(field.data))
                     except ValueError:
                         setattr(event, field_id, None)
+                if field_id == "photo":
+                    if field.data:
+                        blob = field.data.stream.read()
+                        setattr(event, field_id, blob)
                 else:
                     setattr(event, field_id, field.data)
 
