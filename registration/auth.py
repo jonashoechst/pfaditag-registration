@@ -289,7 +289,8 @@ def user(_id):
             form.manage_land_id.data = form.manage_land_id.data if form.manage_land_id.data else None
 
             user.name = form.name.data
-            user.set_password(form.password.data)
+            if form.password.data:
+                user.set_password(form.password.data)
 
             # if the current user is logged in, check permissions
             if current_user.is_authenticated:
