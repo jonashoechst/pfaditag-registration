@@ -309,11 +309,13 @@ def user(_id):
                 # land manager privilege can be altered by superusers
                 if form.is_manager_land.data != user.is_manager_land:
                     if current_user.is_superuser:
+                        flask.flash("Landeskoodinator*in-Rechte mit Hilfe der Superuser-Rechte bearbeitet.")
                         permissions_altered = True
                         user.is_manager_land = form.is_manager_land.data
                     elif current_user == user:
                         flask.flash("Du kannst deine eigenen Rechte nur bearbeiten, wenn du weitergehende Rechte hast.", 'warning')
                     elif current_user.is_manager_land and current_user.manage_land == user.manage_land:
+                        flask.flash("Landeskoodinator*in-Rechte mit Hilfe der Landeskoodinator*in-Rechte bearbeitet.")
                         permissions_altered = True
                         user.is_manager_land = form.is_manager_land.data
                     else:
@@ -335,15 +337,22 @@ def user(_id):
 
                 # group manager privilege can be altered by superusers or land managers
                 if form.is_manager_group.data != user.is_manager_group:
+                    # Allow if current user has permission for the same group
+                    # Allow if current user has permission for the groups land
+
+                    # Allow for superusers
                     if current_user.is_superuser:
+                        flask.flash("Stammeskoodinator*in-Rechte mit Hilfe der Superuser-Rechte bearbeitet.")
                         permissions_altered = True
                         user.is_manager_group = form.is_manager_group.data
-                    elif current_user.is_manager_land and current_user.manage_land == user.manage_land:
+                    elif current_user.is_manager_land and current_user.manage_land == user.manage_group.land:
+                        flask.flash("Stammeskoodinator*in-Rechte mit Hilfe der Landeskoodinator*in-Rechte bearbeitet.")
                         permissions_altered = True
                         user.is_manager_group = form.is_manager_group.data
                     elif current_user == user:
                         flask.flash("Du kannst deine eigenen Rechte nur bearbeiten, wenn du weitergehende Rechte hast.", 'warning')
                     elif current_user.is_manager_group and current_user.manage_group == user.manage_group:
+                        flask.flash("Stammeskoodinator*in-Rechte mit Hilfe der Stammeskoodinator*in-Rechte bearbeitet.")
                         permissions_altered = True
                         user.is_manager_group = form.is_manager_group.data
                     else:
