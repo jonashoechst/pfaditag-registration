@@ -102,7 +102,7 @@ class Event(db.Model):
 
 
 class User(UserMixin, db.Model):
-    id = db.Column(db.String(40), unique=True, primary_key=True)
+    id = db.Column(db.String(100), unique=True, primary_key=True)
     password = db.Column(db.String(200), primary_key=False, unique=False, nullable=False)
     name = db.Column(db.String(100), nullable=False, unique=False)
 
