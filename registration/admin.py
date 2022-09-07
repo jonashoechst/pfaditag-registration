@@ -78,9 +78,11 @@ class EventForm(FlaskForm):
     lat = StringField(
         "Treffpunkt (Latitude)",
         description="Die Koordinaten des Treffpunktes kannst du durch klicken auf die Karte eingeben.",
+        validators=[DataRequired()],
     )
     lon = StringField(
         "Treffpunkt (Longitude)",
+        validators=[DataRequired()],
     )
 
     submit = SubmitField('Speichern')
@@ -187,8 +189,8 @@ def events_edit(_id):
             # check if event ends after start
             dt_start = datetime.datetime.combine(form.date.data, form.time.data)
             dt_end = datetime.datetime.combine(form.date_end.data, form.time_end.data)
-            if dt_end <= dt_start:
-                flask.flash("Das Ende der Aktion liegt vor deren Beginn. Die Aktion konnte nicht gespeichert werden.", "danger")
+            if dt_end < dt_start:
+                flask.flash("Das Ende der Aktion liegt vor dem Beginn. Die Aktion konnte nicht gespeichert werden.", "danger")
                 return flask.render_template('admin/events_edit.html', form=form, _id=_id)
 
             # update fields in model
