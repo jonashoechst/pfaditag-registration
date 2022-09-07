@@ -1,6 +1,7 @@
 # fmt: off
 
 import logging
+import logging.config
 import locale
 
 from flask import Flask
@@ -11,7 +12,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 
 locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
-logging.basicConfig(level=logging.DEBUG)
 
 migrate = Migrate()
 login_manager = LoginManager()
@@ -23,6 +23,9 @@ def create_app():
     app = Flask(__name__)
     app.config['APP_TITLE'] = "PfadiTag 2022"
     app.config.from_prefixed_env()
+
+    logging.getLogger("flask_wtf").handlers = app.logger.handlers
+    logging.getLogger("flask_wtf.csrf").handlers = app.logger.handlers
 
     Bootstrap5(app)
 
