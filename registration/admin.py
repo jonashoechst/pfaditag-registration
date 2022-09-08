@@ -74,7 +74,6 @@ class GroupForm(FlaskForm):
     )
 
     submit = SubmitField('Speichern')
-    delete = SubmitField('Löschen')
 
 
 class EventForm(FlaskForm):
@@ -166,15 +165,6 @@ def groups_edit(_id):
     form.land_id.choices = [(l.id, l.name) for l in current_user.query_lands()]
     if group.land and group.land not in current_user.query_lands():
         form.land_id.choices.append((group.land_id, group.land.name))
-
-    # POST: delete group
-    if form.delete.data:
-        for event in group.events:
-            db.session.delete(event)
-        db.session.delete(group)
-        db.session.commit()
-        flask.flash(f"Stamm '{group.name}' erfolgreich gelöscht.", "success")
-        return flask.redirect(flask.url_for('admin.groups'))
 
     # POST: save group
     if form.submit.data:
