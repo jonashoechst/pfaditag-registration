@@ -14,6 +14,12 @@
 {% if event.group.website %}
 <div><b>Website: </b><a href='{{ event.group.website }}' target='_blank'>{{ event.group.website }}</a></div>
 {% endif %}
+{% if event.group.instagram %}
+<div><b>Instagram: </b><a href='{{ event.group.instagram }}' target='_blank'>{{ event.group.instagram }}</a></div>
+{% endif %}
+{% if event.group.facebook %}
+<div><b>Facebook: </b><a href='{{ event.group.facebook }}' target='_blank'>{{ event.group.facebook }}</a></div>
+{% endif %}
 {% if event.lat and event.lon %}
 <div><b>Navigation: </b>
     <a href='http://maps.apple.com/?q={{ event.title }}&ll={{ event.lat }},{{ event.lon }}' target='_blank'>Apple Karten</a> |

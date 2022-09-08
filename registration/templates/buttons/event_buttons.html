@@ -12,6 +12,12 @@
     {% if event.group.website %}
         <a href="{{ event.group.website }}" target="_blank" class="btn btn-outline-primary"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
     {% endif %}
+    {% if event.group.instagram %}
+        <a href="{{event.group.instagram}}" class="btn btn-outline-primary" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+    {% endif %}
+    {% if event.group.facebook %}
+        <a href="{{event.group.facebook}}" class="btn btn-outline-primary" target="_blank"><i class="fa-brands fa-facebook"></i></a>
+    {% endif %}
 </div>
 {% if current_user.is_authenticated and current_user.has_event_permission(event) %}
     <div class="btn-group my-3">

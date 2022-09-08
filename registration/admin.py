@@ -57,6 +57,16 @@ class GroupForm(FlaskForm):
         'Website',
         validators=[Optional(), URL(False), Length(max=64), ]
     )
+    instagram = StringField(
+        'Instagram',
+        validators=[Optional(), URL(False), Length(max=64), ],
+        render_kw={"placeholder": "https://instagram.com/"},
+    )
+    facebook = StringField(
+        'Facebook',
+        validators=[Optional(), URL(False), Length(max=64), ],
+        render_kw={"placeholder": "https://www.facebook.com/"},
+    )
     land_id = SelectField(
         'VCP Land',
         validators=[DataRequired(), ],

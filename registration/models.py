@@ -49,6 +49,8 @@ class Group(db.Model):
     zip = db.Column(db.String(5))
     city = db.Column(db.String(64))
     website = db.Column(db.String(64))
+    instagram = db.Column(db.String(64))
+    facebook = db.Column(db.String(64))
 
     land_id = db.Column(db.Integer, db.ForeignKey('land.id'))
     land = db.relationship("Land", back_populates="groups")

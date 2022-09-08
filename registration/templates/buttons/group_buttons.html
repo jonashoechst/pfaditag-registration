@@ -2,6 +2,12 @@
     {% if group.website %}
     <a href="{{group.website}}" class="btn btn-outline-primary" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
     {% endif %}
+    {% if group.instagram %}
+    <a href="{{group.instagram}}" class="btn btn-outline-primary" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+    {% endif %}
+    {% if group.facebook %}
+    <a href="{{group.facebook}}" class="btn btn-outline-primary" target="_blank"><i class="fa-brands fa-facebook"></i></a>
+    {% endif %}
 </div>
 {% if current_user.has_group_permission(group) %}
 <div class="btn-group">
