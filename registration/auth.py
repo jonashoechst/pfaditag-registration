@@ -37,18 +37,18 @@ current_user: User
 
 class ProfileForm(FlaskForm):
     id = StringField('E-Mail Adresse', validators=[
-        Length(min=6),
+        Length(min=6, max=100),
         Email(message='Bitte gib eine valide E-Mail Adresse an.'),
         DataRequired(),
     ])
     name = StringField(
         'Name',
         description="Bitte Vor- und Nachname angeben, damit wir euch zuordnen können.",
-        validators=[DataRequired()],
+        validators=[DataRequired(), Length(max=100), ],
     )
     password = PasswordField(
         'Password',
-        validators=[DataRequired(), Length(min=8, message='Das Passwort muss mindestens 8 Zeichen haben.')],
+        validators=[DataRequired(), Length(min=8, max=200, message='Das Passwort muss zwischen 8 und 200 Zeichen haben.')],
     )
     confirm = PasswordField(
         'Password (wiederholen)',

@@ -18,6 +18,7 @@ from wtforms.validators import (
     URL,
     Optional,
     Email,
+    Length,
 )
 
 from . import models
@@ -29,32 +30,61 @@ admin_bp = flask.Blueprint('admin', __name__, url_prefix='/admin', static_folder
 
 
 class LandForm(FlaskForm):
-    name = StringField('Name', validators=[DataRequired()])
+    name = StringField(
+        'Name',
+        validators=[DataRequired(), Length(max=64), ],
+    )
 
 
 class GroupForm(FlaskForm):
-    name = StringField('Stammesname', validators=[DataRequired()])
-    street = StringField('Straße, Nr.', validators=[Optional()])
-    zip = StringField('PLZ', validators=[Optional()])
-    city = StringField('Ort', validators=[DataRequired()])
-    website = StringField('Website', validators=[Optional(), URL(False)])
-    land_id = SelectField('VCP Land', validators=[DataRequired()], coerce=int)
+    name = StringField(
+        'Stammesname',
+        validators=[DataRequired(), Length(max=64), ]
+    )
+    street = StringField(
+        'Straße, Nr.',
+        validators=[Optional(), Length(max=64), ]
+    )
+    zip = StringField(
+        'PLZ',
+        validators=[Optional(), Length(max=5), ]
+    )
+    city = StringField(
+        'Ort',
+        validators=[DataRequired(), Length(max=64), ]
+    )
+    website = StringField(
+        'Website',
+        validators=[Optional(), URL(False), Length(max=64), ]
+    )
+    land_id = SelectField(
+        'VCP Land',
+        validators=[DataRequired(), ],
+        coerce=int,
+    )
 
     submit = SubmitField('Speichern')
     delete = SubmitField('Löschen')
 
 
 class EventForm(FlaskForm):
-    group_id = SelectField('Stamm', validators=[DataRequired()], coerce=int)
-    title = StringField('Aktionstitel', validators=[DataRequired()])
+    group_id = SelectField(
+        'Stamm',
+        validators=[DataRequired()],
+        coerce=int,
+    )
+    title = StringField(
+        'Aktionstitel',
+        validators=[DataRequired(), Length(max=64), ],
+    )
     email = EmailField(
         'E-Mail Adresse',
-        validators=[Optional(), Email()],
+        validators=[Optional(), Email(), Length(max=64), ],
         description="Die E-Mail Adresse und Telefonnummer werden öffentlich angezeigt."
     )
     tel = TelField(
         'Telefonnummer',
-        validators=[Optional()],
+        validators=[Optional(), Length(max=32), ],
     )
 
     date = DateField('Aktionstag', validators=[DataRequired()])
@@ -63,7 +93,7 @@ class EventForm(FlaskForm):
     time_end = TimeField('Endzeit', validators=[DataRequired()])
     description = TextAreaField(
         'Beschreibung',
-        validators=[Optional()],
+        validators=[Optional(), Length(max=2000), ],
         render_kw={'rows': '12'},
         description="Versuche einen kurzen Text zu schreiben, der die Aktion beschreibt und auch nicht-Pfadfindern gut erklärt, was ihr macht."
     )
