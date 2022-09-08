@@ -276,9 +276,9 @@ def user(_id):
 
     # POST: delete user
     if form.delete.data:
-        db.session.delete(user)
+        db.session.delete(_user)
         db.session.commit()
-        flask.flash(f"Account '{user.id}' erfolgreich gelöscht.", "success")
+        flask.flash(f"Account '{_user.id}' erfolgreich gelöscht.", "success")
         return flask.redirect(flask.url_for("public.index"))
 
     # POST: save user
@@ -297,7 +297,7 @@ def user(_id):
 
                 # superuser privilege can only be altered by other superusers
                 if form.is_superuser.data != _user.is_superuser:
-                    if current_user == user:
+                    if current_user == _user:
                         flask.flash("Du kannst deine eigenen Rechte nur bearbeiten, wenn du weitergehende Rechte hast.", 'warning')
                     elif current_user.is_superuser:
                         permissions_altered = True
@@ -311,14 +311,14 @@ def user(_id):
                         flask.flash("Landeskoodinator*in-Rechte mit Hilfe der Superuser-Rechte bearbeitet.")
                         permissions_altered = True
                         _user.is_manager_land = form.is_manager_land.data
-                    elif current_user == user:
+                    elif current_user == _user:
                         flask.flash("Du kannst deine eigenen Rechte nur bearbeiten, wenn du weitergehende Rechte hast.", 'warning')
                     elif current_user.is_manager_land and current_user.manage_land == _user.manage_land:
                         flask.flash("Landeskoodinator*in-Rechte mit Hilfe der Landeskoodinator*in-Rechte bearbeitet.")
                         permissions_altered = True
                         _user.is_manager_land = form.is_manager_land.data
                     else:
-                        flask.flash(f"Du hast keine Berechtigung, Rechte für das Land {user.manage_land.name} zu vergeben.", 'warning')
+                        flask.flash(f"Du hast keine Berechtigung, Rechte für das Land {_user.manage_land.name} zu vergeben.", 'warning')
 
                 # updated managed land
                 if form.manage_land_id.data != _user.manage_land_id:
@@ -348,14 +348,14 @@ def user(_id):
                         flask.flash("Stammeskoodinator*in-Rechte mit Hilfe der Landeskoodinator*in-Rechte bearbeitet.")
                         permissions_altered = True
                         _user.is_manager_group = form.is_manager_group.data
-                    elif current_user == user:
+                    elif current_user == _user:
                         flask.flash("Du kannst deine eigenen Rechte nur bearbeiten, wenn du weitergehende Rechte hast.", 'warning')
                     elif current_user.is_manager_group and current_user.manage_group == _user.manage_group:
                         flask.flash("Stammeskoodinator*in-Rechte mit Hilfe der Stammeskoodinator*in-Rechte bearbeitet.")
                         permissions_altered = True
                         _user.is_manager_group = form.is_manager_group.data
                     else:
-                        flask.flash(f"Du hast keine Berechtigung, Rechte für die Gruppe {user.manage_group.name} zu vergeben.", 'warning')
+                        flask.flash(f"Du hast keine Berechtigung, Rechte für die Gruppe {_user.manage_group.name} zu vergeben.", 'warning')
 
                 # updated managed group
                 if form.manage_group_id.data != _user.manage_group_id:
