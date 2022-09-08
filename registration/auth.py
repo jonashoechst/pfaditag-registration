@@ -268,8 +268,8 @@ def user(_id):
         form.confirm.validators = [EqualTo('password', message='Die Passwörter stimmen nicht überein.')]
 
         if _user not in current_user.query_users():
-            flask.flash(f"Du hast keine Berechtigung, diesen Account zu bearbeiten. {current_user.query_users()}", 'alert')
-            return flask.redirect(flask.url_for('admin.accounts'))
+            flask.flash("Du hast keine Berechtigung, diesen Account zu bearbeiten.", 'alert')
+            return flask.redirect(flask.url_for('auth.users'))
 
     form.manage_group_id.choices = [(0, "")] + [(g.id, g.display_name) for g in Group.query.all()]
     form.manage_land_id.choices = [(0, "")] + [(l.id, l.name) for l in Land.query.all()]
