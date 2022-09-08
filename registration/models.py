@@ -59,6 +59,7 @@ class Group(db.Model):
     region = db.relationship("Region", back_populates="groups")
 
     events = db.relationship('Event', back_populates='group')
+    users = db.relationship('User', back_populates='manage_group')
 
     def __repr__(self):
         return f'<Group {self.id} ({self.name})>'
@@ -191,10 +192,18 @@ class User(UserMixin, db.Model):
         users = [self]
 
         if self.is_manager_land and self.manage_land_id:
+            # add all land managers
             for user in self.manage_land.users:
                 if user not in users:
                     users.append(user)
+            # add all managers of groups belonging to the land
+            for group in self.manage_land.groups:
+                for user in group.users:
+                    if user not in users:
+                        users.append(user)
+
         if self.is_superuser:
+            # add all remaining users
             for user in User.query.all():
                 if user not in users:
                     users.append(user)
