@@ -22,5 +22,6 @@
 {% if current_user.is_authenticated and current_user.has_event_permission(event) %}
     <div class="btn-group my-3">
         <a href="{{ url_for('admin.events_edit', _id=event.id) }}" class="btn btn-outline-secondary"><i class="fa-solid fa-pen-to-square"></i></a>
+        <a href="{{ url_for('admin.groups_edit', _id=event.group.id) }}" class="btn btn-outline-secondary"><i class="fa-solid fa-group-arrows-rotate"></i></a>
     </div>
 {% endif %}
