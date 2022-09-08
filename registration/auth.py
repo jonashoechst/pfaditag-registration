@@ -377,7 +377,7 @@ def user(_id):
                     msg = Message(
                         subject=f"[{current_app.config['APP_TITLE']}] Rechte angepasst",
                         sender=f"{current_app.config['APP_TITLE']} <{current_app.config['MAIL_USERNAME']}>",
-                        recipients=[user.id],
+                        recipients=[_user.id],
                         cc=[u.id for u in _user.query_managers()],
                         bcc=[u.id for u in User.query.filter(User.is_superuser)],
                     )
