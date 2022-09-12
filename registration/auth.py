@@ -38,7 +38,7 @@ current_user: User
 class ProfileForm(FlaskForm):
     id = StringField('E-Mail Adresse', validators=[
         Length(min=6, max=100),
-        Email(message='Bitte gib eine valide E-Mail Adresse an.'),
+        Email(message='Bitte gib eine valide E-Mail Adresse an.', allow_smtputf8=False),
         DataRequired(),
     ])
     name = StringField(
@@ -86,7 +86,10 @@ class ProfileForm(FlaskForm):
 class LoginForm(FlaskForm):
     id = StringField(
         'E-Mail Adresse',
-        validators=[DataRequired(), Email(message='Bitte gib eine valide E-Mail Adresse an.')],
+        validators=[
+            DataRequired(),
+            Email(message='Bitte gib eine valide E-Mail Adresse an.', allow_smtputf8=False),
+        ],
     )
     password = PasswordField(
         'Password', validators=[],
@@ -98,7 +101,10 @@ class LoginForm(FlaskForm):
 class PasswordResetForm(FlaskForm):
     id = StringField(
         'E-Mail Adresse',
-        validators=[DataRequired(), Email(message='Bitte gib die E-Mail Adresse deines Accounts an.')],
+        validators=[
+            DataRequired(),
+            Email(message='Bitte gib die E-Mail Adresse deines Accounts an.', allow_smtputf8=False),
+        ],
     )
     password = PasswordField(
         'Password',
