@@ -89,19 +89,27 @@ class Event(db.Model):
     lat = db.Column(db.Numeric(8, 6))
     lon = db.Column(db.Numeric(9, 6))
 
-    date = db.Column(db.Date, index=True, default=datetime.date(2022, 9, 24))
-    time = db.Column(db.Time, index=True, default=datetime.time(00, 00))
-    date_end = db.Column(db.Date, index=True, default=datetime.date(2022, 9, 24))
-    time_end = db.Column(db.Time, index=True, default=datetime.time(00, 00))
+    date: datetime.date = db.Column(db.Date, index=True, default=datetime.date(2022, 9, 24))
+    time: datetime.time = db.Column(db.Time, index=True, default=datetime.time(00, 00))
+    date_end: datetime.date = db.Column(db.Date, index=True, default=datetime.date(2022, 9, 24))
+    time_end: datetime.time = db.Column(db.Time, index=True, default=datetime.time(00, 00))
 
     description = db.Column(db.String(2000))
     photo = db.Column(db.LargeBinary(16*1024**2))
 
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
-    group = db.relationship("Group", back_populates="events")
+    group: Group = db.relationship("Group", back_populates="events")
 
     def __repr__(self):
         return f'<Event {self.id} ({self.title})>'
+
+    @property
+    def dt(self) -> datetime.datetime:
+        return datetime.datetime.combine(self.date, self.time)
+
+    @property
+    def dt_end(self) -> datetime.datetime:
+        return datetime.datetime.combine(self.date_end, self.time_end)
 
 
 class User(UserMixin, db.Model):
