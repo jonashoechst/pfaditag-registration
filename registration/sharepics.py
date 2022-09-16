@@ -24,12 +24,12 @@ def sharepic_photo(event_id: int, color="#7876aa"):
     # PfadiTag transparent overlay
     overlay = Image.new('RGBA', img.size, (255, 255, 255, 0))
     overlay_draw = ImageDraw.Draw(overlay)
-    overlay_draw.text((1000, 1500), "PfadiTag", font=ImageFont.truetype("etc/Roboto/Roboto-Bold.ttf", size=515), anchor="ms", fill=(255, 255, 255, 150))
+    overlay_draw.text((-38, 1022), "PfadiTag", font=ImageFont.truetype("etc/Roboto/Roboto-Bold.ttf", size=515), fill=(255, 255, 255, 150))
     img = Image.alpha_composite(img, overlay)
 
     # Draw texts
     draw = ImageDraw.Draw(img)
-    draw.text((1950, 1950), "pfaditag.de", font=ImageFont.truetype("etc/Roboto/Roboto-Regular.ttf", size=80), anchor="rb", fill=color)
+    draw.text((1550, 1880), "pfaditag.de", font=ImageFont.truetype("etc/Roboto/Roboto-Regular.ttf", size=80), fill=color)
 
     # compile a contact line
     if event.email and event.tel:
@@ -42,7 +42,7 @@ def sharepic_photo(event_id: int, color="#7876aa"):
         contact = event.group.website
     else:
         contact = f"{event.group.zip} {event.group.city}"
-    draw.text((50, 1950), contact, font=ImageFont.truetype("etc/Roboto/Roboto-Light.ttf", size=60), anchor="lb", fill=color)
+    draw.text((50, 1900), contact, font=ImageFont.truetype("etc/Roboto/Roboto-Light.ttf", size=60), fill=color)
 
     draw.text((50, 1550), event.title, font=ImageFont.truetype("etc/Roboto/Roboto-Bold.ttf", size=100), fill=color)
     draw.text((50, 1670), event.group.short_name, font=ImageFont.truetype("etc/Roboto/Roboto-Regular.ttf", size=100), fill=color)
