@@ -24,7 +24,7 @@ def sharepic_photo(event_id: int, color="#7876aa"):
     # PfadiTag transparent overlay
     overlay = Image.new('RGBA', img.size, (255, 255, 255, 0))
     overlay_draw = ImageDraw.Draw(overlay)
-    overlay_draw.text((-38, 1022), "PfadiTag", font=ImageFont.truetype("etc/Roboto/Roboto-Bold.ttf", size=515), fill=(255, 255, 255, 150))
+    overlay_draw.text((-38, 1030), "PfadiTag", font=ImageFont.truetype("etc/Roboto/Roboto-Bold.ttf", size=505), fill=(255, 255, 255, 150))
     img = Image.alpha_composite(img, overlay)
 
     # Draw texts
