@@ -45,7 +45,7 @@ def sharepic_photo(event_id: int, color="#7876aa"):
     draw.text((50, 1900), contact, font=ImageFont.truetype("etc/Roboto/Roboto-Light.ttf", size=60), fill=color)
 
     draw.text((50, 1550), event.title, font=ImageFont.truetype("etc/Roboto/Roboto-Bold.ttf", size=100), fill=color)
-    draw.text((50, 1670), event.group.short_name, font=ImageFont.truetype("etc/Roboto/Roboto-Regular.ttf", size=100), fill=color)
+    draw.text((50, 1670), f"Stamm {event.group.short_name}", font=ImageFont.truetype("etc/Roboto/Roboto-Regular.ttf", size=100), fill=color)
 
     if event.date == event.date_end:
         date_str = f'{event.date.strftime("%A, %d. %B %Y")} von {event.time.strftime("%H:%M")} bis {event.time_end.strftime("%H:%M")} Uhr'
