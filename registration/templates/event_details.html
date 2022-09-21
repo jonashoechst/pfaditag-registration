@@ -28,3 +28,15 @@
     </div>
 {% endif %}
 {% include 'buttons/event_buttons.html' %}
+
+{% if current_user.is_authenticated and current_user.has_event_permission(event) %}
+    <div>Individuelle Sharepics:</div>
+    <div class="btn-group my-3">
+        <a href="{{ url_for('sharepics.sharepic_story', event_id=event.id, story_id=1) }}" class="btn btn-outline-secondary">Story 1</i></a>
+        <a href="{{ url_for('sharepics.sharepic_story', event_id=event.id, story_id=2) }}" class="btn btn-outline-secondary">Story 2</i></a>
+        <a href="{{ url_for('sharepics.sharepic_story', event_id=event.id, story_id=3) }}" class="btn btn-outline-secondary">Story 3</i></a>
+        {% if event.photo %}
+            <a href="{{ url_for('sharepics.sharepic_photo', event_id=event.id) }}" class="btn btn-outline-secondary">Post</i></a>
+        {% endif %}
+    </div>
+{% endif %}
