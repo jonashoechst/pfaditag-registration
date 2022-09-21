@@ -111,6 +111,26 @@ class Event(db.Model):
     def dt_end(self) -> datetime.datetime:
         return datetime.datetime.combine(self.date_end, self.time_end)
 
+    @property
+    def date_string(self) -> str:
+        if self.date == self.date_end:
+            return f'{self.date.strftime("%A, %d. %B %Y")} von {self.time.strftime("%H:%M")} bis {self.time_end.strftime("%H:%M")} Uhr'
+
+        return f'von {self.dt.strftime("%A, %d.%m.%Y, %H:%M")} bis {self.dt_end.strftime("%A, %d.%m.%Y, %H:%M")} Uhr'
+
+    @property
+    def contact_string(self) -> str:
+        if self.email and self.tel:
+            return f"{self.email} - {self.tel}"
+        elif self.tel:
+            return self.tel
+        elif self.email:
+            return self.email
+        elif self.group.website:
+            return self.group.website
+        else:
+            return f"{self.group.zip} {self.group.city}"
+
 
 class User(UserMixin, db.Model):
     id = db.Column(db.String(100), unique=True, primary_key=True)

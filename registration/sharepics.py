@@ -31,27 +31,10 @@ def sharepic_photo(event_id: int, color="#7876aa"):
     draw = ImageDraw.Draw(img)
     draw.text((1550, 1880), "pfaditag.de", font=ImageFont.truetype("etc/Roboto/Roboto-Regular.ttf", size=80), fill=color)
 
-    # compile a contact line
-    if event.email and event.tel:
-        contact = f"{event.email} - {event.tel}"
-    elif event.tel:
-        contact = event.tel
-    elif event.email:
-        contact = event.email
-    elif event.group.website:
-        contact = event.group.website
-    else:
-        contact = f"{event.group.zip} {event.group.city}"
-    draw.text((50, 1900), contact, font=ImageFont.truetype("etc/Roboto/Roboto-Light.ttf", size=60), fill=color)
-
+    draw.text((50, 1900), event.contact_string, font=ImageFont.truetype("etc/Roboto/Roboto-Light.ttf", size=60), fill=color)
     draw.text((50, 1550), event.title, font=ImageFont.truetype("etc/Roboto/Roboto-Bold.ttf", size=100), fill=color)
     draw.text((50, 1670), f"Stamm {event.group.short_name}", font=ImageFont.truetype("etc/Roboto/Roboto-Regular.ttf", size=100), fill=color)
-
-    if event.date == event.date_end:
-        date_str = f'{event.date.strftime("%A, %d. %B %Y")} von {event.time.strftime("%H:%M")} bis {event.time_end.strftime("%H:%M")} Uhr'
-    else:
-        date_str = f'von {event.dt.strftime("%A, %d.%m.%Y, %H:%M")} bis {event.dt_end.strftime("%A, %d.%m.%Y, %H:%M")} Uhr'
-    draw.text((50, 1790), date_str, font=ImageFont.truetype("etc/Roboto/Roboto-Bold.ttf", size=50), fill=color)
+    draw.text((50, 1790), event.date_string, font=ImageFont.truetype("etc/Roboto/Roboto-Bold.ttf", size=50), fill=color)
 
     # create BytesIO as virtual output file
     img_bytes = io.BytesIO()
@@ -60,4 +43,33 @@ def sharepic_photo(event_id: int, color="#7876aa"):
     # send output
     response = flask.make_response(img_bytes.getvalue())
     response.headers['Content-Type'] = 'image/png'
+    response.headers["Content-Disposition"] = f"attachment"
+    return response
+
+
+@sharepics_bp.route('/sharepic_<int:event_id>_story_<int:story_id>.png')
+def sharepic_story(event_id: int, story_id: int, color="#7876aa"):
+    event: models.Event = models.Event.query.get(event_id)
+
+    # create PIL image / draw object
+    img = Image.open(f"etc/sharepics/story_{story_id}.png")
+    img = img.resize((1080, 1920))
+    draw = ImageDraw.Draw(img)
+
+    # Overlay text
+    draw.text((20, 1540), event.title, font=ImageFont.truetype("etc/Roboto/Roboto-Bold.ttf", size=60), fill=color)
+    draw.text((20, 1600), f"Stamm {event.group.short_name}", font=ImageFont.truetype("etc/Roboto/Roboto-Regular.ttf", size=60), fill=color)
+    draw.text((20, 1670), event.date_string, font=ImageFont.truetype("etc/Roboto/Roboto-Bold.ttf", size=30), fill=color)
+
+    draw.text((20, 1740), event.contact_string, font=ImageFont.truetype("etc/Roboto/Roboto-Light.ttf", size=40), fill=color)
+
+    # create BytesIO as virtual output file
+    img_bytes = io.BytesIO()
+    img.save(img_bytes, format='PNG')
+
+    # send output
+    response = flask.make_response(img_bytes.getvalue())
+    response.headers['Content-Type'] = 'image/png'
+    response.headers["Content-Disposition"] = f"attachment"
+
     return response
