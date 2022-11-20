@@ -75,7 +75,8 @@ class Group(db.Model):
     def query_managers(self):
         return User.query.filter(
             (User.is_superuser) |
-            (User.is_manager_land & (User.manage_land_id == self.land_id))
+            (User.is_manager_land & (User.manage_land_id == self.land_id)) |
+            (User.is_manager_group & (User.manage_group_id == self.id))
         )
 
 
@@ -219,6 +220,11 @@ class User(UserMixin, db.Model):
         logging.debug("%s.query_users()", self)
         users = [self]
 
+        if self.is_manager_group and self.manage_group_id:
+            for user in self.manage_group.users:
+                if user not in users:
+                    users.append(user)
+
         if self.is_manager_land and self.manage_land_id:
             # add all land managers
             for user in self.manage_land.users:
@@ -246,7 +252,9 @@ class User(UserMixin, db.Model):
                 # all managers of the same land
                 (User.is_manager_land & (User.manage_land_id == self.manage_land_id)) |
                 # all managers of the group's land
-                (User.is_manager_land & (User.manage_land_id == self.manage_group.land_id))
+                (User.is_manager_land & (User.manage_land_id == self.manage_group.land_id)) |
+                # all managers of the group
+                (User.is_manager_group & (User.manage_group_id == self.manage_group_id))
             )
 
         return User.query.filter(
