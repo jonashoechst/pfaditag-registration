@@ -3,6 +3,7 @@ import flask
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileSize
 from flask_login import current_user, login_required
+from flask_mail import Message
 from wtforms import (
     StringField,
     EmailField,
@@ -12,6 +13,7 @@ from wtforms import (
     SelectField,
     DateField,
     TimeField,
+    BooleanField,
 )
 from wtforms.validators import (
     DataRequired,
@@ -23,6 +25,7 @@ from wtforms.validators import (
 
 from . import models
 from .models import db
+from . import mail
 
 current_user: models.User
 
@@ -248,3 +251,59 @@ def events_edit(_id):
             field.data = event.__dict__[field_id]
 
     return flask.render_template('admin/events_edit.html', form=form, _id=_id)
+
+
+class MailForm(FlaskForm):
+    recv_users = BooleanField(
+        'Koordinator*innen',
+        description="Sende an alle Koordinator*innen, die auf deiner Ebene oder darunter sind (z.B. Stämme deines Landes).",
+    )
+    recv_event_mails = BooleanField(
+        'Kontaktadressen Aktionen',
+        description="Sende an alle Aktionen, die du in deiner Rolle verwalten kannst (z.B. Aktionen deines Landes).",
+    )
+    subject = StringField(
+        'Betreff',
+        validators=[DataRequired(), Length(max=400), ],
+    )
+    text = TextAreaField(
+        'Text',
+        validators=[Length(max=10000), ],
+        render_kw={'rows': '12'},
+    )
+
+    submit = SubmitField('Senden')
+
+
+@admin_bp.route('/mail', methods=['GET', 'POST'])
+@login_required
+def send_mail():
+    form = MailForm()
+
+    if form.submit.data:
+        if form.validate_on_submit():
+            recipients = []
+
+            if form.recv_users.data:
+                print(current_user.query_users())
+                recipients.extend([u.id for u in current_user.query_users()])
+            if form.recv_event_mails.data:
+                recipients.extend([e.email for e in current_user.query_events()])
+
+            msg = Message(
+                subject=f"[{flask.current_app.config['APP_TITLE']}] {form.subject.data}",
+                sender=f"{current_user.name} <{flask.current_app.config['MAIL_USERNAME']}>",
+                recipients=recipients,
+                cc=[current_user.id],
+                reply_to=current_user.id,
+            )
+            msg.body = form.text.data
+            mail.send(msg)
+
+            if len(recipients) > 0:
+                flask.flash(f"Mail '{msg.subject}' wurde an {len(recipients)} Adressen gesendet.", "success")
+                return flask.redirect(flask.url_for('public.events'))
+
+            flask.flash(f"Mail '{msg.subject}' wurde nur an die eigene Adresse gesendet.", "warning")
+
+    return flask.render_template('generic_form.html', title="E-Mail senden", form=form, subtitle="Empfängergruppen")
