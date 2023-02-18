@@ -1,6 +1,6 @@
 # values are parsed with json.loads(), hence boolean values need to be lowercase or 0/1
 FLASK_APP = "registration.py"
-FLASK_ENV = "development"
+FLASK_DEBUG = 1
 FLASK_SQLALCHEMY_DATABASE_URI = "sqlite:///test.db"
 FLASK_SECRET_KEY = "5f352379324c22463451387a0aec5d2f"
 FLASK_SQLALCHEMY_TRACK_MODIFICATIONS = False

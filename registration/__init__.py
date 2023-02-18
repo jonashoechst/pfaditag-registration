@@ -10,13 +10,24 @@ from flask_bootstrap import Bootstrap5
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
+from sqlalchemy import MetaData
 
 locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
 
+metadata = MetaData(
+    naming_convention={
+        "ix": 'ix_%(column_0_label)s',
+        "uq": "uq_%(table_name)s_%(column_0_name)s",
+        "ck": "ck_%(table_name)s_%(constraint_name)s",
+        "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+        "pk": "pk_%(table_name)s"
+    }
+)
+
+db = SQLAlchemy(metadata=metadata)
 migrate = Migrate()
 login_manager = LoginManager()
 mail = Mail()
-db = SQLAlchemy()
 
 
 def create_app():
@@ -34,7 +45,6 @@ def create_app():
     login_manager.init_app(app)
     mail.init_app(app)
 
-
     with app.app_context():
         from registration.admin import admin_bp
         app.register_blueprint(admin_bp)
@@ -48,6 +58,7 @@ def create_app():
         from registration.sharepics import sharepics_bp
         app.register_blueprint(sharepics_bp)
 
-        with db.session.no_autoflush:
-            db.create_all()
+        from registration.models import update_groups
+        update_groups()
+
         return app

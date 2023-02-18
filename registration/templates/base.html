@@ -43,6 +43,8 @@
                                 Superuser
                             {% elif current_user.is_manager_land and current_user.manage_land %}
                                 Landeskoodinator*in {{ current_user.manage_land.name }}
+                            {% elif current_user.is_manager_region and current_user.manage_region %}
+                                Regionskoodinator*in {{ current_user.manage_region.name }}
                             {% elif current_user.is_manager_group and current_user.manage_group %}
                                 Stammeskoodinator*in {{ current_user.manage_group.name }}
                             {% endif %}

@@ -2,3 +2,4 @@ registration.pid
 ENV
 **/__pycache__
 venv
+instance/test.db

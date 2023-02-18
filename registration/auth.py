@@ -27,6 +27,7 @@ from .models import (
     db,
     User,
     Group,
+    Region,
     Land,
 )
 
@@ -60,15 +61,6 @@ class ProfileForm(FlaskForm):
         description="Superuser-Rechte erlauben es, auf alle Inhalte zuzugreifen.",
     )
 
-    manage_group_id = SelectField(
-        'Stammeskoodinator*in',
-        coerce=int,
-        description="Wähle einen Stamm aus, für die du Aktionen verwalten möchtest. Der Zugriff muss noch bestätigt werden.",
-    )
-    is_manager_group = BooleanField(
-        'Freigabe Stamm',
-        description="Stammeskoodinator-Rechte erlauben es, auf den Stamm zuzugreifen.",
-    )
     manage_land_id = SelectField(
         'Landeskoodinator*in',
         coerce=int,
@@ -77,6 +69,24 @@ class ProfileForm(FlaskForm):
     is_manager_land = BooleanField(
         'Freigabe Land',
         description="Landeskoodinator*in-Rechte erlauben es, auf das Land zuzugreifen.",
+    )
+    manage_region_id = SelectField(
+        'Regionskoodinator*in',
+        coerce=int,
+        description="Wähle eine(n) Region/Gau/Bezirk aus, für die du Aktionen verwalten möchtest. Der Zugriff muss noch bestätigt werden.",
+    )
+    is_manager_region = BooleanField(
+        'Freigabe Region',
+        description="Regionskoodinator-Rechte erlauben es, auf die Region zuzugreifen.",
+    )
+    manage_group_id = SelectField(
+        'Stammeskoodinator*in',
+        coerce=int,
+        description="Wähle einen Stamm aus, für die du Aktionen verwalten möchtest. Der Zugriff muss noch bestätigt werden.",
+    )
+    is_manager_group = BooleanField(
+        'Freigabe Stamm',
+        description="Stammeskoodinator-Rechte erlauben es, auf den Stamm zuzugreifen.",
     )
 
     submit = SubmitField('Speichern')
@@ -277,8 +287,9 @@ def user(_id):
             flask.flash("Du hast keine Berechtigung, diesen Account zu bearbeiten.", 'alert')
             return flask.redirect(flask.url_for('auth.users'))
 
-    form.manage_group_id.choices = [(0, "")] + [(g.id, g.display_name) for g in Group.query.all()]
     form.manage_land_id.choices = [(0, "")] + [(l.id, l.name) for l in Land.query.all()]
+    form.manage_region_id.choices = [(0, "")] + [(r.id, r.display_name) for r in Region.query.all()]
+    form.manage_group_id.choices = [(0, "")] + [(g.id, g.display_name) for g in Group.query.all()]
 
     # POST: delete user
     if form.delete.data:
@@ -290,8 +301,9 @@ def user(_id):
     # POST: save user
     if form.submit.data:
         if form.validate_on_submit():
-            form.manage_group_id.data = form.manage_group_id.data if form.manage_group_id.data else None
             form.manage_land_id.data = form.manage_land_id.data if form.manage_land_id.data else None
+            form.manage_region_id.data = form.manage_region_id.data if form.manage_region_id.data else None
+            form.manage_group_id.data = form.manage_group_id.data if form.manage_group_id.data else None
 
             _user.name = form.name.data
             if form.password.data:
@@ -340,24 +352,60 @@ def user(_id):
                         flask.flash("Durch die Änderung des Landes wurde die Freigabe entzogen.", 'warning')
                         _user.is_manager_land = False
 
+                # _region manager privilege can be altered by superusers or land managers
+                if form.is_manager_region.data != _user.is_manager_region:
+                    if current_user.is_superuser:
+                        flask.flash("Regionskoordinator-Rechte mit Hilfe der Superuser-Rechte bearbeitet.")
+                        permissions_altered = True
+                        _user.is_manager_region = form.is_manager_region.data
+                    elif current_user.is_manager_land and current_user.manage_land == _user.manage_region.land:
+                        flask.flash("Regionskoodinator-Rechte mit Hilfe der Landeskoodinator-Rechte bearbeitet.")
+                        permissions_altered = True
+                        _user.is_manager_region = form.is_manager_region.data
+                    elif current_user == _user:
+                        flask.flash("Du kannst deine eigenen Rechte nur bearbeiten, wenn du weitergehende Rechte hast.", 'warning')
+                    elif current_user.is_manager_land and current_user.manage_land == _user.manage_land:
+                        flask.flash("Regionskoodinator-Rechte mit Hilfe der Landeskoodinator*in-Rechte bearbeitet.")
+                        permissions_altered = True
+                        _user.is_manager_region = form.is_manager_region.data
+                    else:
+                        flask.flash(f"Du hast keine Berechtigung, Rechte für das Land {_user.manage_land.name} zu vergeben.", 'warning')
+
+                # updated managed region
+                if form.manage_region_id.data != _user.manage_region_id:
+                    _user.manage_region_id = form.manage_region_id.data
+                    permissions_altered = True
+
+                    # reset permission if region changed
+                    if current_user.is_superuser:
+                        pass
+                    elif not _user.is_manager_region:
+                        pass
+                    else:
+                        flask.flash("Durch die Änderung der/des Region/Bezirk/Gau wurde die Freigabe entzogen.", 'warning')
+                        _user.is_manager_region = False
+
                 # group manager privilege can be altered by superusers or land managers
                 if form.is_manager_group.data != _user.is_manager_group:
                     # Allow if current user has permission for the same group
                     # Allow if current user has permission for the groups land
 
-                    # Allow for superusers
                     if current_user.is_superuser:
-                        flask.flash("Stammeskoodinator*in-Rechte mit Hilfe der Superuser-Rechte bearbeitet.")
+                        flask.flash("Stammeskoodinator-Rechte mit Hilfe der Superuser-Rechte bearbeitet.")
                         permissions_altered = True
                         _user.is_manager_group = form.is_manager_group.data
                     elif current_user.is_manager_land and current_user.manage_land == _user.manage_group.land:
-                        flask.flash("Stammeskoodinator*in-Rechte mit Hilfe der Landeskoodinator*in-Rechte bearbeitet.")
+                        flask.flash("Stammeskoodinator-Rechte mit Hilfe der Landeskoodinator-Rechte bearbeitet.")
+                        permissions_altered = True
+                        _user.is_manager_group = form.is_manager_group.data
+                    elif current_user.is_manager_region and current_user.manage_region == _user.manage_group.region:
+                        flask.flash("Stammeskoodinator-Rechte mit Hilfe der Regionskoordinator-Rechte bearbeitet.")
                         permissions_altered = True
                         _user.is_manager_group = form.is_manager_group.data
                     elif current_user == _user:
                         flask.flash("Du kannst deine eigenen Rechte nur bearbeiten, wenn du weitergehende Rechte hast.", 'warning')
                     elif current_user.is_manager_group and current_user.manage_group == _user.manage_group:
-                        flask.flash("Stammeskoodinator*in-Rechte mit Hilfe der Stammeskoodinator*in-Rechte bearbeitet.")
+                        flask.flash("Stammeskoodinator-Rechte mit Hilfe der Stammeskoodinator-Rechte bearbeitet.")
                         permissions_altered = True
                         _user.is_manager_group = form.is_manager_group.data
                     else:
@@ -372,6 +420,8 @@ def user(_id):
                     if current_user.is_superuser:
                         pass
                     elif current_user.is_manager_land and current_user.manage_land == _user.manage_land:
+                        pass
+                    elif current_user.is_manager_region and current_user.manage_region == _user.manage_region:
                         pass
                     elif not _user.is_manager_group:
                         pass
@@ -401,6 +451,7 @@ def user(_id):
 
                 _user.id = form.id.data
                 _user.manage_group_id = form.manage_group_id.data
+                _user.manage_region_id = form.manage_region_id.data
                 _user.manage_land_id = form.manage_land_id.data
 
                 db.session.add(_user)

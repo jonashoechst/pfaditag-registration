@@ -1,27 +1,31 @@
+from __future__ import annotations
 import csv
 import datetime
 import logging
 import secrets
-from typing import List
 
-from flask_sqlalchemy import event
+# from flask_sqlalchemy import event
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import Mapped
+from sqlalchemy.exc import OperationalError
 from . import db
+db: SQLAlchemy
 
 
 class Land(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), index=True)
-    groups = db.relationship('Group', back_populates='land')
-    regions = db.relationship('Region', back_populates='land')
-    users = db.relationship('User', back_populates='manage_land')
+    id: Mapped[int] = db.Column(db.Integer, primary_key=True)
+    name: Mapped[str] = db.Column(db.String(64), index=True)
+    groups: Mapped[list[Group]] = db.relationship('Group', back_populates='land')
+    regions: Mapped[list[Region]] = db.relationship('Region', back_populates='land')
+    users: Mapped[list[User]] = db.relationship('User', back_populates='manage_land')
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<Land {self.id} ({self.name})>'
 
-    def query_managers(self):
+    def query_managers(self) -> list[User]:
         return User.query.filter(
             (User.is_superuser) |
             (User.is_manager_land & (User.manage_land_id == self.id))
@@ -29,50 +33,62 @@ class Land(db.Model):
 
 
 class Region(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), index=True)
+    id: Mapped[int] = db.Column(db.Integer, primary_key=True)
+    name: Mapped[str] = db.Column(db.String(64), index=True)
 
-    land_id = db.Column(db.Integer, db.ForeignKey('land.id'))
-    land = db.relationship("Land", back_populates="regions")
+    land_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey('land.id'))
+    land: Mapped[Land] = db.relationship("Land", back_populates="regions")
 
-    groups = db.relationship('Group', back_populates='region')
+    groups: Mapped[list[Group]] = db.relationship('Group', back_populates='region')
+    users: Mapped[list[User]] = db.relationship('User', back_populates='manage_region')
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<Region {self.id} ({self.name})>'
+
+    @property
+    def display_name(self) -> str:
+        return f'{self.land.name}, {self.name} ({self.id})'
+
+    def query_managers(self) -> list[User]:
+        return User.query.filter(
+            (User.is_superuser) |
+            (User.is_manager_land & (User.manage_land_id == self.land_id))
+            (User.is_manager_region & (User.manage_region_id == self.id))
+        )
 
 
 class Group(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = db.Column(db.Integer, primary_key=True)
 
-    name = db.Column(db.String(64))
-    street = db.Column(db.String(64))
-    zip = db.Column(db.String(5))
-    city = db.Column(db.String(64))
-    website = db.Column(db.String(64))
-    instagram = db.Column(db.String(64))
-    facebook = db.Column(db.String(64))
+    name: Mapped[str] = db.Column(db.String(64))
+    street: Mapped[str] = db.Column(db.String(64))
+    zip: Mapped[str] = db.Column(db.String(5))
+    city: Mapped[str] = db.Column(db.String(64))
+    website: Mapped[str] = db.Column(db.String(64))
+    instagram: Mapped[str] = db.Column(db.String(64))
+    facebook: Mapped[str] = db.Column(db.String(64))
 
-    land_id = db.Column(db.Integer, db.ForeignKey('land.id'))
-    land = db.relationship("Land", back_populates="groups")
+    land_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey('land.id'))
+    land: Mapped[Land] = db.relationship("Land", back_populates="groups")
 
-    region_id = db.Column(db.Integer, db.ForeignKey('region.id'))
-    region = db.relationship("Region", back_populates="groups")
+    region_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey('region.id'))
+    region: Mapped[Region] = db.relationship("Region", back_populates="groups")
 
-    events = db.relationship('Event', back_populates='group')
-    users = db.relationship('User', back_populates='manage_group')
+    events: Mapped[list[Event]] = db.relationship('Event', back_populates='group')
+    users: Mapped[list[User]] = db.relationship('User', back_populates='manage_group')
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<Group {self.id} ({self.name})>'
 
     @property
-    def display_name(self):
+    def display_name(self) -> str:
         return f'{self.land.name}, Stamm {self.name}, {self.city} ({self.id})'
 
     @property
-    def short_name(self):
+    def short_name(self) -> str:
         return f'{self.name}, {self.city}'
 
-    def query_managers(self):
+    def query_managers(self) -> list[User]:
         return User.query.filter(
             (User.is_superuser) |
             (User.is_manager_land & (User.manage_land_id == self.land_id)) |
@@ -81,27 +97,27 @@ class Group(db.Model):
 
 
 class Event(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = db.Column(db.Integer, primary_key=True)
 
-    title = db.Column(db.String(64), index=True)
-    email = db.Column(db.String(64))
-    tel = db.Column(db.String(32))
+    title: Mapped[str] = db.Column(db.String(64), index=True)
+    email: Mapped[str] = db.Column(db.String(64))
+    tel: Mapped[str] = db.Column(db.String(32))
 
-    lat = db.Column(db.Numeric(8, 6))
-    lon = db.Column(db.Numeric(9, 6))
+    lat: Mapped[float] = db.Column(db.Numeric(8, 6))
+    lon: Mapped[float] = db.Column(db.Numeric(9, 6))
 
-    date: datetime.date = db.Column(db.Date, index=True, default=datetime.date(2022, 9, 24))
-    time: datetime.time = db.Column(db.Time, index=True, default=datetime.time(00, 00))
-    date_end: datetime.date = db.Column(db.Date, index=True, default=datetime.date(2022, 9, 24))
-    time_end: datetime.time = db.Column(db.Time, index=True, default=datetime.time(00, 00))
+    date: Mapped[datetime.date] = db.Column(db.Date, index=True, default=datetime.date(2022, 9, 24))
+    time: Mapped[datetime.date] = db.Column(db.Time, index=True, default=datetime.time(00, 00))
+    date_end: Mapped[datetime.date] = db.Column(db.Date, index=True, default=datetime.date(2022, 9, 24))
+    time_end: Mapped[datetime.date] = db.Column(db.Time, index=True, default=datetime.time(00, 00))
 
-    description = db.Column(db.String(2000))
+    description: Mapped[str] = db.Column(db.String(2000))
     photo = db.Column(db.LargeBinary(16*1024**2))
 
-    group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
-    group: Group = db.relationship("Group", back_populates="events")
+    group_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey('group.id'))
+    group: Mapped[Group] = db.relationship("Group", back_populates="events")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<Event {self.id} ({self.title})>'
 
     @property
@@ -134,43 +150,50 @@ class Event(db.Model):
 
 
 class User(UserMixin, db.Model):
-    id = db.Column(db.String(100), unique=True, primary_key=True)
-    password = db.Column(db.String(200), primary_key=False, unique=False, nullable=False)
-    name = db.Column(db.String(100), nullable=False, unique=False)
+    id: Mapped[int] = db.Column(db.String(100), unique=True, primary_key=True)
+    password: Mapped[str] = db.Column(db.String(200), primary_key=False, unique=False, nullable=False)
+    name: Mapped[str] = db.Column(db.String(100), nullable=False, unique=False)
 
-    manage_land_id = db.Column(db.Integer, db.ForeignKey('land.id'), nullable=True)
-    manage_land = db.relationship('Land')
-    manage_group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
-    manage_group = db.relationship('Group')
+    manage_land_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey('land.id'), nullable=True)
+    manage_land: Mapped[Land] = db.relationship('Land')
+    manage_region_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey('region.id'), nullable=True)
+    manage_region: Mapped[Region] = db.relationship('Region')
+    manage_group_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
+    manage_group: Mapped[Group] = db.relationship('Group')
 
     # permissions
-    is_superuser = db.Column(db.Boolean, default=False)
-    is_manager_land = db.Column(db.Boolean, default=False)
-    is_manager_group = db.Column(db.Boolean, default=False)
+    is_superuser: Mapped[bool] = db.Column(db.Boolean, default=False)
+    is_manager_land: Mapped[bool] = db.Column(db.Boolean, default=False)
+    is_manager_region: Mapped[bool] = db.Column(db.Boolean, default=False)
+    is_manager_group: Mapped[bool] = db.Column(db.Boolean, default=False)
 
-    created_on = db.Column(db.DateTime, index=False, unique=False, nullable=True)
-    last_login = db.Column(db.DateTime, index=False, unique=False, nullable=True)
-    token = db.Column(db.String(32), unique=False, nullable=True)
-    token_expiration = db.Column(db.DateTime, index=False, unique=False, nullable=True)
+    created_on: Mapped[datetime.datetime] = db.Column(db.DateTime, index=False, unique=False, nullable=True)
+    last_login: Mapped[datetime.datetime] = db.Column(db.DateTime, index=False, unique=False, nullable=True)
+    token: Mapped[str] = db.Column(db.String(32), unique=False, nullable=True)
+    token_expiration: Mapped[datetime.datetime] = db.Column(db.DateTime, index=False, unique=False, nullable=True)
 
-    def set_password(self, password):
+    def set_password(self, password: str):
         self.password = generate_password_hash(password, method='sha256')
 
-    def check_password(self, password):
+    def check_password(self, password: str) -> bool:
         if not password:
             return False
         return check_password_hash(self.password, password)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<User {self.id} ({self.name})>'
 
-    def query_groups(self) -> List[Group]:
+    def query_groups(self) -> list[Group]:
         '''Returns a list of groups the user can manage'''
         logging.debug("%s.query_groups()", self)
         groups = []
 
         if self.is_manager_group and self.manage_group_id:
             groups.append(self.manage_group)
+        if self.is_manager_region and self.manage_region_id:
+            for group in self.manage_region.groups:
+                if group not in groups:
+                    groups.append(group)
         if self.is_manager_land and self.manage_land_id:
             for group in self.manage_land.groups:
                 if group not in groups:
@@ -182,13 +205,18 @@ class User(UserMixin, db.Model):
 
         return groups
 
-    def query_events(self) -> List[Event]:
+    def query_events(self) -> list[Event]:
         '''Returns a list of events that the user is allowed to manage'''
         logging.debug("%s.query_events()", self)
         events = []
 
         if self.is_manager_group and self.manage_group_id:
             events += self.manage_group.events
+        if self.is_manager_region and self.manage_region_id:
+            for group in self.manage_region.groups:
+                for event in group.events:
+                    if event not in events:
+                        events.append(event)
         if self.is_manager_land and self.manage_land_id:
             for group in self.manage_land.groups:
                 for event in group.events:
@@ -201,10 +229,28 @@ class User(UserMixin, db.Model):
 
         return events
 
-    def query_lands(self) -> List[Land]:
+    def query_regions(self) -> list[Region]:
+        '''Returns a list of regions the user can manage'''
+        logging.debug("%s.query_regions()", self)
+        regions: list[Region] = []
+
+        if self.is_manager_region and self.manage_region_id:
+            regions.append(self.manage_region)
+        if self.is_manager_land and self.manage_land_id:
+            for region in self.manage_land.regions:
+                if region not in regions:
+                    regions.append(region)
+        if self.is_superuser:
+            for region in Region.query.all():
+                if region not in region:
+                    regions.append(region)
+
+        return regions
+
+    def query_lands(self) -> list[Land]:
         '''Returns a list of lands the user can manage'''
         logging.debug("%s.query_lands()", self)
-        lands = []
+        lands: list[Land] = []
 
         if self.is_manager_land and self.manage_land_id:
             lands.append(self.manage_land)
@@ -215,21 +261,37 @@ class User(UserMixin, db.Model):
 
         return lands
 
-    def query_users(self) -> List:
+    def query_users(self) -> list[User]:
         '''Returns as list of users this user can manage'''
         logging.debug("%s.query_users()", self)
-        users = [self]
+        users: list[User] = [self]
 
         if self.is_manager_group and self.manage_group_id:
             for user in self.manage_group.users:
                 if user not in users:
                     users.append(user)
 
+        if self.is_manager_region and self.manage_region_id:
+            # add all region managers
+            for user in self.manage_region.users:
+                if user not in users:
+                    users.append(user)
+            # add all managers of groups belonging to the land
+            for group in self.manage_region.groups:
+                for user in group.users:
+                    if user not in users:
+                        users.append(user)
+
         if self.is_manager_land and self.manage_land_id:
             # add all land managers
             for user in self.manage_land.users:
                 if user not in users:
                     users.append(user)
+            # add all managers of regions belonging to the land
+            for region in self.manage_land.regions:
+                for user in region.users:
+                    if user not in users:
+                        users.append(user)
             # add all managers of groups belonging to the land
             for group in self.manage_land.groups:
                 for user in group.users:
@@ -244,23 +306,46 @@ class User(UserMixin, db.Model):
 
         return users
 
-    def query_managers(self) -> List:
+    def query_managers(self) -> list[User]:
         '''Returns a list of users that can manage this user'''
         logging.debug("%s.query_managers()", self)
-        if self.manage_group_id:
-            return User.query.filter(
-                # all managers of the same land
-                (User.is_manager_land & (User.manage_land_id == self.manage_land_id)) |
-                # all managers of the group's land
-                (User.is_manager_land & (User.manage_land_id == self.manage_group.land_id)) |
-                # all managers of the group
-                (User.is_manager_group & (User.manage_group_id == self.manage_group_id))
-            )
 
-        return User.query.filter(
-            # all managers of the same land
-            (User.is_manager_land & (User.manage_land_id == self.manage_land_id))
-        )
+        managers: list[User] = []
+
+        # the group managers can be managed by
+        if self.manage_group_id:
+            for user in User.query.filter(
+                # all managers of the group
+                (User.is_manager_group & (User.manage_group_id == self.manage_group_id)) |
+                # all managers of the group' region
+                (User.is_manager_region & (User.manage_region_id == self.manage_group.region_id)) |
+                # all managers of the group's land
+                (User.is_manager_land & (User.manage_land_id == self.manage_group.land_id))
+            ):
+                if user not in managers:
+                    managers.append(user)
+
+        # the region managers can be managed by
+        if self.manage_region_id:
+            for user in User.query.filter(
+                # all managers of the region
+                (User.is_manager_region & (User.manage_region_id == self.manage_region_id)) |
+                # all managers of the regions's land
+                (User.is_manager_land & (User.manage_land_id == self.manage_region.land_id))
+            ):
+                if user not in managers:
+                    managers.append(user)
+
+        # the land managers can be managed by
+        if self.manage_land_id:
+            for user in User.query.filter(
+                # all managers of the land
+                (User.is_manager_land & (User.manage_land_id == self.manage_land_id))
+            ):
+                if user not in managers:
+                    managers.append(user)
+
+        return managers
 
     def set_token(self, validity: datetime.timedelta = datetime.timedelta(days=1)) -> str:
         self.token = secrets.token_urlsafe(24)
@@ -278,26 +363,30 @@ class User(UserMixin, db.Model):
 
         return False
 
-    @ property
+    @property
     def has_permissions(self) -> bool:
-        return (self.is_superuser or self.is_manager_land or self.is_manager_group)
+        return (self.is_superuser or self.is_manager_region or self.is_manager_land or self.is_manager_group)
 
-    def has_group_permission(self, group: Group):
+    def has_group_permission(self, group: Group) -> bool:
         '''Returns a boolean indicating the user has permissions to access the group'''
         if self.is_superuser:
             return True
         if self.is_manager_land and self.manage_land_id == group.land_id:
+            return True
+        if self.is_manager_region and self.manage_region_id == group.region_id:
             return True
         if self.is_manager_group and self.manage_group_id == group.id:
             return True
 
         return False
 
-    def has_event_permission(self, event: Event):
+    def has_event_permission(self, event: Event) -> bool:
         '''Returns a boolean indicating the user has permissions to access the group'''
         if self.is_superuser:
             return True
         if self.is_manager_land and self.manage_land == event.group.land_id:
+            return True
+        if self.is_manager_region and self.manage_region == event.group.region_id:
             return True
         if self.is_manager_group and self.manage_group_id == event.group_id:
             return True
@@ -305,45 +394,49 @@ class User(UserMixin, db.Model):
         return False
 
 
-@ event.listens_for(Group.__table__, 'after_create')
-def create_departments(*args, **kwargs):
-    with open("etc/group_list.csv") as group_list:
-        group_reader = csv.reader(group_list, dialect='excel', delimiter=';')
-        next(group_reader)
-        for _id, _land, _region, _name, _ort, *_ in group_reader:
-            try:
-                _name = _name[4:] if _name.startswith("VCP ") else _name
-                _name = _name[6:] if _name.startswith("Stamm ") else _name
-                _name = _name.strip()
+def update_groups(csv_path="etc/group_list.csv"):
+    try:
+        with open(csv_path, encoding="utf-8") as group_list:
+            group_reader = csv.reader(group_list, dialect='excel', delimiter=';')
+            next(group_reader)
+            for _id, _land, _region, _name, _ort, *_ in group_reader:
+                try:
+                    _name = _name[4:] if _name.startswith("VCP ") else _name
+                    _name = _name[6:] if _name.startswith("Stamm ") else _name
+                    _name = _name.strip()
 
-                group = Group(
-                    id=int(_id),
-                    name=_name.strip(),
-                    zip=_ort[:5],
-                    city=_ort[6:],
-                    land_id=int(_id[:2]),
-                    region_id=int(_id[:4]),
-                )
-                db.session.add(group)
+                    group = Group.query.get(int(_id))
+                    if group is None:
+                        group = Group(
+                            id=int(_id),
+                            name=_name.strip(),
+                            zip=_ort[:5],
+                            city=_ort[6:],
+                            land_id=int(_id[:2]),
+                            region_id=int(_id[:4]),
+                        )
+                        db.session.add(group)
 
-                if Land.query.filter_by(id=group.land_id).count() == 0:
-                    land = Land(
-                        id=group.land_id,
-                        name=_land.strip(),
-                    )
-                    db.session.add(land)
+                    if Land.query.filter_by(id=group.land_id).count() == 0:
+                        land = Land(
+                            id=group.land_id,
+                            name=_land.strip(),
+                        )
+                        db.session.add(land)
 
-                if Region.query.filter_by(id=group.region_id).count() == 0:
-                    region = Region(
-                        id=group.region_id,
-                        name=_region.strip(),
-                        land_id=group.land_id,
-                    )
-                    db.session.add(region)
+                    if Region.query.filter_by(id=group.region_id).count() == 0:
+                        region = Region(
+                            id=group.region_id,
+                            name=_region.strip(),
+                            land_id=group.land_id,
+                        )
+                        db.session.add(region)
 
-                db.session.commit()
+                    db.session.commit()
 
-            except ValueError:
-                pass
+                except ValueError:
+                    pass
 
-    db.session.commit()
+        db.session.commit()
+    except OperationalError as e:
+        logging.warning("Couldn't update groups: %s", e)
