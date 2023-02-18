@@ -4,13 +4,13 @@ import datetime
 import logging
 import secrets
 
-# from flask_sqlalchemy import event
+import flask
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import Mapped
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import OperationalError, ProgrammingError
 from . import db
 db: SQLAlchemy
 
@@ -185,7 +185,7 @@ class User(UserMixin, db.Model):
 
     def query_groups(self) -> list[Group]:
         '''Returns a list of groups the user can manage'''
-        logging.debug("%s.query_groups()", self)
+        flask.current_app.logger.debug("%s.query_groups()", self)
         groups = []
 
         if self.is_manager_group and self.manage_group_id:
@@ -207,7 +207,7 @@ class User(UserMixin, db.Model):
 
     def query_events(self) -> list[Event]:
         '''Returns a list of events that the user is allowed to manage'''
-        logging.debug("%s.query_events()", self)
+        flask.current_app.logger.debug("%s.query_events()", self)
         events = []
 
         if self.is_manager_group and self.manage_group_id:
@@ -231,7 +231,7 @@ class User(UserMixin, db.Model):
 
     def query_regions(self) -> list[Region]:
         '''Returns a list of regions the user can manage'''
-        logging.debug("%s.query_regions()", self)
+        flask.current_app.logger.debug("%s.query_regions()", self)
         regions: list[Region] = []
 
         if self.is_manager_region and self.manage_region_id:
@@ -249,7 +249,7 @@ class User(UserMixin, db.Model):
 
     def query_lands(self) -> list[Land]:
         '''Returns a list of lands the user can manage'''
-        logging.debug("%s.query_lands()", self)
+        flask.current_app.logger.debug("%s.query_lands()", self)
         lands: list[Land] = []
 
         if self.is_manager_land and self.manage_land_id:
@@ -263,7 +263,7 @@ class User(UserMixin, db.Model):
 
     def query_users(self) -> list[User]:
         '''Returns as list of users this user can manage'''
-        logging.debug("%s.query_users()", self)
+        flask.current_app.logger.debug("%s.query_users()", self)
         users: list[User] = [self]
 
         if self.is_manager_group and self.manage_group_id:
@@ -308,7 +308,7 @@ class User(UserMixin, db.Model):
 
     def query_managers(self) -> list[User]:
         '''Returns a list of users that can manage this user'''
-        logging.debug("%s.query_managers()", self)
+        flask.current_app.logger.debug("%s.query_managers()", self)
 
         managers: list[User] = []
 
@@ -396,47 +396,64 @@ class User(UserMixin, db.Model):
 
 def update_groups(csv_path="etc/group_list.csv"):
     try:
-        with open(csv_path, encoding="utf-8") as group_list:
-            group_reader = csv.reader(group_list, dialect='excel', delimiter=';')
-            next(group_reader)
-            for _id, _land, _region, _name, _ort, *_ in group_reader:
-                try:
-                    _name = _name[4:] if _name.startswith("VCP ") else _name
-                    _name = _name[6:] if _name.startswith("Stamm ") else _name
-                    _name = _name.strip()
+        group_list = open(csv_path, encoding="utf-8")
+        group_reader = csv.reader(group_list, dialect='excel', delimiter=';')
 
-                    group = Group.query.get(int(_id))
-                    if group is None:
-                        group = Group(
-                            id=int(_id),
-                            name=_name.strip(),
-                            zip=_ort[:5],
-                            city=_ort[6:],
-                            land_id=int(_id[:2]),
-                            region_id=int(_id[:4]),
-                        )
-                        db.session.add(group)
+        # skip csv header
+        next(group_reader)
 
-                    if Land.query.filter_by(id=group.land_id).count() == 0:
-                        land = Land(
-                            id=group.land_id,
-                            name=_land.strip(),
-                        )
-                        db.session.add(land)
+        for _id, _land, _region, _name, _ort, *_ in group_reader:
+            # skip empty lines
+            if _id == "":
+                continue
 
-                    if Region.query.filter_by(id=group.region_id).count() == 0:
-                        region = Region(
-                            id=group.region_id,
-                            name=_region.strip(),
-                            land_id=group.land_id,
-                        )
-                        db.session.add(region)
+            try:
+                _name = _name[4:] if _name.startswith("VCP ") else _name
+                _name = _name[6:] if _name.startswith("Stamm ") else _name
+                _name = _name.strip()
 
-                    db.session.commit()
+                _land_id = int(_id[:2])
+                land = Land.query.get(_land_id)
+                if land is None:
+                    land = Land(
+                        id=_land_id,
+                        name=_land.strip(),
+                    )
+                    db.session.add(land)
+                    flask.current_app.logger.info("Created %s", land)
 
-                except ValueError:
-                    pass
+                _region_id = int(_id[:4])
+                region = Region.query.get(_region_id)
+                if region is None:
+                    region = Region(
+                        id=_region_id,
+                        name=_region.strip(),
+                        land_id=_land_id,
+                    )
+                    db.session.add(region)
+                    flask.current_app.logger.info("Created %s", region)
+
+                _group_id = int(_id)
+                group = Group.query.get(_group_id)
+                if group is None:
+                    group = Group(
+                        id=_group_id,
+                        name=_name.strip(),
+                        zip=_ort[:5],
+                        city=_ort[6:],
+                        land_id=_land_id,
+                        region_id=_region_id,
+                    )
+                    db.session.add(group)
+                    flask.current_app.logger.info("Created %s", group)
+
+                db.session.commit()
+
+            except ValueError as e:
+                flask.current_app.logger.warning("Error parsing group '%s': %s", _id, e)
 
         db.session.commit()
-    except OperationalError as e:
-        logging.warning("Couldn't update groups: %s", e)
+    except (OperationalError, ProgrammingError) as e:
+        flask.current_app.logger.warning("Couldn't update groups: %s", e)
+    finally:
+        group_list.close()
