@@ -106,9 +106,9 @@ class Event(db.Model):
     lat: Mapped[float] = db.Column(db.Numeric(8, 6))
     lon: Mapped[float] = db.Column(db.Numeric(9, 6))
 
-    date: Mapped[datetime.date] = db.Column(db.Date, index=True, default=datetime.date(2022, 9, 24))
+    date: Mapped[datetime.date] = db.Column(db.Date, index=True, default=datetime.date(2023, 9, 23))
     time: Mapped[datetime.date] = db.Column(db.Time, index=True, default=datetime.time(00, 00))
-    date_end: Mapped[datetime.date] = db.Column(db.Date, index=True, default=datetime.date(2022, 9, 24))
+    date_end: Mapped[datetime.date] = db.Column(db.Date, index=True, default=datetime.date(2023, 9, 23))
     time_end: Mapped[datetime.date] = db.Column(db.Time, index=True, default=datetime.time(00, 00))
 
     description: Mapped[str] = db.Column(db.String(2000))

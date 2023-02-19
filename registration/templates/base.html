@@ -53,6 +53,7 @@
                             <li><a class="dropdown-item" href="{{url_for('admin.groups')}}"><i class="fa-solid fa-group-arrows-rotate"></i> Übersicht Stämme</a></li>
                             <li><a class="dropdown-item" href="{{url_for('public.events')}}"><i class="fa-solid fa-calendar-days"></i> Übersicht Aktionen</a></li>
                             <li><a class="dropdown-item" href="{{url_for('admin.send_mail')}}"><i class="fa-solid fa-envelope"></i> E-Mail senden</a></li>
+                            <li><a class="dropdown-item" href="{{url_for('admin.events_edit', _id='new')}}"><i class="fa-solid fa-plus"></i> Neue Aktion</a></li>
                             {% if current_user.is_manager_group and current_user.manage_group %}
                                 <div class="dropdown-divider"></div>
                                 <h6 class="dropdown-header">Stamm {{current_user.manage_group.name}}</h6>
