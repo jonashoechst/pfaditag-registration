@@ -10,6 +10,7 @@
             <th scope="col">Stamm</th>
             <th scope="col">Ort</th>
             <th scope="col">VCP-Land</th>
+            <th scope="col" class="text-end">Jahr</th>
             <th scope="col" class="text-end"></th>
         </tr>
     </thead>
@@ -20,6 +21,7 @@
             <td>{{ event.group.name }}</td>
             <td>{{ event.group.zip }} {{ event.group.city }}</td>
             <td>{{ event.group.land.name }}</td>
+            <td class="text-end">{{ event.date.year }}</td>
             <td class="text-end">{% include 'buttons/event_buttons.html' %}</td>
         </tr>
         {% endfor %}

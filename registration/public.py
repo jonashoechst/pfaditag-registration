@@ -3,6 +3,7 @@ import flask
 import icalendar
 from . import models
 from flask_login import current_user
+from typing import List
 
 public_bp = flask.Blueprint('public', __name__, url_prefix='', static_folder='static')
 
@@ -10,7 +11,9 @@ public_bp = flask.Blueprint('public', __name__, url_prefix='', static_folder='st
 @public_bp.route('/index')
 @public_bp.route('/')
 def index():
-    _events = models.Event.query.all()
+    _events: List[models.Event] = models.Event.query.all()
+    if not current_user.is_authenticated:
+        _events = [e for e in _events if e.date.year == datetime.date.today().year]
     return flask.render_template(
         'index.html',
         events=_events,
@@ -46,7 +49,7 @@ def events():
     if current_user.is_authenticated:
         _events = current_user.query_events()
     else:
-        _events = models.Event.query.all()
+        _events = [e for e in models.Event.query.all() if e.date.year == datetime.date.today().year]
 
     return flask.render_template(
         'admin/events.html',

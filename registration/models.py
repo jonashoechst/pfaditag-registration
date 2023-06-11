@@ -382,16 +382,7 @@ class User(UserMixin, db.Model):
 
     def has_event_permission(self, event: Event) -> bool:
         '''Returns a boolean indicating the user has permissions to access the group'''
-        if self.is_superuser:
-            return True
-        if self.is_manager_land and self.manage_land == event.group.land_id:
-            return True
-        if self.is_manager_region and self.manage_region == event.group.region_id:
-            return True
-        if self.is_manager_group and self.manage_group_id == event.group_id:
-            return True
-
-        return False
+        return self.has_group_permission(event.group)
 
 
 def update_groups(csv_path="etc/group_list.csv"):
