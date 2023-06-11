@@ -264,6 +264,7 @@ def user(_id):
 
         form._fields.pop("is_manager_group")
         form._fields.pop("is_manager_land")
+        form._fields.pop("is_manager_region")
         form._fields.pop("is_superuser")
         form.submit.label.text = "Registrieren"
     else:
