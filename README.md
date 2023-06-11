@@ -34,7 +34,7 @@ $.get('https://nominatim.openstreetmap.org/search?format=json&q={{ group.street 
 Make sure, that all dependencies are installed:
 
 ```bash
-$ cd bootstrap-5.2.0-beta1         
+$ cd bootstrap-5.3.0  
 $ npm install 
 
 up to date, audited 929 packages in 2s
@@ -58,7 +58,7 @@ Build:
 ```bash
 $ npm run dist
 
-> bootstrap@5.2.0-beta1 dist
+> bootstrap@5.3.0 dist
 > npm-run-all --aggregate-output --parallel css js
 ...
 ```

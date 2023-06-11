@@ -9,8 +9,8 @@
         {% block styles %}
             <link rel="stylesheet" href="{{url_for('.static', filename='pfaditag.css')}}">
             <link rel="stylesheet" href="{{url_for('.static', filename='bootstrap.min.css')}}"/>
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-            <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <link rel="stylesheet" href="{{url_for('.static', filename='fontawesome-free-6.4.0-web/css/all.min.css')}}"/>
+            <link rel="stylesheet" href="{{url_for('.static', filename='DataTables-1.13.4/css/dataTables.bootstrap5.min.css')}}"/>
         {% endblock %}
 
         <title>{% block title %}{{ config['APP_TITLE'] }}{{ " | "+title if title else "" }}{% endblock %}</title>
@@ -147,10 +147,10 @@
 
         <!-- Optional JavaScript -->
         {% block scripts %}
-            {{ bootstrap.load_js() }}
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-            <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-            <script src="https://cdn.datatables.net/1.12.1/js/dataTables.bootstrap5.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>   
+            <script src="{{url_for('.static', filename='bootstrap.min.js')}}"></script>
+            <script src="{{url_for('.static', filename='jquery-3.7.0.min.js')}}"></script>
+            <script src="{{url_for('.static', filename='DataTables-1.13.4/js/jquery.dataTables.min.js')}}"></script>
+            <script src="{{url_for('.static', filename='DataTables-1.13.4/js/dataTables.bootstrap5.min.js')}}"></script>
             <script>
             $(document).ready(function () {
                 $('#datatable').DataTable({
