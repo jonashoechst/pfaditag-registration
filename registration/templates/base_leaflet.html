@@ -4,13 +4,13 @@
 {{ super() }}
 <link rel="stylesheet" href="{{url_for('.static', filename='leaflet/leaflet.css')}}">
 <link rel="stylesheet" href="{{url_for('.static', filename='leaflet/leaflet.css')}}">
-<link rel="stylesheet" href="{{url_for('.static', filename='L.Control.Locate.min.css')}}">
+<link rel="stylesheet" href="{{url_for('.static', filename='leaflet-locatecontrol-dist/L.Control.Locate.min.css')}}">
 <link rel="stylesheet" href="{{url_for('.static', filename='leaflet-vector-markers.css')}}">
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
 <script src="{{url_for('.static', filename='leaflet/leaflet.js')}}"></script>
-<script src="{{url_for('.static', filename='L.Control.Locate.min.js')}}"></script>
+<script src="{{url_for('.static', filename='leaflet-locatecontrol-dist/L.Control.Locate.min.js')}}"></script>
 <script src="{{url_for('.static', filename='leaflet-vector-markers.min.js')}}"></script>
 {% endblock %}
