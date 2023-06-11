@@ -1,14 +1,5 @@
 {% extends "base_leaflet.html" %}
 
-{% block styles %}
-{{ super() }}
-<style>
-    #map {
-        height: 1000px;
-    }
-</style>
-{% endblock %}
-
 {% block opener %}
 <section class="colored-block p-5">
     <div class="container h-100" id="opener">
@@ -68,7 +59,7 @@
 
 <div id="events" class="container p-3">
     <h1 class="pt-3">Aktionen zum Mitmachen</h1>
-    <div id="map" class="my-3"></div>
+    <div id="map" class="my-3 vh-100"></div>
 </div>
 {% endblock %}
 
@@ -98,7 +89,8 @@
 {% block scripts %}
 {{ super() }}
 <script>
-    var map = L.map('map').setView([50.9, 10.5], 7);
+    var map = L.map('map');
+    map.fitBounds([[54.83, 5.51], [47.29, 14.59]]);
     var locator = L.control.locate({ locateOptions: { maxZoom: 11 } }).addTo(map);
 
     L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
