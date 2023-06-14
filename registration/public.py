@@ -13,7 +13,7 @@ public_bp = flask.Blueprint('public', __name__, url_prefix='', static_folder='st
 def index():
     _events: List[models.Event] = models.Event.query.all()
     if not current_user.is_authenticated:
-        _events = [e for e in _events if e.date.year == datetime.date.today().year]
+        _events = [e for e in _events if e.is_current]
     return flask.render_template(
         'index.html',
         events=_events,
@@ -49,7 +49,7 @@ def events():
     if current_user.is_authenticated:
         _events = current_user.query_events()
     else:
-        _events = [e for e in models.Event.query.all() if e.date.year == datetime.date.today().year]
+        _events = [e for e in models.Event.query.all() if e.is_current]
 
     return flask.render_template(
         'admin/events.html',

@@ -148,6 +148,10 @@ class Event(db.Model):
         else:
             return f"{self.group.zip} {self.group.city}"
 
+    @property
+    def is_current(self) -> bool:
+        return self.date.year == datetime.date.today().year
+
 
 class User(UserMixin, db.Model):
     id: Mapped[int] = db.Column(db.String(100), unique=True, primary_key=True)
