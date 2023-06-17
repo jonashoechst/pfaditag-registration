@@ -44,6 +44,14 @@ def faq():
     )
 
 
+@public_bp.route('/faq_intern')
+def faq_intern():
+    return flask.render_template(
+        'faq_intern.html',
+        title="Häufig gestellte Fragen (FAQ)",
+    )
+
+
 @public_bp.route('/events')
 def events():
     if current_user.is_authenticated:
