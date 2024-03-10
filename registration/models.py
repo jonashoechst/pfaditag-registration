@@ -177,7 +177,7 @@ class User(UserMixin, db.Model):
     token_expiration: Mapped[datetime.datetime] = db.Column(db.DateTime, index=False, unique=False, nullable=True)
 
     def set_password(self, password: str):
-        self.password = generate_password_hash(password, method='sha256')
+        self.password = generate_password_hash(password, method='pbkdf2:sha256')
 
     def check_password(self, password: str) -> bool:
         if not password:
