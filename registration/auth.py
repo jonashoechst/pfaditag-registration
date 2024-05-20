@@ -260,7 +260,7 @@ def edit_user(user_id):
             # save account
             db.session.commit()
             flask.flash(f"Account {_user.id} wurde gespeichert.", "success")
-            return flask.redirect(flask.url_for('auth.user', user_id=_user.id))
+            return flask.redirect(flask.url_for('auth.edit_user', user_id=_user.id))
 
     # initialize form values
     for field_id, field in dict(form._fields).items():
@@ -288,7 +288,7 @@ class RegisterForm(FlaskForm):
 def new_user():
     if isinstance(current_user, User) and current_user.is_authenticated:
         flask.flash("Du bist bereits eingeloggt.", 'alert')
-        return flask.redirect(flask.url_for('auth.user', user_id=current_user.id))
+        return flask.redirect(flask.url_for('auth.edit_user', user_id=current_user.id))
 
     form = RegisterForm()
 
@@ -358,7 +358,7 @@ def new_user():
 def users():
     if not current_user.is_superuser:
         flask.flash('Nur Superuser können die Nutzerübersicht aufrufen.', 'info')
-        return flask.redirect(flask.url_for('auth.user', user_id=current_user.id))
+        return flask.redirect(flask.url_for('auth.edit_user', user_id=current_user.id))
 
     _users = User.query.all()
     return flask.render_template("auth/users.html", users=_users, title="Übersicht Accounts")
@@ -432,7 +432,7 @@ def edit_permission(permission_id: str):
         db.session.delete(_perm)
         db.session.commit()
         flask.flash("Berechtigung erfolgreich gelöscht.", "success")
-        return flask.redirect(flask.url_for('auth.user', user_id=_perm.user_id))
+        return flask.redirect(flask.url_for('auth.edit_user', user_id=_perm.user_id))
 
     # POST: save permission
     if form.submit.data:
@@ -447,7 +447,7 @@ def edit_permission(permission_id: str):
                     _perm.granted = form.granted.data
                 else:
                     flask.flash("Du hast keine Berechtigung, diese Berechtigung zu bearbeiten.", 'warning')
-                    return flask.redirect(flask.url_for('auth.user', user_id=_perm.user_id))
+                    return flask.redirect(flask.url_for('auth.edit_user', user_id=_perm.user_id))
 
                 if _perm.granted:
                     perm_msg = Message(
@@ -479,12 +479,12 @@ def edit_permission(permission_id: str):
                 mail.send(perm_msg)
 
                 flask.flash("Berechtigung wurde angelegt.", "success")
-                return flask.redirect(flask.url_for('auth.user', user_id=_perm.user_id))
+                return flask.redirect(flask.url_for('auth.edit_user', user_id=_perm.user_id))
 
             # save account
             db.session.commit()
             flask.flash("Berechtigung wurde gespeichert.", "success")
-            return flask.redirect(flask.url_for('auth.user', user_id=_perm.user_id))
+            return flask.redirect(flask.url_for('auth.edit_user', user_id=_perm.user_id))
 
     # initialize form values
     for field_id, field in dict(form._fields).items():
