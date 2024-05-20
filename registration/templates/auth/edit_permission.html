@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% import "bootstrap5/form.html" as wtf %}
+
+{% block content %}
+<div class="row header">
+    <div class="col-xs-12">
+        <h1>{{ title }}</h1>
+        <h5>{{ subtitle }}</h5>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-6 first-column">
+        <form action="" method="POST" class="form" role="form" enctype="multipart/form-data">
+            {{ form.csrf_token() }}
+            {{ wtf.render_form_row([form.user_id]) }}
+            {{ wtf.render_form_row([form.group_id]) }}
+            <div class="row">
+                <div class="col">
+                    <div class="mb-3 required">
+                        <label class="form-label" for="group_tree">{{ form.group_id.label }}</label>
+                        <div id="group_tree"></div>
+                        <small class="form-text text-muted">{{ form.group_id.description }}</small>
+                    </div>
+                </div>
+            </div>
+            {{ wtf.render_form_row([form.granted]) }}
+            {{ wtf.render_field(form.submit, button_style='success') }}
+            {{ wtf.render_field(form.delete, button_style='danger') }}
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script type="text/javascript">
+    treeData = {{ tree_data|safe }}
+    $(document).ready(function () {initGroupTree(treeData);});
+</script>
+{% endblock %}

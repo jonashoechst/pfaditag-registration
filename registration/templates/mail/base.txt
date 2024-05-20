@@ -1,5 +1,9 @@
-Hallo {{ user.name }},  
 {% block content %}
 {% endblock %}
 Gut Pfad
 das {{ config['APP_TITLE'] }}-Team
+
+---
+{{ config['APP_TITLE'] }} | {{ url_for('public.index', _external=True) }}
+E-Mail: hallo@pfaditag.de
+Impressum: {{ url_for('public.impressum', _external=True) }}

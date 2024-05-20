@@ -1,26 +1,24 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Übersicht Stämme</h1>
+<h1>{{ title or "Übersicht Gliederungen" }}</h1>
 
 <table class="table table-striped table-hover align-middle" id="datatable">
     <thead>
         <tr>
-            <th scope="col">Stamm</th>
+            <th scope="col">Gliederung</th>
             <th scope="col">Ort</th>
-            <th scope="col">VCP-Land</th>
-            <th scope="col">Aktionen</th>
+            <th scope="col">Aktuelle Aktionen</th>
             <th scope="col">Optionen</th>
         </tr>
     </thead>
     <tbody>
-        {% for group in current_user.query_groups() %}
+        {% for group in groups %}
         <tr>
             <th scope="row">{{ group.name }}</th>
             <td>{{ group.zip }} {{ group.city }}</td>
-            <td>{{ group.land.name }}</td>
             <td class="align-middle">
-            {% for event in group.events %}
+            {% for event in group.events if event.is_current %}
                 <a href="{{ url_for('admin.events_edit', _id=event.id) }}">{{ event.title }}</a>
             {% endfor %}
             </td>

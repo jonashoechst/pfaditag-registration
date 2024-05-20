@@ -1,7 +1,5 @@
 from __future__ import annotations
-import csv
 import datetime
-import logging
 import secrets
 
 import flask
@@ -10,55 +8,17 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import Mapped
-from sqlalchemy.exc import OperationalError, ProgrammingError
 from . import db
 db: SQLAlchemy
 
 
-class Land(db.Model):
-    id: Mapped[int] = db.Column(db.Integer, primary_key=True)
-    name: Mapped[str] = db.Column(db.String(64), index=True)
-    groups: Mapped[list[Group]] = db.relationship('Group', back_populates='land')
-    regions: Mapped[list[Region]] = db.relationship('Region', back_populates='land')
-    users: Mapped[list[User]] = db.relationship('User', back_populates='manage_land')
-
-    def __repr__(self) -> str:
-        return f'<Land {self.id} ({self.name})>'
-
-    def query_managers(self) -> list[User]:
-        return User.query.filter(
-            (User.is_superuser) |
-            (User.is_manager_land & (User.manage_land_id == self.id))
-        )
-
-
-class Region(db.Model):
-    id: Mapped[int] = db.Column(db.Integer, primary_key=True)
-    name: Mapped[str] = db.Column(db.String(64), index=True)
-
-    land_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey('land.id'))
-    land: Mapped[Land] = db.relationship("Land", back_populates="regions")
-
-    groups: Mapped[list[Group]] = db.relationship('Group', back_populates='region')
-    users: Mapped[list[User]] = db.relationship('User', back_populates='manage_region')
-
-    def __repr__(self) -> str:
-        return f'<Region {self.id} ({self.name})>'
-
-    @property
-    def display_name(self) -> str:
-        return f'{self.land.name}, {self.name} ({self.id})'
-
-    def query_managers(self) -> list[User]:
-        return User.query.filter(
-            (User.is_superuser) |
-            (User.is_manager_land & (User.manage_land_id == self.land_id))
-            (User.is_manager_region & (User.manage_region_id == self.id))
-        )
-
-
 class Group(db.Model):
     id: Mapped[int] = db.Column(db.Integer, primary_key=True)
+    parent_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey("group.id"), nullable=True)
+    parent: Mapped[Group] = db.relationship("Group", back_populates="children", remote_side=[id])
+    children: Mapped[list[Group]] = db.relationship("Group", back_populates="parent")
+    attributes: Mapped[dict] = db.Column(db.JSON, default={})
+    group_type: Mapped[str] = db.Column(db.String(255))
 
     name: Mapped[str] = db.Column(db.String(64))
     street: Mapped[str] = db.Column(db.String(64))
@@ -68,32 +28,40 @@ class Group(db.Model):
     instagram: Mapped[str] = db.Column(db.String(64))
     facebook: Mapped[str] = db.Column(db.String(64))
 
-    land_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey('land.id'))
-    land: Mapped[Land] = db.relationship("Land", back_populates="groups")
-
-    region_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey('region.id'))
-    region: Mapped[Region] = db.relationship("Region", back_populates="groups")
+    display: Mapped[bool] = db.Column(db.Boolean, default=False, nullable=False)
 
     events: Mapped[list[Event]] = db.relationship('Event', back_populates='group')
-    users: Mapped[list[User]] = db.relationship('User', back_populates='manage_group')
+    # users: Mapped[list[User]] = db.relationship('User', secondary="user_permission", back_populates="groups")
+    permissions: Mapped[list[UserPermission]] = db.relationship('UserPermission')
+
+    @property
+    def users(self) -> list[User]:
+        return [p.user for p in self.permissions if p.granted]
 
     def __repr__(self) -> str:
         return f'<Group {self.id} ({self.name})>'
 
     @property
-    def display_name(self) -> str:
-        return f'{self.land.name}, Stamm {self.name}, {self.city} ({self.id})'
+    def subtree(self) -> list[Group]:
+        return [self] + [gc for c in self.children for gc in c.subtree]
 
     @property
-    def short_name(self) -> str:
-        return f'{self.name}, {self.city}'
+    def root(self) -> Group:
+        if not self.parent_id:
+            return self
+        return self.parent.root
 
-    def query_managers(self) -> list[User]:
-        return User.query.filter(
-            (User.is_superuser) |
-            (User.is_manager_land & (User.manage_land_id == self.land_id)) |
-            (User.is_manager_group & (User.manage_group_id == self.id))
-        )
+    @property
+    def path(self) -> list[Group]:
+        if not self.parent_id:
+            return [self]
+        return self.parent.path + [self]
+
+    @property
+    def depth(self) -> int:
+        if not self.parent_id:
+            return 0
+        return self.parent.depth + 1
 
 
 class Event(db.Model):
@@ -112,7 +80,6 @@ class Event(db.Model):
     time_end: Mapped[datetime.date] = db.Column(db.Time, index=True, default=datetime.time(00, 00))
 
     description: Mapped[str] = db.Column(db.String(2000))
-    photo = db.Column(db.LargeBinary(16*1024**2))
 
     group_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey('group.id'))
     group: Mapped[Group] = db.relationship("Group", back_populates="events")
@@ -157,19 +124,11 @@ class User(UserMixin, db.Model):
     id: Mapped[int] = db.Column(db.String(100), unique=True, primary_key=True)
     password: Mapped[str] = db.Column(db.String(200), primary_key=False, unique=False, nullable=False)
     name: Mapped[str] = db.Column(db.String(100), nullable=False, unique=False)
-
-    manage_land_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey('land.id'), nullable=True)
-    manage_land: Mapped[Land] = db.relationship('Land')
-    manage_region_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey('region.id'), nullable=True)
-    manage_region: Mapped[Region] = db.relationship('Region')
-    manage_group_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
-    manage_group: Mapped[Group] = db.relationship('Group')
+    # groups: Mapped[list[Group]] = db.relationship('Group', secondary="user_permission", back_populates="users")
 
     # permissions
     is_superuser: Mapped[bool] = db.Column(db.Boolean, default=False)
-    is_manager_land: Mapped[bool] = db.Column(db.Boolean, default=False)
-    is_manager_region: Mapped[bool] = db.Column(db.Boolean, default=False)
-    is_manager_group: Mapped[bool] = db.Column(db.Boolean, default=False)
+    permissions: Mapped[list[UserPermission]] = db.relationship('UserPermission')
 
     created_on: Mapped[datetime.datetime] = db.Column(db.DateTime, index=False, unique=False, nullable=True)
     last_login: Mapped[datetime.datetime] = db.Column(db.DateTime, index=False, unique=False, nullable=True)
@@ -177,7 +136,7 @@ class User(UserMixin, db.Model):
     token_expiration: Mapped[datetime.datetime] = db.Column(db.DateTime, index=False, unique=False, nullable=True)
 
     def set_password(self, password: str):
-        self.password = generate_password_hash(password, method='pbkdf2:sha256')
+        self.password = generate_password_hash(password, method='sha256')
 
     def check_password(self, password: str) -> bool:
         if not password:
@@ -187,21 +146,27 @@ class User(UserMixin, db.Model):
     def __repr__(self) -> str:
         return f'<User {self.id} ({self.name})>'
 
+    @property
+    def groups(self) -> list[Group]:
+        return [p.group for p in self.permissions if p.granted]
+
     def query_groups(self) -> list[Group]:
         '''Returns a list of groups the user can manage'''
         flask.current_app.logger.debug("%s.query_groups()", self)
         groups = []
 
-        if self.is_manager_group and self.manage_group_id:
-            groups.append(self.manage_group)
-        if self.is_manager_region and self.manage_region_id:
-            for group in self.manage_region.groups:
-                if group not in groups:
-                    groups.append(group)
-        if self.is_manager_land and self.manage_land_id:
-            for group in self.manage_land.groups:
-                if group not in groups:
-                    groups.append(group)
+        # add all direct groups
+        for group in self.groups:
+            if group not in groups:
+                groups.append(group)
+
+        # add all subtree groups
+        for group in self.groups:
+            for pgroup in group.subtree:
+                if pgroup not in groups:
+                    groups.append(pgroup)
+
+        # add all groups
         if self.is_superuser:
             for group in Group.query.all():
                 if group not in groups:
@@ -214,142 +179,17 @@ class User(UserMixin, db.Model):
         flask.current_app.logger.debug("%s.query_events()", self)
         events = []
 
-        if self.is_manager_group and self.manage_group_id:
-            events += self.manage_group.events
-        if self.is_manager_region and self.manage_region_id:
-            for group in self.manage_region.groups:
-                for event in group.events:
-                    if event not in events:
-                        events.append(event)
-        if self.is_manager_land and self.manage_land_id:
-            for group in self.manage_land.groups:
-                for event in group.events:
-                    if event not in events:
-                        events.append(event)
+        for group in self.query_groups():
+            for event in group.events:
+                if event not in events:
+                    events.append(event)
+
         if self.is_superuser:
             for event in Event.query.all():
                 if event not in events:
                     events.append(event)
 
         return events
-
-    def query_regions(self) -> list[Region]:
-        '''Returns a list of regions the user can manage'''
-        flask.current_app.logger.debug("%s.query_regions()", self)
-        regions: list[Region] = []
-
-        if self.is_manager_region and self.manage_region_id:
-            regions.append(self.manage_region)
-        if self.is_manager_land and self.manage_land_id:
-            for region in self.manage_land.regions:
-                if region not in regions:
-                    regions.append(region)
-        if self.is_superuser:
-            for region in Region.query.all():
-                if region not in region:
-                    regions.append(region)
-
-        return regions
-
-    def query_lands(self) -> list[Land]:
-        '''Returns a list of lands the user can manage'''
-        flask.current_app.logger.debug("%s.query_lands()", self)
-        lands: list[Land] = []
-
-        if self.is_manager_land and self.manage_land_id:
-            lands.append(self.manage_land)
-        if self.is_superuser:
-            for land in Land.query.all():
-                if land not in lands:
-                    lands.append(land)
-
-        return lands
-
-    def query_users(self) -> list[User]:
-        '''Returns as list of users this user can manage'''
-        flask.current_app.logger.debug("%s.query_users()", self)
-        users: list[User] = [self]
-
-        if self.is_manager_group and self.manage_group_id:
-            for user in self.manage_group.users:
-                if user not in users:
-                    users.append(user)
-
-        if self.is_manager_region and self.manage_region_id:
-            # add all region managers
-            for user in self.manage_region.users:
-                if user not in users:
-                    users.append(user)
-            # add all managers of groups belonging to the land
-            for group in self.manage_region.groups:
-                for user in group.users:
-                    if user not in users:
-                        users.append(user)
-
-        if self.is_manager_land and self.manage_land_id:
-            # add all land managers
-            for user in self.manage_land.users:
-                if user not in users:
-                    users.append(user)
-            # add all managers of regions belonging to the land
-            for region in self.manage_land.regions:
-                for user in region.users:
-                    if user not in users:
-                        users.append(user)
-            # add all managers of groups belonging to the land
-            for group in self.manage_land.groups:
-                for user in group.users:
-                    if user not in users:
-                        users.append(user)
-
-        if self.is_superuser:
-            # add all remaining users
-            for user in User.query.all():
-                if user not in users:
-                    users.append(user)
-
-        return users
-
-    def query_managers(self) -> list[User]:
-        '''Returns a list of users that can manage this user'''
-        flask.current_app.logger.debug("%s.query_managers()", self)
-
-        managers: list[User] = []
-
-        # the group managers can be managed by
-        if self.manage_group_id:
-            for user in User.query.filter(
-                # all managers of the group
-                (User.is_manager_group & (User.manage_group_id == self.manage_group_id)) |
-                # all managers of the group' region
-                (User.is_manager_region & (User.manage_region_id == self.manage_group.region_id)) |
-                # all managers of the group's land
-                (User.is_manager_land & (User.manage_land_id == self.manage_group.land_id))
-            ):
-                if user not in managers:
-                    managers.append(user)
-
-        # the region managers can be managed by
-        if self.manage_region_id:
-            for user in User.query.filter(
-                # all managers of the region
-                (User.is_manager_region & (User.manage_region_id == self.manage_region_id)) |
-                # all managers of the regions's land
-                (User.is_manager_land & (User.manage_land_id == self.manage_region.land_id))
-            ):
-                if user not in managers:
-                    managers.append(user)
-
-        # the land managers can be managed by
-        if self.manage_land_id:
-            for user in User.query.filter(
-                # all managers of the land
-                (User.is_manager_land & (User.manage_land_id == self.manage_land_id))
-            ):
-                if user not in managers:
-                    managers.append(user)
-
-        return managers
 
     def set_token(self, validity: datetime.timedelta = datetime.timedelta(days=1)) -> str:
         self.token = secrets.token_urlsafe(24)
@@ -367,20 +207,15 @@ class User(UserMixin, db.Model):
 
         return False
 
-    @property
-    def has_permissions(self) -> bool:
-        return (self.is_superuser or self.is_manager_region or self.is_manager_land or self.is_manager_group)
-
-    def has_group_permission(self, group: Group) -> bool:
+    def has_group_permission(self, group_id: str) -> bool:
         '''Returns a boolean indicating the user has permissions to access the group'''
         if self.is_superuser:
             return True
-        if self.is_manager_land and self.manage_land_id == group.land_id:
-            return True
-        if self.is_manager_region and self.manage_region_id == group.region_id:
-            return True
-        if self.is_manager_group and self.manage_group_id == group.id:
-            return True
+
+        for group in self.groups:
+            for subgroup in group.subtree:
+                if group_id == subgroup.id:
+                    return True
 
         return False
 
@@ -389,66 +224,24 @@ class User(UserMixin, db.Model):
         return self.has_group_permission(event.group)
 
 
-def update_groups(csv_path="etc/group_list.csv"):
-    try:
-        group_list = open(csv_path, encoding="utf-8")
-        group_reader = csv.reader(group_list, dialect='excel', delimiter=';')
+class UserPermission(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(100), db.ForeignKey(User.id))
+    group_id = db.Column(db.Integer, db.ForeignKey(Group.id))
 
-        # skip csv header
-        next(group_reader)
+    granted: Mapped[bool] = db.Column(db.Boolean, default=False, nullable=False)
 
-        for _id, _land, _region, _name, _ort, *_ in group_reader:
-            # skip empty lines
-            if _id == "":
-                continue
+    user: Mapped[User] = db.relationship("User", back_populates="permissions")
+    group: Mapped[Group] = db.relationship("Group", back_populates="permissions")
 
-            try:
-                _name = _name[4:] if _name.startswith("VCP ") else _name
-                _name = _name[6:] if _name.startswith("Stamm ") else _name
-                _name = _name.strip()
+    def query_grantable_users(self) -> list[User]:
+        "Returns a list of users that are allowed to grant this permission"
+        users = []
+        for pgroup in self.group.path:
+            pgroup: Group
+            for perm in pgroup.permissions:
+                perm: UserPermission
+                if perm.granted and perm.user not in users:
+                    users.append(perm.user)
 
-                _land_id = int(_id[:2])
-                land = Land.query.get(_land_id)
-                if land is None:
-                    land = Land(
-                        id=_land_id,
-                        name=_land.strip(),
-                    )
-                    db.session.add(land)
-                    flask.current_app.logger.info("Created %s", land)
-
-                _region_id = int(_id[:4])
-                region = Region.query.get(_region_id)
-                if region is None:
-                    region = Region(
-                        id=_region_id,
-                        name=_region.strip(),
-                        land_id=_land_id,
-                    )
-                    db.session.add(region)
-                    flask.current_app.logger.info("Created %s", region)
-
-                _group_id = int(_id)
-                group = Group.query.get(_group_id)
-                if group is None:
-                    group = Group(
-                        id=_group_id,
-                        name=_name.strip(),
-                        zip=_ort[:5],
-                        city=_ort[6:],
-                        land_id=_land_id,
-                        region_id=_region_id,
-                    )
-                    db.session.add(group)
-                    flask.current_app.logger.info("Created %s", group)
-
-                db.session.commit()
-
-            except ValueError as e:
-                flask.current_app.logger.warning("Error parsing group '%s': %s", _id, e)
-
-        db.session.commit()
-    except (OperationalError, ProgrammingError) as e:
-        flask.current_app.logger.warning("Couldn't update groups: %s", e)
-    finally:
-        group_list.close()
+        return users

@@ -68,55 +68,45 @@ def events():
 
 @public_bp.route('/event/<int:event_id>')
 def event(event_id):
-    event = models.Event.query.get(event_id)
+    _event = models.Event.query.get(event_id)
     return flask.render_template(
         'event.html',
-        title=event.title,
-        event=event,
+        title=_event.title,
+        event=_event,
     )
-
-
-@public_bp.route('/event/photo/<int:event_id>')
-def event_photo(event_id):
-    event = models.Event.query.get(event_id)
-    if not event.photo:
-        return flask.abort(404)
-    response = flask.make_response(event.photo)
-    response.headers['Content-Type'] = 'image'
-    return response
 
 
 @public_bp.route('/event/<int:event_id>.ics')
 def event_ics(event_id):
-    event = models.Event.query.get(event_id)
+    _event = models.Event.query.get(event_id)
 
     cal_event = icalendar.Event()
 
-    cal_event.add('summary', event.title)
-    cal_event.add('dtstart',  datetime.datetime.combine(event.date, event.time))
-    cal_event.add('dtend', datetime.datetime.combine(event.date_end, event.time_end))
+    cal_event.add('summary', _event.title)
+    cal_event.add('dtstart',  datetime.datetime.combine(_event.date, _event.time))
+    cal_event.add('dtend', datetime.datetime.combine(_event.date_end, _event.time_end))
     cal_event.add('dtstamp', datetime.datetime.now())
-    cal_event['description'] = event.description + "\n"
+    cal_event['description'] = _event.description + "\n"
 
-    if event.email:
-        cal_event['description'] += "\nE-Mail: " + event.email
-    if event.tel:
-        cal_event['description'] += "\nTelefon: " + event.tel
-    if event.group.website:
-        cal_event['description'] += "\nWebsite: " + event.group.website
+    if _event.email:
+        cal_event['description'] += "\nE-Mail: " + _event.email
+    if _event.tel:
+        cal_event['description'] += "\nTelefon: " + _event.tel
+    if _event.group.website:
+        cal_event['description'] += "\nWebsite: " + _event.group.website
 
-    cal_event['organizer'] = icalendar.vCalAddress(f"mailto:{event.email}")
-    cal_event['organizer'].params['cn'] = icalendar.vText(f"Stamm {event.group.short_name}")
+    cal_event['organizer'] = icalendar.vCalAddress(f"mailto:{_event.email}")
+    cal_event['organizer'].params['cn'] = icalendar.vText(f"{_event.group.name}")
 
-    cal_event['location'] = icalendar.vText(event.group.city)
-    cal_event['geo'] = f"{event.lat},{event.lon}"
+    cal_event['location'] = icalendar.vText(_event.group.city)
+    cal_event['geo'] = f"{_event.lat},{_event.lon}"
 
-    cal_event['url'] = icalendar.vUri(flask.url_for('public.event', event_id=event.id, _external=True))
+    cal_event['url'] = icalendar.vUri(flask.url_for('public.event', event_id=_event.id, _external=True))
 
     cal = icalendar.Calendar()
     cal.add_component(cal_event)
 
     response = flask.Response(cal.to_ical(), mimetype='text/calendar')
-    response.headers["Content-Disposition"] = f"attachment; filename={event.title}.ics"
+    response.headers["Content-Disposition"] = f"attachment; filename={_event.title}.ics"
 
     return response

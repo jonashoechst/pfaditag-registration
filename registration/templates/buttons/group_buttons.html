@@ -9,8 +9,8 @@
     <a href="{{group.facebook}}" class="btn btn-outline-primary" target="_blank"><i class="fa-brands fa-facebook"></i></a>
     {% endif %}
 </div>
-{% if current_user.has_group_permission(group) %}
+{% if current_user.has_group_permission(group.id) %}
 <div class="btn-group">
-    <a href="{{ url_for('admin.groups_edit', _id=group.id) }}" class="btn btn-outline-secondary"><i class="fa-solid fa-pen-to-square"></i></a>
+    <a href="{{ url_for('admin.group_edit', group_id=group.id) }}" class="btn btn-outline-secondary"><i class="fa-solid fa-pen-to-square"></i></a>
 </div>
 {% endif %}

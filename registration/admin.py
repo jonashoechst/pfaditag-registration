@@ -32,16 +32,9 @@ current_user: models.User
 admin_bp = flask.Blueprint('admin', __name__, url_prefix='/admin', static_folder='static')
 
 
-class LandForm(FlaskForm):
-    name = StringField(
-        'Name',
-        validators=[DataRequired(), Length(max=64), ],
-    )
-
-
 class GroupForm(FlaskForm):
     name = StringField(
-        'Stammesname',
+        'Name',
         validators=[DataRequired(), Length(max=64), ]
     )
     street = StringField(
@@ -70,18 +63,13 @@ class GroupForm(FlaskForm):
         validators=[Optional(), URL(False), Length(max=64), ],
         render_kw={"placeholder": "https://www.facebook.com/"},
     )
-    land_id = SelectField(
-        'VCP Land',
-        validators=[DataRequired(), ],
-        coerce=int,
-    )
 
     submit = SubmitField('Speichern')
 
 
 class EventForm(FlaskForm):
     group_id = SelectField(
-        'Stamm',
+        'Gliederung',
         validators=[DataRequired()],
         coerce=int,
     )
@@ -134,40 +122,30 @@ class EventForm(FlaskForm):
 @admin_bp.route('/groups')
 @login_required
 def groups():
-    if not current_user.has_permissions:
-        flask.flash("Du hast noch keine Berechtigungen erteilt bekommen.")
+    group_id = flask.request.args.get("group_id")
+    group = db.session.get(models.Group, group_id)
+    if group_id and not group:
+        flask.flash("Gliederung konnte nicht gefunden werden.", "warning")
 
-    return flask.render_template('admin/groups.html')
+    if group:
+        if not current_user.has_group_permission(group.id):
+            flask.flash(f"Du hast keine Berechtigung die Gliederung von {group} anzuzeigen.", "warning")
+        else:
+            return flask.render_template('admin/groups.html', groups=group.subtree, title=f"Gliederungen {group.name}")
+
+    return flask.render_template('admin/groups.html', groups=current_user.query_groups())
 
 
-@admin_bp.route('/groups/edit/<_id>', methods=['GET', 'POST'])
+@admin_bp.route('/groups/edit/<group_id>', methods=['GET', 'POST'])
 @login_required
-def groups_edit(_id):
+def group_edit(group_id):
     form = GroupForm()
 
-    # create new group if keyword is given
-    if _id == "new":
-        if current_user.is_superuser:
-            group = models.Group()
-            db.session.add(group)
-        elif current_user.is_manager_land and current_user.manage_land:
-            group = models.Group(land_id=current_user.manage_land.id)
-            db.session.add(group)
-        else:
-            flask.flash('Du bist nicht berechtigt, einen neuen Stamm anzulegen.', 'danger')
-            return flask.redirect(flask.request.referrer or flask.url_for('admin.groups'))
-    else:
-        group = models.Group.query.get(_id)
+    if not current_user.has_group_permission(group_id):
+        flask.flash("Du bist nicht berechtigt, diese Gruppe zu bearbeiten.", "danger")
+        return flask.redirect(flask.request.referrer or flask.url_for('auth.edit_user', user_id=current_user.id))
 
-        # check if user is allows to edit event
-        if group not in current_user.query_groups():
-            flask.flash("Du bist nicht berechtigt, diese Gruppe zu bearbeiten.", "danger")
-            return flask.redirect(flask.request.referrer or flask.url_for('admin.groups'))
-
-    # form.land_id.choices = models.Land.query.all()
-    form.land_id.choices = [(l.id, l.name) for l in current_user.query_lands()]
-    if group.land and group.land not in current_user.query_lands():
-        form.land_id.choices.append((group.land_id, group.land.name))
+    group = models.Group.query.get(group_id)
 
     # POST: save group
     if form.submit.data:
@@ -176,7 +154,7 @@ def groups_edit(_id):
                 setattr(group, field_id, field.data)
 
             db.session.commit()
-            flask.flash(f"Stamm '{group.name}' wurde gespeichert.", "success")
+            flask.flash(f"Gliederung '{group.name}' wurde gespeichert.", "success")
 
             return flask.redirect(flask.url_for('admin.groups'))
 
@@ -185,9 +163,7 @@ def groups_edit(_id):
         if field_id in group.__dict__:
             field.data = group.__dict__[field_id]
 
-    _title = f"Stamm {group.name} bearbeiten" if _id != "new" else "Neuen Stamm anlegen"
-
-    return flask.render_template('generic_form.html', form=form, _id=_id, title=_title)
+    return flask.render_template('admin/group_edit.html', form=form, group=group)
 
 
 @admin_bp.route('/events/edit/<_id>', methods=['GET', 'POST'])
@@ -198,6 +174,10 @@ def events_edit(_id):
     # create new group if keyword is given
     if _id == "new":
         event = models.Event()
+        group_id = flask.request.args.get('group_id')
+        group = models.Group.query.get(group_id)
+        if group:
+            form.group_id.data = group.id
         db.session.add(event)
     else:
         event = models.Event.query.get(_id)
@@ -207,7 +187,7 @@ def events_edit(_id):
             flask.flash("Du bist nicht berechtigt, diese Aktion zu bearbeiten.", "danger")
             return flask.redirect(flask.request.referrer or flask.url_for('public.events'))
 
-    form.group_id.choices = [(g.id, g.display_name) for g in current_user.query_groups()]
+    form.group_id.choices = [(g.id, g.name) for g in current_user.query_groups()]
 
     # POST: delete
     if form.delete.data:
@@ -275,35 +255,33 @@ class MailForm(FlaskForm):
     submit = SubmitField('Senden')
 
 
-@admin_bp.route('/mail', methods=['GET', 'POST'])
-@login_required
-def send_mail():
-    form = MailForm()
+# @admin_bp.route('/mail', methods=['GET', 'POST'])
+# @login_required
+# def send_mail():
+#     form = MailForm()
 
-    if form.submit.data:
-        if form.validate_on_submit():
-            recipients = []
+#     if form.submit.data:
+#         if form.validate_on_submit():
+#             recipients = []
 
-            if form.recv_users.data:
-                print(current_user.query_users())
-                recipients.extend([u.id for u in current_user.query_users()])
-            if form.recv_event_mails.data:
-                recipients.extend([e.email for e in current_user.query_events()])
+#             if form.recv_event_mails.data:
+#                 recipients.extend([e.email for e in current_user.query_events()])
 
-            msg = Message(
-                subject=f"[{flask.current_app.config['APP_TITLE']}] {form.subject.data}",
-                sender=f"{current_user.name} <{flask.current_app.config['MAIL_USERNAME']}>",
-                recipients=recipients,
-                cc=[current_user.id],
-                reply_to=current_user.id,
-            )
-            msg.body = form.text.data
-            mail.send(msg)
+#             msg = Message(
+#                 subject=f"[{flask.current_app.config['APP_TITLE']}] {form.subject.data}",
+#                 sender=f"{current_user.name} <{flask.current_app.config['MAIL_USERNAME']}>",
+#                 recipients=recipients,
+#                 cc=[current_user.id],
+#                 reply_to=current_user.id,
+#             )
+#             msg.body = form.text.data
+#             print(msg)
+#             mail.send(msg)
 
-            if len(recipients) > 0:
-                flask.flash(f"Mail '{msg.subject}' wurde an {len(recipients)} Adressen gesendet.", "success")
-                return flask.redirect(flask.url_for('public.events'))
+#             if len(recipients) > 0:
+#                 flask.flash(f"Mail '{msg.subject}' wurde an {len(recipients)} Adressen gesendet.", "success")
+#                 return flask.redirect(flask.url_for('public.events'))
 
-            flask.flash(f"Mail '{msg.subject}' wurde nur an die eigene Adresse gesendet.", "warning")
+#             flask.flash(f"Mail '{msg.subject}' wurde nur an die eigene Adresse gesendet.", "warning")
 
-    return flask.render_template('generic_form.html', title="E-Mail senden", form=form, subtitle="Empfängergruppen")
+#     return flask.render_template('generic_form.html', title="E-Mail senden", form=form, subtitle="Empfängergruppen")

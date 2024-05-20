@@ -1,0 +1,47 @@
+{% set title = "Account anlegen" %}
+
+{% extends "base.html" %}
+{% import "bootstrap5/form.html" as wtf %}
+
+{% block content %}
+<div class="row header">
+    <div class="col-xs-12">
+        <h1>{{ title }}</h1>
+        <h5>{{ subtitle }}</h5>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-6 first-column mb-3">
+        <form action="" method="POST" class="form" role="form" enctype="multipart/form-data">
+            {{ form.csrf_token() }}
+            {{ wtf.render_form_row([form.id]) }}
+            {{ wtf.render_form_row([form.name]) }}
+            {{ wtf.render_form_row([form.password]) }}
+            {{ wtf.render_form_row([form.confirm]) }}
+            {{ wtf.render_form_row([form.group_id]) }}
+            <div class="row">
+                <div class="col">
+                    <div class="mb-3 required">
+                        <label class="form-label" for="group_tree">{{ form.group_id.label }}</label>
+                        <div id="group_tree"></div>
+                        <small class="form-text text-muted">{{ form.group_id.description }}</small>
+                    </div>
+                </div>
+            </div>
+            {{ wtf.render_field(form.submit, button_style='success') }}
+        </form>
+    </div>
+    <div class="col-sm-6 second-column mb-3">
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script type="text/javascript">
+    treeData = {{ tree_data|safe }}
+    $(document).ready(function () {initGroupTree(treeData);});
+</script>
+{% endblock %}

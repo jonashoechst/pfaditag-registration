@@ -111,7 +111,7 @@
     var marker_event_{{ event.id }} = L.marker([{{ event.lat }}, {{ event.lon }}], { icon: {{ "eventStyle" if event.is_current else "oldEventStyle" }} }).addTo(map);
     marker_event_{{ event.id }}.bindPopup(`
 <h4>{{ event.title }}</h4>
-<h6>Stamm {{ event.group.short_name }}</h6>
+<h6>{{ event.group.name }}</h6>
 {% include 'event_details.html' %}
 `);
     {% endfor %}

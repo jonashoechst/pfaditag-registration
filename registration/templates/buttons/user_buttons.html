@@ -1,8 +1,8 @@
 <div class="btn-group">
     <a href="mailto:{{user.id}}" class="btn btn-outline-primary"><i class="fa-solid fa-at"></i></a>
 </div>
-{% if user in current_user.query_users() %}
+{% if current_user.is_superuser %}
 <div class="btn-group">
-    <a href="{{ url_for('auth.user', _id=user.id) }}" class="btn btn-outline-secondary"><i class="fa-solid fa-pen-to-square"></i></a>
+    <a href="{{ url_for('auth.edit_user', user_id=user.id) }}" class="btn btn-outline-secondary"><i class="fa-solid fa-pen-to-square"></i></a>
 </div>
 {% endif %}

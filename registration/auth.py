@@ -1,4 +1,5 @@
 import datetime
+import json
 import flask
 from flask_login import login_required, current_user, login_user, logout_user
 from flask_mail import Message
@@ -9,9 +10,9 @@ from wtforms import (
     StringField,
     SubmitField,
     PasswordField,
-    SelectField,
     BooleanField,
     Field,
+    HiddenField,
 )
 from wtforms.validators import (
     DataRequired,
@@ -26,9 +27,8 @@ from . import login_manager, mail
 from .models import (
     db,
     User,
+    UserPermission,
     Group,
-    Region,
-    Land,
 )
 
 # Blueprint Configuration
@@ -44,7 +44,7 @@ class ProfileForm(FlaskForm):
     ])
     name = StringField(
         'Name',
-        description="Bitte Vor- und Nachname angeben, damit wir euch zuordnen können.",
+        description="Bitte Vor- und Nachname angeben, damit wir dich zuordnen können.",
         validators=[DataRequired(), Length(max=100), ],
     )
     password = PasswordField(
@@ -61,70 +61,8 @@ class ProfileForm(FlaskForm):
         description="Superuser-Rechte erlauben es, auf alle Inhalte zuzugreifen.",
     )
 
-    manage_land_id = SelectField(
-        'Landeskoodinator*in',
-        coerce=int,
-        description="Wähle ein Land aus, für das du die Rechte haben möchtest. Der Zugriff muss noch bestätigt werden.",
-    )
-    is_manager_land = BooleanField(
-        'Freigabe Land',
-        description="Landeskoodinator*in-Rechte erlauben es, auf das Land zuzugreifen.",
-    )
-    manage_region_id = SelectField(
-        'Regionskoodinator*in',
-        coerce=int,
-        description="Wähle eine(n) Region/Gau/Bezirk aus, für die du Aktionen verwalten möchtest. Der Zugriff muss noch bestätigt werden.",
-    )
-    is_manager_region = BooleanField(
-        'Freigabe Region',
-        description="Regionskoodinator-Rechte erlauben es, auf die Region zuzugreifen.",
-    )
-    manage_group_id = SelectField(
-        'Stammeskoodinator*in',
-        coerce=int,
-        description="Wähle einen Stamm aus, für die du Aktionen verwalten möchtest. Der Zugriff muss noch bestätigt werden.",
-    )
-    is_manager_group = BooleanField(
-        'Freigabe Stamm',
-        description="Stammeskoodinator-Rechte erlauben es, auf den Stamm zuzugreifen.",
-    )
-
     submit = SubmitField('Speichern')
     delete = SubmitField('Löschen')
-
-
-class LoginForm(FlaskForm):
-    id = StringField(
-        'E-Mail Adresse',
-        validators=[
-            DataRequired(),
-            Email(message='Bitte gib eine valide E-Mail Adresse an.', allow_smtputf8=False),
-        ],
-    )
-    password = PasswordField(
-        'Password', validators=[],
-    )
-    submit = SubmitField('Login')
-    reset = SubmitField("Passwort vergessen?")
-
-
-class PasswordResetForm(FlaskForm):
-    id = StringField(
-        'E-Mail Adresse',
-        validators=[
-            DataRequired(),
-            Email(message='Bitte gib die E-Mail Adresse deines Accounts an.', allow_smtputf8=False),
-        ],
-    )
-    password = PasswordField(
-        'Password',
-        validators=[DataRequired(), Length(min=8, message='Das Passwort muss mindestens 8 Zeichen haben.')]
-    )
-    confirm = PasswordField(
-        'Password (wiederholen)',
-        validators=[DataRequired(), EqualTo('password', message='Die Passwörter stimmen nicht überein.')],
-    )
-    submit = SubmitField('Passwort zurücksetzen')
 
 
 def disable_field(field: Field, disabled=True):
@@ -134,6 +72,13 @@ def disable_field(field: Field, disabled=True):
         field.render_kw.update({'disabled': ""})
     else:
         field.render_kw.pop('disabled', None)
+
+
+class LoginForm(FlaskForm):
+    id = ProfileForm.id
+    password = ProfileForm.password
+    submit = SubmitField('Login')
+    reset = SubmitField("Passwort vergessen?")
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -153,7 +98,7 @@ def login():
         if _user:
             return flask.redirect(flask.url_for('auth.reset', username=form.id.data))
 
-        flask.flash("Es existiert kein Benutzer mit dieser E-Mail Adresse.", 'alert')
+        flask.flash("Es existiert keine Nutzer*in mit dieser E-Mail Adresse.", 'alert')
         return flask.redirect(flask.url_for('auth.login'))
 
     # if submit: validate login attempt
@@ -177,6 +122,13 @@ def login():
     )
 
 
+class PasswordResetForm(FlaskForm):
+    id = ProfileForm.id
+    password = ProfileForm.password
+    confirm = ProfileForm.confirm
+    submit = SubmitField('Passwort zurücksetzen')
+
+
 @auth_bp.route('/reset/<username>', methods=['GET', 'POST'])
 def reset(username):
     # Bypass if user is logged in
@@ -190,7 +142,7 @@ def reset(username):
 
     # Validate reset attempt
     if not _user:
-        flask.flash('Benutzer nicht gefunden.', 'danger')
+        flask.flash('Nutzer*in nicht gefunden.', 'danger')
         return flask.redirect(flask.url_for('auth.login'))
 
     form = PasswordResetForm()
@@ -227,6 +179,7 @@ def reset(username):
                 recipients=[_user.id],
             )
             msg.body = render_template("mail/reset.txt", user=_user)
+            print(msg)
             mail.send(msg)
 
             flask.flash('E-Mail zum Zurücksetzen des Passwortes wurde gesendet.', 'success')
@@ -250,47 +203,34 @@ def logout():
     return flask.redirect(flask.url_for('auth.login'))
 
 
-@auth_bp.route('/user/<_id>', methods=['GET', 'POST'])
-def user(_id):
+@auth_bp.route('/user/edit/<user_id>', methods=['GET', 'POST'])
+@login_required
+def edit_user(user_id):
     form = ProfileForm()
 
-    if not current_user and _id != "new":
+    if not isinstance(current_user, User):
         flask.flash("Du bist nicht eingeloggt.", 'alert')
         return flask.redirect(flask.url_for('auth.login'))
 
-    # create new profile if keyword is given
-    if _id == "new":
-        _user = User()
+    _user = User.query.filter_by(id=user_id).first()
 
-        form._fields.pop("is_manager_group")
-        form._fields.pop("is_manager_land")
-        form._fields.pop("is_manager_region")
-        form._fields.pop("is_superuser")
-        form.submit.label.text = "Registrieren"
+    # disable editing the email adress
+    form._fields.pop("id")
+
+    # adjust password rules to accept empty passwords for existing users
+    form.password.flags = None
+    form.password.validators = [Optional(), Length(min=8, message='Das Passwort muss mindestens 8 Zeichen haben.')]
+
+    form.confirm.flags = None
+    form.confirm.validators = [EqualTo('password', message='Die Passwörter stimmen nicht überein.')]
+
+    if _user.id == current_user.id:
+        pass
+    elif current_user.is_superuser:
+        pass
     else:
-        if not isinstance(current_user, User):
-            flask.flash("Du bist nicht eingeloggt.", 'alert')
-            return flask.redirect(flask.url_for('auth.login'))
-
-        _user = User.query.filter_by(id=_id).first()
-
-        # disable editing the email adress
-        form._fields.pop("id")
-
-        # adjust password rules to accept empty passwords for existing users
-        form.password.flags = None
-        form.password.validators = [Optional(), Length(min=8, message='Das Passwort muss mindestens 8 Zeichen haben.')]
-
-        form.confirm.flags = None
-        form.confirm.validators = [EqualTo('password', message='Die Passwörter stimmen nicht überein.')]
-
-        if _user not in current_user.query_users():
-            flask.flash("Du hast keine Berechtigung, diesen Account zu bearbeiten.", 'alert')
-            return flask.redirect(flask.url_for('auth.users'))
-
-    form.manage_land_id.choices = [(0, "")] + [(l.id, l.name) for l in Land.query.all()]
-    form.manage_region_id.choices = [(0, "")] + [(r.id, r.display_name) for r in Region.query.all()]
-    form.manage_group_id.choices = [(0, "")] + [(g.id, g.display_name) for g in Group.query.all()]
+        flask.flash("Du hast keine Berechtigung, diesen Account zu bearbeiten.", 'alert')
+        return flask.redirect(flask.url_for('auth.users'))
 
     # POST: delete user
     if form.delete.data:
@@ -302,179 +242,25 @@ def user(_id):
     # POST: save user
     if form.submit.data:
         if form.validate_on_submit():
-            form.manage_land_id.data = form.manage_land_id.data if form.manage_land_id.data else None
-            form.manage_region_id.data = form.manage_region_id.data if form.manage_region_id.data else None
-            form.manage_group_id.data = form.manage_group_id.data if form.manage_group_id.data else None
-
             _user.name = form.name.data
             if form.password.data:
                 _user.set_password(form.password.data)
 
             # if the current user is logged in, check permissions
             if current_user.is_authenticated:
-                permissions_altered = False
-
                 # superuser privilege can only be altered by other superusers
                 if form.is_superuser.data != _user.is_superuser:
                     if current_user == _user:
-                        flask.flash("Du kannst deine eigenen Rechte nur bearbeiten, wenn du weitergehende Rechte hast.", 'warning')
+                        flask.flash("Du kannst deine eigenen Rechte nicht bearbeiten.", 'warning')
                     elif current_user.is_superuser:
-                        permissions_altered = True
                         _user.is_superuser = form.is_superuser.data
                     else:
                         flask.flash("Du hast keine Berechtigung, dem Account Superuser-Rechte zu erteilen oder zu entziehen.", 'warning')
 
-                # land manager privilege can be altered by superusers
-                if form.is_manager_land.data != _user.is_manager_land:
-                    if current_user.is_superuser:
-                        flask.flash("Landeskoodinator*in-Rechte mit Hilfe der Superuser-Rechte bearbeitet.")
-                        permissions_altered = True
-                        _user.is_manager_land = form.is_manager_land.data
-                    elif current_user == _user:
-                        flask.flash("Du kannst deine eigenen Rechte nur bearbeiten, wenn du weitergehende Rechte hast.", 'warning')
-                    elif current_user.is_manager_land and current_user.manage_land == _user.manage_land:
-                        flask.flash("Landeskoodinator*in-Rechte mit Hilfe der Landeskoodinator*in-Rechte bearbeitet.")
-                        permissions_altered = True
-                        _user.is_manager_land = form.is_manager_land.data
-                    else:
-                        flask.flash(f"Du hast keine Berechtigung, Rechte für das Land {_user.manage_land.name} zu vergeben.", 'warning')
-
-                # updated managed land
-                if form.manage_land_id.data != _user.manage_land_id:
-                    _user.manage_land_id = form.manage_land_id.data
-                    permissions_altered = True
-
-                    # reset permission if land changed
-                    if current_user.is_superuser:
-                        pass
-                    elif not _user.is_manager_land:
-                        pass
-                    else:
-                        flask.flash("Durch die Änderung des Landes wurde die Freigabe entzogen.", 'warning')
-                        _user.is_manager_land = False
-
-                # _region manager privilege can be altered by superusers or land managers
-                if form.is_manager_region.data != _user.is_manager_region:
-                    if current_user.is_superuser:
-                        flask.flash("Regionskoordinator-Rechte mit Hilfe der Superuser-Rechte bearbeitet.")
-                        permissions_altered = True
-                        _user.is_manager_region = form.is_manager_region.data
-                    elif current_user.is_manager_land and current_user.manage_land == _user.manage_region.land:
-                        flask.flash("Regionskoodinator-Rechte mit Hilfe der Landeskoodinator-Rechte bearbeitet.")
-                        permissions_altered = True
-                        _user.is_manager_region = form.is_manager_region.data
-                    elif current_user == _user:
-                        flask.flash("Du kannst deine eigenen Rechte nur bearbeiten, wenn du weitergehende Rechte hast.", 'warning')
-                    elif current_user.is_manager_land and current_user.manage_land == _user.manage_land:
-                        flask.flash("Regionskoodinator-Rechte mit Hilfe der Landeskoodinator*in-Rechte bearbeitet.")
-                        permissions_altered = True
-                        _user.is_manager_region = form.is_manager_region.data
-                    else:
-                        flask.flash(f"Du hast keine Berechtigung, Rechte für das Land {_user.manage_land.name} zu vergeben.", 'warning')
-
-                # updated managed region
-                if form.manage_region_id.data != _user.manage_region_id:
-                    _user.manage_region_id = form.manage_region_id.data
-                    permissions_altered = True
-
-                    # reset permission if region changed
-                    if current_user.is_superuser:
-                        pass
-                    elif not _user.is_manager_region:
-                        pass
-                    else:
-                        flask.flash("Durch die Änderung der/des Region/Bezirk/Gau wurde die Freigabe entzogen.", 'warning')
-                        _user.is_manager_region = False
-
-                # group manager privilege can be altered by superusers or land managers
-                if form.is_manager_group.data != _user.is_manager_group:
-                    # Allow if current user has permission for the same group
-                    # Allow if current user has permission for the groups land
-
-                    if current_user.is_superuser:
-                        flask.flash("Stammeskoodinator-Rechte mit Hilfe der Superuser-Rechte bearbeitet.")
-                        permissions_altered = True
-                        _user.is_manager_group = form.is_manager_group.data
-                    elif current_user.is_manager_land and current_user.manage_land == _user.manage_group.land:
-                        flask.flash("Stammeskoodinator-Rechte mit Hilfe der Landeskoodinator-Rechte bearbeitet.")
-                        permissions_altered = True
-                        _user.is_manager_group = form.is_manager_group.data
-                    elif current_user.is_manager_region and current_user.manage_region == _user.manage_group.region:
-                        flask.flash("Stammeskoodinator-Rechte mit Hilfe der Regionskoordinator-Rechte bearbeitet.")
-                        permissions_altered = True
-                        _user.is_manager_group = form.is_manager_group.data
-                    elif current_user == _user:
-                        flask.flash("Du kannst deine eigenen Rechte nur bearbeiten, wenn du weitergehende Rechte hast.", 'warning')
-                    elif current_user.is_manager_group and current_user.manage_group == _user.manage_group:
-                        flask.flash("Stammeskoodinator-Rechte mit Hilfe der Stammeskoodinator-Rechte bearbeitet.")
-                        permissions_altered = True
-                        _user.is_manager_group = form.is_manager_group.data
-                    else:
-                        flask.flash(f"Du hast keine Berechtigung, Rechte für die Gruppe {_user.manage_group.name} zu vergeben.", 'warning')
-
-                # updated managed group
-                if form.manage_group_id.data != _user.manage_group_id:
-                    permissions_altered = True
-                    _user.manage_group_id = form.manage_group_id.data
-
-                    # remove permission, if group changed
-                    if current_user.is_superuser:
-                        pass
-                    elif current_user.is_manager_land and current_user.manage_land == _user.manage_land:
-                        pass
-                    elif current_user.is_manager_region and current_user.manage_region == _user.manage_region:
-                        pass
-                    elif not _user.is_manager_group:
-                        pass
-                    else:
-                        flask.flash("Durch die Änderung der Gruppe wurde die Freigabe entzogen.", 'warning')
-                        _user.is_manager_group = False
-
-                if permissions_altered:
-                    msg = Message(
-                        subject=f"[{current_app.config['APP_TITLE']}] Rechte angepasst",
-                        sender=f"{current_app.config['APP_TITLE']} <{current_app.config['MAIL_USERNAME']}>",
-                        recipients=[_user.id],
-                        cc=[u.id for u in _user.query_managers()],
-                        bcc=[u.id for u in User.query.filter(User.is_superuser)],
-                    )
-                    msg.body = render_template("mail/permissions_altered.txt", user=_user)
-                    mail.send(msg)
-
-            # create new user
-            if _id == "new":
-                if User.query.get(form.id.data):
-                    flask.flash(f"Der Account {form.id.data} existiert bereits.", 'warning')
-                    return flask.redirect(flask.url_for('auth.user', _id="new"))
-
-                if User.query.count() == 0:
-                    _user.is_superuser = True
-
-                _user.id = form.id.data
-                _user.manage_group_id = form.manage_group_id.data
-                _user.manage_region_id = form.manage_region_id.data
-                _user.manage_land_id = form.manage_land_id.data
-
-                db.session.add(_user)
-                db.session.commit()
-
-                msg = Message(
-                    subject=f"[{current_app.config['APP_TITLE']}] Neuer Account",
-                    sender=f"{current_app.config['APP_TITLE']} <{current_app.config['MAIL_USERNAME']}>",
-                    recipients=[_user.id],
-                    cc=[u.id for u in _user.query_managers()],
-                    bcc=[u.id for u in User.query.filter(User.is_superuser)],
-                )
-                msg.body = render_template("mail/hello.txt", user=_user)
-                mail.send(msg)
-
-                flask.flash(f"Account {_user.id} wurde angelegt.", "success")
-                return flask.redirect(flask.url_for('auth.login', _id=_user.id))
-
             # save account
             db.session.commit()
             flask.flash(f"Account {_user.id} wurde gespeichert.", "success")
-            return flask.redirect(flask.url_for('auth.user', _id=_user.id))
+            return flask.redirect(flask.url_for('auth.user', user_id=_user.id))
 
     # initialize form values
     for field_id, field in dict(form._fields).items():
@@ -482,15 +268,100 @@ def user(_id):
         if field_id in _user.__dict__:
             field.data = _user.__dict__[field_id]
 
-    _title = f"Account {_user.id} bearbeiten" if _id != "new" else "Account anlegen"
+    return flask.render_template('auth/edit_user.html', form=form, user=_user, permissions=_user.permissions)
 
-    return flask.render_template('generic_form.html', form=form, _id=_id, title=_title)
+
+class RegisterForm(FlaskForm):
+    id = ProfileForm.id
+    name = ProfileForm.name
+    password = ProfileForm.password
+    confirm = ProfileForm.confirm
+    group_id = HiddenField(
+        'Gliederung',
+        description="Wahle eine Gruppe aus, für die du eine Berechtigung beantragen möchtest."
+    )
+
+    submit = SubmitField('Registrieren')
+
+
+@auth_bp.route('/user/new', methods=['GET', 'POST'])
+def new_user():
+    if isinstance(current_user, User) and current_user.is_authenticated:
+        flask.flash("Du bist bereits eingeloggt.", 'alert')
+        return flask.redirect(flask.url_for('auth.user', user_id=current_user.id))
+
+    form = RegisterForm()
+
+    # POST: save user
+    if form.submit.data:
+        if form.validate_on_submit():
+            if User.query.get(form.id.data):
+                flask.flash(f"Der Account {form.id.data} existiert bereits.", 'warning')
+                return flask.redirect(flask.url_for('auth.new_user'))
+
+            # create new user
+            _user = User()
+            _user.id = form.id.data
+            _user.name = form.name.data
+            if form.password.data:
+                _user.set_password(form.password.data)
+
+            # create initial user as superuser
+            if User.query.count() == 0:
+                _user.is_superuser = True
+            db.session.add(_user)
+
+            # create initial group permission
+            perm: UserPermission
+            if form.group_id.data:
+                perm = UserPermission()
+                perm.user_id = _user.id
+                perm.group_id = form.group_id.data
+                perm.granted = False
+                db.session.add(perm)
+
+            db.session.commit()
+
+            # send hello message
+            msg = Message(
+                subject=f"[{current_app.config['APP_TITLE']}] Neuer Account",
+                sender=f"{current_app.config['APP_TITLE']} <{current_app.config['MAIL_USERNAME']}>",
+                recipients=[_user.id],
+                bcc=[u.id for u in User.query.filter(User.is_superuser)],
+            )
+            msg.body = render_template("mail/hello.txt", user=_user)
+            print(msg)
+            mail.send(msg)
+
+            # send permission request request
+            if perm:
+                perm_msg = Message(
+                    subject=f"[{current_app.config['APP_TITLE']}] Berechtigung freigeben",
+                    sender=f"{current_app.config['APP_TITLE']} <{current_app.config['MAIL_USERNAME']}>",
+                    recipients=perm.query_grantable_users(),
+                )
+                perm_msg.body = render_template("mail/perm_request.txt", perm=perm)
+                print(perm_msg)
+                mail.send(perm_msg)
+
+            flask.flash(f"Account {_user.id} wurde angelegt.", "success")
+            return flask.redirect(flask.url_for('auth.login', _id=_user.id))
+
+    roots = db.session.query(Group).filter(None == Group.parent_id).all()
+    tree_data = [group_tree(group) for group in roots]
+
+    return flask.render_template('auth/new_user.html', form=form, tree_data=json.dumps(tree_data))
 
 
 @auth_bp.route('/users')
 @login_required
 def users():
-    return flask.render_template("auth/users.html")
+    if not current_user.is_superuser:
+        flask.flash('Nur Superuser können die Nutzerübersicht aufrufen.', 'info')
+        return flask.redirect(flask.url_for('auth.user', user_id=current_user.id))
+
+    _users = User.query.all()
+    return flask.render_template("auth/users.html", users=_users, title="Übersicht Accounts")
 
 
 @login_manager.user_loader
@@ -504,3 +375,126 @@ def load_user(user_id):
 def unauthorized():
     flask.flash('Du musst angemeldet sein, um diese Seite aufrufen zu können.', 'info')
     return flask.redirect(flask.url_for('auth.login'))
+
+
+class PermissionForm(FlaskForm):
+    user_id = StringField(
+        'Nutzer*in',
+        description="E-Mail Adresse der Nutzer*in.",
+    )
+    group_id = HiddenField(
+        'Gliederung',
+    )
+    granted = BooleanField(
+        'Bestätigt',
+        description="Die Berechtigung muss bestätigt werden.",
+    )
+
+    submit = SubmitField('Speichern')
+    delete = SubmitField('Löschen')
+
+
+def group_tree(group: Group) -> dict:
+    return dict(
+        id=group.id,
+        text=group.name,
+        children=[group_tree(sgroup) for sgroup in group.children],
+    )
+
+
+@auth_bp.route('/auth/permission/<permission_id>', methods=['GET', 'POST'])
+@login_required
+def edit_permission(permission_id: str):
+    form = PermissionForm()
+
+    # create new profile if keyword is given
+    if permission_id == "new":
+        _perm = UserPermission()
+        user_id = flask.request.args.get("user_id")
+        if user_id:
+            form.user_id.data = user_id
+        group_id = flask.request.args.get("group_id")
+        if group_id:
+            form.group_id.data = group_id
+        form.submit.label.text = "Erstellen"
+    else:
+        _perm = UserPermission.query.filter_by(id=int(permission_id)).first()
+        if not _perm:
+            flask.flash("Berechtigung existiert nicht.", "warning")
+            return flask.redirect(flask.url_for('public.index'))
+
+        # disable editing group
+        form.group_id.render_kw = {"disabled": True}
+        form.user_id.render_kw = {"disabled": True}
+
+    # POST: delete permission
+    if form.delete.data:
+        db.session.delete(_perm)
+        db.session.commit()
+        flask.flash("Berechtigung erfolgreich gelöscht.", "success")
+        return flask.redirect(flask.url_for('auth.user', user_id=_perm.user_id))
+
+    # POST: save permission
+    if form.submit.data:
+        if form.validate_on_submit():
+            if permission_id == "new":
+                _perm.user_id = form.user_id.data
+                _perm.group_id = form.group_id.data
+
+            # if permissions should be altered, check user permissions
+            if _perm.granted != form.granted.data:
+                if current_user.has_group_permission(_perm.group_id):
+                    _perm.granted = form.granted.data
+                else:
+                    flask.flash("Du hast keine Berechtigung, diese Berechtigung zu bearbeiten.", 'warning')
+                    return flask.redirect(flask.url_for('auth.user', user_id=_perm.user_id))
+
+                if _perm.granted:
+                    perm_msg = Message(
+                        subject=f"[{current_app.config['APP_TITLE']}] Berechtigung erteilt",
+                        sender=f"{current_app.config['APP_TITLE']} <{current_app.config['MAIL_USERNAME']}>",
+                        recipients=[_perm.user_id],
+                    )
+                    perm_msg.body = render_template("mail/perm_granted.txt", perm=_perm)
+                    print(perm_msg)
+                    mail.send(perm_msg)
+
+            # create new permission
+            if permission_id == "new":
+                db.session.add(_perm)
+                db.session.commit()
+
+                grantable_users = _perm.query_grantable_users()
+                # send to superusers if not grantables exist
+                bcc = [] if grantable_users else [u.id for u in User.query.filter(User.is_superuser)]
+
+                perm_msg = Message(
+                    subject=f"[{current_app.config['APP_TITLE']}] Berechtigung angefragt",
+                    sender=f"{current_app.config['APP_TITLE']} <{current_app.config['MAIL_USERNAME']}>",
+                    recipients=grantable_users,
+                    bcc=bcc,
+                )
+                perm_msg.body = render_template("mail/perm_request.txt", perm=_perm)
+                print(perm_msg)
+                mail.send(perm_msg)
+
+                flask.flash("Berechtigung wurde angelegt.", "success")
+                return flask.redirect(flask.url_for('auth.user', user_id=_perm.user_id))
+
+            # save account
+            db.session.commit()
+            flask.flash("Berechtigung wurde gespeichert.", "success")
+            return flask.redirect(flask.url_for('auth.user', user_id=_perm.user_id))
+
+    # initialize form values
+    for field_id, field in dict(form._fields).items():
+        # set data from existing user
+        if field_id in _perm.__dict__:
+            field.data = _perm.__dict__[field_id]
+
+    _title = "Berechtigung bearbeiten" if permission_id != "new" else "Berechtigung anlegen"
+
+    roots = db.session.query(Group).filter(None == Group.parent_id).all()
+    tree_data = [group_tree(group) for group in roots]
+
+    return flask.render_template('auth/edit_permission.html', form=form, title=_title, tree_data=json.dumps(tree_data))

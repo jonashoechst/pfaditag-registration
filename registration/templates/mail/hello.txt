@@ -1,9 +1,14 @@
 {% extends "mail/base.txt" %}
-
 {% block content %}
+Hallo {{ user.name }},
+
 Du oder jemand anderes hat einen Account auf {{ url_for('public.index', _external=True) }} für dich angelegt. 
-
-Ein neuer Account hat noch keine Rechte für Stämme oder Länder. Wir haben aber einen Superuser und die Ansprechpartner aus deinem Land informiert, damit sie dir Zugriff geben. Falls du nichts mehr hörst, frage gerne nach!
-
-Dein Profil kannst du hier einsehen und auch wieder löschen: {{ url_for('auth.user', _id=user.id, _external=True) }}
+{% if user.permissions %}
+Beim Anlegen wurden Berechtigungen für folgende Gliederungen beantragt:
+{% for perm in user.permissions -%}
+ -{% for node in perm.group.path %} > {{ node.name }}{% endfor %}
+{% endfor %}
+Ein neuer Account hat noch keine Rechte für Gliederungen. Wir haben die Ansprechpartner aus deiner Gliederung und der darüberliegenden Gliederungen informiert, damit sie dir Zugriff geben können. Falls du nichts mehr hörst, frage gerne nach!
+{% endif %}
+Dein Profil kannst du hier einsehen und auch wieder löschen: {{ url_for('auth.edit_user', user_id=user.id, _external=True) }} Dort kannst du auch Berechtigungen für weitere Gliederungen beantragen.
 {% endblock %}

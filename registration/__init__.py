@@ -50,10 +50,4 @@ def create_app():
         from registration.auth import auth_bp
         app.register_blueprint(auth_bp)
 
-        from registration.sharepics import sharepics_bp
-        app.register_blueprint(sharepics_bp)
-
-        from registration.models import update_groups
-        update_groups()
-
         return app

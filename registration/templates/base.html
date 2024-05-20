@@ -11,6 +11,7 @@
             <link rel="stylesheet" href="{{url_for('.static', filename='bootstrap-5.3.0-dist/css/bootstrap.min.css')}}"/>
             <link rel="stylesheet" href="{{url_for('.static', filename='fontawesome-free-6.4.0-web/css/all.min.css')}}"/>
             <link rel="stylesheet" href="{{url_for('.static', filename='DataTables-1.13.4/css/dataTables.bootstrap5.min.css')}}"/>
+            <link rel="stylesheet" href="{{url_for('.static', filename='gijgo@1.9.14/css/gijgo.min.css')}}"/>
         {% endblock %}
 
         <title>{% block title %}{{ config['APP_TITLE'] }}{{ " | "+title if title else "" }}{% endblock %}</title>
@@ -41,43 +42,32 @@
                             {{ current_user.name }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-lg-end" aria-labelledby="navbarDropdown">
-                                <h6 class="dropdown-header">Rolle: 
-                                {% if current_user.is_superuser %}
-                                    Superuser
-                                {% elif current_user.is_manager_land and current_user.manage_land %}
-                                    Landeskoodinator*in {{ current_user.manage_land.name }}
-                                {% elif current_user.is_manager_region and current_user.manage_region %}
-                                    Regionskoodinator*in {{ current_user.manage_region.name }}
-                                {% elif current_user.is_manager_group and current_user.manage_group %}
-                                    Stammeskoodinator*in {{ current_user.manage_group.name }}
-                                {% endif %}
-                                </h6>
+                                <h6 class="dropdown-header">Accouts &amp; Gliederungen</h6>
                                 <li><a class="dropdown-item" href="{{url_for('auth.users')}}"><i class="fa-solid fa-users"></i> Übersicht Accounts</a></li>
-                                <li><a class="dropdown-item" href="{{url_for('admin.groups')}}"><i class="fa-solid fa-group-arrows-rotate"></i> Übersicht Stämme</a></li>
-                                <li><a class="dropdown-item" href="{{url_for('public.events')}}"><i class="fa-solid fa-calendar-days"></i> Übersicht Aktionen</a></li>
-                                <li><a class="dropdown-item" href="{{url_for('admin.send_mail')}}"><i class="fa-solid fa-envelope"></i> E-Mail senden</a></li>
-                                <li><a class="dropdown-item" href="{{url_for('admin.events_edit', _id='new')}}"><i class="fa-solid fa-plus"></i> Neue Aktion</a></li>
-                                {% if current_user.is_manager_group and current_user.manage_group %}
-                                    <div class="dropdown-divider"></div>
-                                    <h6 class="dropdown-header">Stamm {{current_user.manage_group.name}}</h6>
-                                    <li><a class="dropdown-item" href="{{url_for('admin.groups_edit', _id=current_user.manage_group_id)}}"><i class="fa-solid fa-pen-to-square"></i> Stamm bearbeiten</a></li>
-                                    {% for event in current_user.manage_group.events %}
+                                <li><a class="dropdown-item" href="{{url_for('admin.groups')}}"><i class="fa-solid fa-group-arrows-rotate"></i> Übersicht Gliederungen</a></li>
+                                <div class="dropdown-divider"></div>
+                                {% for group in current_user.groups %}
+                                    <h6 class="dropdown-header">{{ group.name }}</h6>
+                                    <li><a class="dropdown-item" href="{{url_for('admin.events_edit', _id='new', group_id=group.id)}}"><i class="fa-solid fa-plus"></i> Neue Aktion</a></li>
+                                    {% for event in group.events %}
                                         <li><a class="dropdown-item" href="{{url_for('admin.events_edit', _id=event.id)}}"><i class="fa-solid fa-calendar-day"></i> Aktion '{{ event.title }}' bearbeiten</a></li>
                                     {% endfor %}
-                                    <li><a class="dropdown-item" href="{{url_for('admin.events_edit', _id='new')}}"><i class="fa-solid fa-plus"></i> Neue Aktion</a></li>
-                                {% endif %}
-                                <div class="dropdown-divider"></div>
-                                <li><a class="dropdown-item" href="{{url_for('auth.user', _id=current_user.id)}}"><i class="fa-solid fa-user"></i> Account bearbeiten</a></li>
-                                <li><a class="dropdown-item" href="{{url_for('auth.logout')}}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a></li>
-                                <div class="dropdown-divider"></div>
+                                    {% if group.children %}
+                                    <li><a class="dropdown-item" href="{{url_for('admin.groups', group_id=group.id)}}"><i class="fa-solid fa-group-arrows-rotate"></i> Untergliederungen anzeigen</a></li>
+                                    {% endif %}
+                                    <li><a class="dropdown-item" href="{{url_for('admin.group_edit', group_id=group.id)}}"><i class="fa-solid fa-pen-to-square"></i> Gliederung bearbeiten</a></li>
+                                    <div class="dropdown-divider"></div>
+                                {% endfor %}
                                 <li><a class="dropdown-item" href="{{url_for('public.faq_intern')}}"><i class="fa-solid fa-clipboard-question"></i> FAQ (intern)</a></li>
+                                <li><a class="dropdown-item" href="{{url_for('auth.edit_user', user_id=current_user.id)}}"><i class="fa-solid fa-user"></i> Account bearbeiten</a></li>
+                                <li><a class="dropdown-item" href="{{url_for('auth.logout')}}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a></li>
                             </ul>
                         {% else %}
                             Account
                             </a>
                             <ul class="dropdown-menu dropdown-menu-lg-end" aria-labelledby="navbarDropdown">
                                 <li><a class="dropdown-item" href="{{url_for('auth.login')}}"><i class="fa-solid fa-arrow-right-to-bracket"></i> Login</a></li>
-                                <li><a class="dropdown-item" href="{{url_for('auth.user', _id='new')}}"><i class="fa-solid fa-address-card"></i> Registrieren</a></li>
+                                <li><a class="dropdown-item" href="{{url_for('auth.new_user')}}"><i class="fa-solid fa-address-card"></i> Registrieren</a></li>
                                 <div class="dropdown-divider"></div>
                                 <li><a class="dropdown-item" href="{{url_for('public.faq_intern')}}"><i class="fa-solid fa-clipboard-question"></i> FAQ (intern)</a></li>
                             </ul>
@@ -152,8 +142,13 @@
         {% block scripts %}
             <script src="{{url_for('.static', filename='bootstrap-5.3.0-dist/js/bootstrap.bundle.min.js')}}"></script>
             <script src="{{url_for('.static', filename='jquery-3.7.0.min.js')}}"></script>
+            <script src="{{url_for('.static', filename='gijgo@1.9.14/js/gijgo.min.js')}}"></script>
             <script src="{{url_for('.static', filename='DataTables-1.13.4/js/jquery.dataTables.min.js')}}"></script>
             <script src="{{url_for('.static', filename='DataTables-1.13.4/js/dataTables.bootstrap5.min.js')}}"></script>
+            <script>
+                // confirm deletion
+                $('#delete').on('click', function () {return confirm('Bist du sicher, dass du das löschen möchtest?');});
+            </script>
             <script>
             $(document).ready(function () {
                 $('#datatable').DataTable({
@@ -174,7 +169,40 @@
                     "order": []
                 });
             });
-            </script>      
+            </script>     
+            <script>
+                function initGroupTree(treeData) {
+                    // build tree
+                    tree = $('#group_tree').tree({
+                        uiLibrary: 'bootstrap5',
+                        dataSource: treeData,
+                        cascadeSelection: false,
+                        border: true,
+                        primaryKey: 'id',
+                        selectionType: 'single',
+                        select: function (e, node, id) {
+                            $('#group_id').val(id); 
+                        }
+                    });
+            
+                    // apply selection from group_id field to tree
+                    group_node = tree.getNodeById($('#group_id').val());
+                    tree.select(group_node);
+            
+                    // expand nodes in tree
+                    node = group_node.parent();
+                    do {
+                        tree.expand(node);
+                        node = node.parent();
+                    }
+                    while (node[0].id != "group_tree");
+            
+                    // disable tree if group_id is disabled
+                    if ($('#group_id')[0].disabled) {
+                        tree.disableAll();
+                    }
+                }
+            </script>     
         {% endblock %}
     </body>
 </html>
