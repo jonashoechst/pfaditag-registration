@@ -9,6 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import Mapped
 from . import db
+
 db: SQLAlchemy
 
 
@@ -30,16 +31,16 @@ class Group(db.Model):
 
     display: Mapped[bool] = db.Column(db.Boolean, default=False, nullable=False)
 
-    events: Mapped[list[Event]] = db.relationship('Event', back_populates='group')
+    events: Mapped[list[Event]] = db.relationship("Event", back_populates="group")
     # users: Mapped[list[User]] = db.relationship('User', secondary="user_permission", back_populates="groups")
-    permissions: Mapped[list[UserPermission]] = db.relationship('UserPermission')
+    permissions: Mapped[list[UserPermission]] = db.relationship("UserPermission")
 
     @property
     def users(self) -> list[User]:
         return [p.user for p in self.permissions if p.granted]
 
     def __repr__(self) -> str:
-        return f'<Group {self.id} ({self.name})>'
+        return f"<Group {self.id} ({self.name})>"
 
     @property
     def subtree(self) -> list[Group]:
@@ -85,7 +86,7 @@ class Event(db.Model):
     group: Mapped[Group] = db.relationship("Group", back_populates="events")
 
     def __repr__(self) -> str:
-        return f'<Event {self.id} ({self.title})>'
+        return f"<Event {self.id} ({self.title})>"
 
     @property
     def dt(self) -> datetime.datetime:
@@ -128,7 +129,7 @@ class User(UserMixin, db.Model):
 
     # permissions
     is_superuser: Mapped[bool] = db.Column(db.Boolean, default=False)
-    permissions: Mapped[list[UserPermission]] = db.relationship('UserPermission')
+    permissions: Mapped[list[UserPermission]] = db.relationship("UserPermission")
 
     created_on: Mapped[datetime.datetime] = db.Column(db.DateTime, index=False, unique=False, nullable=True)
     last_login: Mapped[datetime.datetime] = db.Column(db.DateTime, index=False, unique=False, nullable=True)
@@ -136,7 +137,7 @@ class User(UserMixin, db.Model):
     token_expiration: Mapped[datetime.datetime] = db.Column(db.DateTime, index=False, unique=False, nullable=True)
 
     def set_password(self, password: str):
-        self.password = generate_password_hash(password, method='sha256')
+        self.password = generate_password_hash(password, method="sha256")
 
     def check_password(self, password: str) -> bool:
         if not password:
@@ -144,14 +145,14 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password, password)
 
     def __repr__(self) -> str:
-        return f'<User {self.id} ({self.name})>'
+        return f"<User {self.id} ({self.name})>"
 
     @property
     def groups(self) -> list[Group]:
         return [p.group for p in self.permissions if p.granted]
 
     def query_groups(self) -> list[Group]:
-        '''Returns a list of groups the user can manage'''
+        """Returns a list of groups the user can manage"""
         flask.current_app.logger.debug("%s.query_groups()", self)
         groups = []
 
@@ -175,7 +176,7 @@ class User(UserMixin, db.Model):
         return groups
 
     def query_events(self) -> list[Event]:
-        '''Returns a list of events that the user is allowed to manage'''
+        """Returns a list of events that the user is allowed to manage"""
         flask.current_app.logger.debug("%s.query_events()", self)
         events = []
 
@@ -208,7 +209,7 @@ class User(UserMixin, db.Model):
         return False
 
     def has_group_permission(self, group_id: str) -> bool:
-        '''Returns a boolean indicating the user has permissions to access the group'''
+        """Returns a boolean indicating the user has permissions to access the group"""
         if self.is_superuser:
             return True
 
@@ -220,7 +221,7 @@ class User(UserMixin, db.Model):
         return False
 
     def has_event_permission(self, event: Event) -> bool:
-        '''Returns a boolean indicating the user has permissions to access the group'''
+        """Returns a boolean indicating the user has permissions to access the group"""
         return self.has_group_permission(event.group)
 
 

@@ -32,62 +32,70 @@ from .models import (
 )
 
 # Blueprint Configuration
-auth_bp = flask.Blueprint('auth', __name__, url_prefix='/auth', static_folder='static')
+auth_bp = flask.Blueprint("auth", __name__, url_prefix="/auth", static_folder="static")
 current_user: User
 
 
 class ProfileForm(FlaskForm):
-    id = StringField('E-Mail Adresse', validators=[
-        Length(min=6, max=100),
-        Email(message='Bitte gib eine valide E-Mail Adresse an.', allow_smtputf8=False),
-        DataRequired(),
-    ])
+    id = StringField(
+        "E-Mail Adresse",
+        validators=[
+            Length(min=6, max=100),
+            Email(message="Bitte gib eine valide E-Mail Adresse an.", allow_smtputf8=False),
+            DataRequired(),
+        ],
+    )
     name = StringField(
-        'Name',
+        "Name",
         description="Bitte Vor- und Nachname angeben, damit wir dich zuordnen können.",
-        validators=[DataRequired(), Length(max=100), ],
+        validators=[
+            DataRequired(),
+            Length(max=100),
+        ],
     )
     password = PasswordField(
-        'Password',
-        validators=[DataRequired(), Length(min=8, max=200, message='Das Passwort muss zwischen 8 und 200 Zeichen haben.')],
+        "Password",
+        validators=[
+            DataRequired(),
+            Length(min=8, max=200, message="Das Passwort muss zwischen 8 und 200 Zeichen haben."),
+        ],
     )
     confirm = PasswordField(
-        'Password (wiederholen)',
-        validators=[DataRequired(),
-                    EqualTo('password', message='Die Passwörter stimmen nicht überein.')],
+        "Password (wiederholen)",
+        validators=[DataRequired(), EqualTo("password", message="Die Passwörter stimmen nicht überein.")],
     )
     is_superuser = BooleanField(
-        'Superuser',
+        "Superuser",
         description="Superuser-Rechte erlauben es, auf alle Inhalte zuzugreifen.",
     )
 
-    submit = SubmitField('Speichern')
-    delete = SubmitField('Löschen')
+    submit = SubmitField("Speichern")
+    delete = SubmitField("Löschen")
 
 
 def disable_field(field: Field, disabled=True):
     if not field.render_kw:
         field.render_kw = {}
     if disabled:
-        field.render_kw.update({'disabled': ""})
+        field.render_kw.update({"disabled": ""})
     else:
-        field.render_kw.pop('disabled', None)
+        field.render_kw.pop("disabled", None)
 
 
 class LoginForm(FlaskForm):
     id = ProfileForm.id
     password = ProfileForm.password
-    submit = SubmitField('Login')
+    submit = SubmitField("Login")
     reset = SubmitField("Passwort vergessen?")
 
 
-@auth_bp.route('/login', methods=['GET', 'POST'])
+@auth_bp.route("/login", methods=["GET", "POST"])
 def login():
-    next_page = flask.request.args.get('next') or flask.url_for('public.index')
+    next_page = flask.request.args.get("next") or flask.url_for("public.index")
 
     # Bypass if user is logged in
     if current_user.is_authenticated:
-        flask.flash("Du bist bereits eingeloggt.", 'alert')
+        flask.flash("Du bist bereits eingeloggt.", "alert")
         return flask.redirect(next_page)
 
     form = LoginForm()
@@ -96,10 +104,10 @@ def login():
     if form.reset.data and form.validate_on_submit():
         _user = User.query.filter_by(id=form.id.data).first()
         if _user:
-            return flask.redirect(flask.url_for('auth.reset', username=form.id.data))
+            return flask.redirect(flask.url_for("auth.reset", username=form.id.data))
 
-        flask.flash("Es existiert keine Nutzer*in mit dieser E-Mail Adresse.", 'alert')
-        return flask.redirect(flask.url_for('auth.login'))
+        flask.flash("Es existiert keine Nutzer*in mit dieser E-Mail Adresse.", "alert")
+        return flask.redirect(flask.url_for("auth.login"))
 
     # if submit: validate login attempt
     if form.submit.data and form.validate_on_submit():
@@ -109,16 +117,16 @@ def login():
             _user.last_login = datetime.datetime.now()
             db.session.commit()
 
-            flask.flash(f"Login erfolgreich. Willkommen, {current_user.name}!", 'success')
+            flask.flash(f"Login erfolgreich. Willkommen, {current_user.name}!", "success")
             return flask.redirect(next_page)
 
-        flask.flash('Login fehlgeschlagen.', 'danger')
-        return flask.redirect(flask.url_for('auth.login'))
+        flask.flash("Login fehlgeschlagen.", "danger")
+        return flask.redirect(flask.url_for("auth.login"))
 
     return flask.render_template(
-        'generic_form.html',
+        "generic_form.html",
         form=form,
-        title='Login',
+        title="Login",
     )
 
 
@@ -126,24 +134,24 @@ class PasswordResetForm(FlaskForm):
     id = ProfileForm.id
     password = ProfileForm.password
     confirm = ProfileForm.confirm
-    submit = SubmitField('Passwort zurücksetzen')
+    submit = SubmitField("Passwort zurücksetzen")
 
 
-@auth_bp.route('/reset/<username>', methods=['GET', 'POST'])
+@auth_bp.route("/reset/<username>", methods=["GET", "POST"])
 def reset(username):
     # Bypass if user is logged in
     if current_user.is_authenticated:
-        flask.flash("Du bist bereits eingeloggt.", 'alert')
-        return flask.redirect(flask.url_for('public.index'))
+        flask.flash("Du bist bereits eingeloggt.", "alert")
+        return flask.redirect(flask.url_for("public.index"))
 
     # Get user object and token
     _user = User.query.filter_by(id=username).first()
-    token = flask.request.args.get('token')
+    token = flask.request.args.get("token")
 
     # Validate reset attempt
     if not _user:
-        flask.flash('Nutzer*in nicht gefunden.', 'danger')
-        return flask.redirect(flask.url_for('auth.login'))
+        flask.flash("Nutzer*in nicht gefunden.", "danger")
+        return flask.redirect(flask.url_for("auth.login"))
 
     form = PasswordResetForm()
     form.id.data = username
@@ -154,14 +162,14 @@ def reset(username):
         if form.validate_on_submit():
             _user.set_password(form.password.data)
             db.session.commit()
-            flask.flash('Passwort erfolgreich geändert.', 'success')
-            return flask.redirect(flask.url_for('auth.login'))
+            flask.flash("Passwort erfolgreich geändert.", "success")
+            return flask.redirect(flask.url_for("auth.login"))
 
         # return passwort enter form
         return flask.render_template(
-            'generic_form.html',
+            "generic_form.html",
             form=form,
-            title='Passwort zurücksetzen',
+            title="Passwort zurücksetzen",
         )
 
     form._fields.pop("password")
@@ -181,16 +189,16 @@ def reset(username):
             msg.body = render_template("mail/reset.txt", user=_user)
             mail.send(msg)
 
-            flask.flash('E-Mail zum Zurücksetzen des Passwortes wurde gesendet.', 'success')
-            return flask.redirect(flask.url_for('auth.reset', username=username))
+            flask.flash("E-Mail zum Zurücksetzen des Passwortes wurde gesendet.", "success")
+            return flask.redirect(flask.url_for("auth.reset", username=username))
 
-        flask.flash('Passwort konnte nicht zurückgesetzt werden.', 'danger')
-        return flask.redirect(flask.url_for('auth.reset', username=username))
+        flask.flash("Passwort konnte nicht zurückgesetzt werden.", "danger")
+        return flask.redirect(flask.url_for("auth.reset", username=username))
 
     return flask.render_template(
-        'generic_form.html',
+        "generic_form.html",
         form=form,
-        title='Passwort zurücksetzen',
+        title="Passwort zurücksetzen",
     )
 
 
@@ -198,18 +206,18 @@ def reset(username):
 @login_required
 def logout():
     logout_user()
-    flask.flash("Logout erfolgreich.", 'success')
-    return flask.redirect(flask.url_for('auth.login'))
+    flask.flash("Logout erfolgreich.", "success")
+    return flask.redirect(flask.url_for("auth.login"))
 
 
-@auth_bp.route('/user/edit/<user_id>', methods=['GET', 'POST'])
+@auth_bp.route("/user/edit/<user_id>", methods=["GET", "POST"])
 @login_required
 def edit_user(user_id):
     form = ProfileForm()
 
     if not isinstance(current_user, User):
-        flask.flash("Du bist nicht eingeloggt.", 'alert')
-        return flask.redirect(flask.url_for('auth.login'))
+        flask.flash("Du bist nicht eingeloggt.", "alert")
+        return flask.redirect(flask.url_for("auth.login"))
 
     _user = User.query.filter_by(id=user_id).first()
 
@@ -218,18 +226,18 @@ def edit_user(user_id):
 
     # adjust password rules to accept empty passwords for existing users
     form.password.flags = None
-    form.password.validators = [Optional(), Length(min=8, message='Das Passwort muss mindestens 8 Zeichen haben.')]
+    form.password.validators = [Optional(), Length(min=8, message="Das Passwort muss mindestens 8 Zeichen haben.")]
 
     form.confirm.flags = None
-    form.confirm.validators = [EqualTo('password', message='Die Passwörter stimmen nicht überein.')]
+    form.confirm.validators = [EqualTo("password", message="Die Passwörter stimmen nicht überein.")]
 
     if _user.id == current_user.id:
         pass
     elif current_user.is_superuser:
         pass
     else:
-        flask.flash("Du hast keine Berechtigung, diesen Account zu bearbeiten.", 'alert')
-        return flask.redirect(flask.url_for('auth.users'))
+        flask.flash("Du hast keine Berechtigung, diesen Account zu bearbeiten.", "alert")
+        return flask.redirect(flask.url_for("auth.users"))
 
     # POST: delete user
     if form.delete.data:
@@ -250,16 +258,19 @@ def edit_user(user_id):
                 # superuser privilege can only be altered by other superusers
                 if form.is_superuser.data != _user.is_superuser:
                     if current_user == _user:
-                        flask.flash("Du kannst deine eigenen Rechte nicht bearbeiten.", 'warning')
+                        flask.flash("Du kannst deine eigenen Rechte nicht bearbeiten.", "warning")
                     elif current_user.is_superuser:
                         _user.is_superuser = form.is_superuser.data
                     else:
-                        flask.flash("Du hast keine Berechtigung, dem Account Superuser-Rechte zu erteilen oder zu entziehen.", 'warning')
+                        flask.flash(
+                            "Du hast keine Berechtigung, dem Account Superuser-Rechte zu erteilen oder zu entziehen.",
+                            "warning",
+                        )
 
             # save account
             db.session.commit()
             flask.flash(f"Account {_user.id} wurde gespeichert.", "success")
-            return flask.redirect(flask.url_for('auth.edit_user', user_id=_user.id))
+            return flask.redirect(flask.url_for("auth.edit_user", user_id=_user.id))
 
     # initialize form values
     for field_id, field in dict(form._fields).items():
@@ -267,7 +278,7 @@ def edit_user(user_id):
         if field_id in _user.__dict__:
             field.data = _user.__dict__[field_id]
 
-    return flask.render_template('auth/edit_user.html', form=form, user=_user, permissions=_user.permissions)
+    return flask.render_template("auth/edit_user.html", form=form, user=_user, permissions=_user.permissions)
 
 
 class RegisterForm(FlaskForm):
@@ -276,18 +287,17 @@ class RegisterForm(FlaskForm):
     password = ProfileForm.password
     confirm = ProfileForm.confirm
     group_id = HiddenField(
-        'Gliederung',
-        description="Wahle eine Gruppe aus, für die du eine Berechtigung beantragen möchtest."
+        "Gliederung", description="Wahle eine Gruppe aus, für die du eine Berechtigung beantragen möchtest."
     )
 
-    submit = SubmitField('Registrieren')
+    submit = SubmitField("Registrieren")
 
 
-@auth_bp.route('/user/new', methods=['GET', 'POST'])
+@auth_bp.route("/user/new", methods=["GET", "POST"])
 def new_user():
     if isinstance(current_user, User) and current_user.is_authenticated:
-        flask.flash("Du bist bereits eingeloggt.", 'alert')
-        return flask.redirect(flask.url_for('auth.edit_user', user_id=current_user.id))
+        flask.flash("Du bist bereits eingeloggt.", "alert")
+        return flask.redirect(flask.url_for("auth.edit_user", user_id=current_user.id))
 
     form = RegisterForm()
 
@@ -295,8 +305,8 @@ def new_user():
     if form.submit.data:
         if form.validate_on_submit():
             if User.query.get(form.id.data):
-                flask.flash(f"Der Account {form.id.data} existiert bereits.", 'warning')
-                return flask.redirect(flask.url_for('auth.new_user'))
+                flask.flash(f"Der Account {form.id.data} existiert bereits.", "warning")
+                return flask.redirect(flask.url_for("auth.new_user"))
 
             # create new user
             _user = User()
@@ -342,20 +352,20 @@ def new_user():
                 mail.send(perm_msg)
 
             flask.flash(f"Account {_user.id} wurde angelegt.", "success")
-            return flask.redirect(flask.url_for('auth.login', _id=_user.id))
+            return flask.redirect(flask.url_for("auth.login", _id=_user.id))
 
     roots = db.session.query(Group).filter(None == Group.parent_id).all()
     tree_data = [group_tree(group) for group in roots]
 
-    return flask.render_template('auth/new_user.html', form=form, tree_data=json.dumps(tree_data))
+    return flask.render_template("auth/new_user.html", form=form, tree_data=json.dumps(tree_data))
 
 
-@auth_bp.route('/users')
+@auth_bp.route("/users")
 @login_required
 def users():
     if not current_user.is_superuser:
-        flask.flash('Nur Superuser können die Nutzerübersicht aufrufen.', 'info')
-        return flask.redirect(flask.url_for('auth.edit_user', user_id=current_user.id))
+        flask.flash("Nur Superuser können die Nutzerübersicht aufrufen.", "info")
+        return flask.redirect(flask.url_for("auth.edit_user", user_id=current_user.id))
 
     _users = User.query.all()
     return flask.render_template("auth/users.html", users=_users, title="Übersicht Accounts")
@@ -370,25 +380,25 @@ def load_user(user_id):
 
 @login_manager.unauthorized_handler
 def unauthorized():
-    flask.flash('Du musst angemeldet sein, um diese Seite aufrufen zu können.', 'info')
-    return flask.redirect(flask.url_for('auth.login'))
+    flask.flash("Du musst angemeldet sein, um diese Seite aufrufen zu können.", "info")
+    return flask.redirect(flask.url_for("auth.login"))
 
 
 class PermissionForm(FlaskForm):
     user_id = StringField(
-        'Nutzer*in',
+        "Nutzer*in",
         description="E-Mail Adresse der Nutzer*in.",
     )
     group_id = HiddenField(
-        'Gliederung',
+        "Gliederung",
     )
     granted = BooleanField(
-        'Bestätigt',
+        "Bestätigt",
         description="Die Berechtigung muss bestätigt werden.",
     )
 
-    submit = SubmitField('Speichern')
-    delete = SubmitField('Löschen')
+    submit = SubmitField("Speichern")
+    delete = SubmitField("Löschen")
 
 
 def group_tree(group: Group) -> dict:
@@ -399,7 +409,7 @@ def group_tree(group: Group) -> dict:
     )
 
 
-@auth_bp.route('/auth/permission/<permission_id>', methods=['GET', 'POST'])
+@auth_bp.route("/auth/permission/<permission_id>", methods=["GET", "POST"])
 @login_required
 def edit_permission(permission_id: str):
     form = PermissionForm()
@@ -418,7 +428,7 @@ def edit_permission(permission_id: str):
         _perm = UserPermission.query.filter_by(id=int(permission_id)).first()
         if not _perm:
             flask.flash("Berechtigung existiert nicht.", "warning")
-            return flask.redirect(flask.url_for('public.index'))
+            return flask.redirect(flask.url_for("public.index"))
 
         # disable editing group
         form.group_id.render_kw = {"disabled": True}
@@ -429,7 +439,7 @@ def edit_permission(permission_id: str):
         db.session.delete(_perm)
         db.session.commit()
         flask.flash("Berechtigung erfolgreich gelöscht.", "success")
-        return flask.redirect(flask.url_for('auth.edit_user', user_id=_perm.user_id))
+        return flask.redirect(flask.url_for("auth.edit_user", user_id=_perm.user_id))
 
     # POST: save permission
     if form.submit.data:
@@ -443,10 +453,10 @@ def edit_permission(permission_id: str):
                 if current_user.has_group_permission(_perm.group_id):
                     _perm.granted = form.granted.data
                 else:
-                    flask.flash("Du hast keine Berechtigung, diese Berechtigung zu bearbeiten.", 'warning')
-                    return flask.redirect(flask.url_for('auth.edit_user', user_id=_perm.user_id))
+                    flask.flash("Du hast keine Berechtigung, diese Berechtigung zu bearbeiten.", "warning")
+                    return flask.redirect(flask.url_for("auth.edit_user", user_id=_perm.user_id))
 
-                if _perm.granted:
+                if _perm.granted and permission_id != "new":
                     perm_msg = Message(
                         subject=f"[{current_app.config['APP_TITLE']}] Berechtigung erteilt",
                         sender=f"{current_app.config['APP_TITLE']} <{current_app.config['MAIL_USERNAME']}>",
@@ -464,22 +474,23 @@ def edit_permission(permission_id: str):
                 # send to superusers if not grantables exist
                 bcc = [] if grantable_users else [u.id for u in User.query.filter(User.is_superuser)]
 
-                perm_msg = Message(
-                    subject=f"[{current_app.config['APP_TITLE']}] Berechtigung angefragt",
-                    sender=f"{current_app.config['APP_TITLE']} <{current_app.config['MAIL_USERNAME']}>",
-                    recipients=grantable_users,
-                    bcc=bcc,
-                )
-                perm_msg.body = render_template("mail/perm_request.txt", perm=_perm)
-                mail.send(perm_msg)
+                if not _perm.granted:
+                    perm_msg = Message(
+                        subject=f"[{current_app.config['APP_TITLE']}] Berechtigung angefragt",
+                        sender=f"{current_app.config['APP_TITLE']} <{current_app.config['MAIL_USERNAME']}>",
+                        recipients=grantable_users,
+                        bcc=bcc,
+                    )
+                    perm_msg.body = render_template("mail/perm_request.txt", perm=_perm)
+                    mail.send(perm_msg)
 
                 flask.flash("Berechtigung wurde angelegt.", "success")
-                return flask.redirect(flask.url_for('auth.edit_user', user_id=_perm.user_id))
+                return flask.redirect(flask.url_for("auth.edit_user", user_id=_perm.user_id))
 
             # save account
             db.session.commit()
             flask.flash("Berechtigung wurde gespeichert.", "success")
-            return flask.redirect(flask.url_for('auth.edit_user', user_id=_perm.user_id))
+            return flask.redirect(flask.url_for("auth.edit_user", user_id=_perm.user_id))
 
     # initialize form values
     for field_id, field in dict(form._fields).items():
@@ -492,4 +503,4 @@ def edit_permission(permission_id: str):
     roots = db.session.query(Group).filter(None == Group.parent_id).all()
     tree_data = [group_tree(group) for group in roots]
 
-    return flask.render_template('auth/edit_permission.html', form=form, title=_title, tree_data=json.dumps(tree_data))
+    return flask.render_template("auth/edit_permission.html", form=form, title=_title, tree_data=json.dumps(tree_data))
