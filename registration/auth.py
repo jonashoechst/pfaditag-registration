@@ -338,7 +338,7 @@ def new_user():
                 perm_msg = Message(
                     subject=f"[{current_app.config['APP_TITLE']}] Berechtigung freigeben",
                     sender=f"{current_app.config['APP_TITLE']} <{current_app.config['MAIL_USERNAME']}>",
-                    recipients=perm.query_grantable_users(),
+                    recipients=[u.id for u in perm.query_grantable_users()],
                 )
                 perm_msg.body = render_template("mail/perm_request.txt", perm=perm)
                 print(perm_msg)
@@ -464,7 +464,7 @@ def edit_permission(permission_id: str):
                 db.session.add(_perm)
                 db.session.commit()
 
-                grantable_users = _perm.query_grantable_users()
+                grantable_users = [u.id for u in _perm.query_grantable_users()]
                 # send to superusers if not grantables exist
                 bcc = [] if grantable_users else [u.id for u in User.query.filter(User.is_superuser)]
 
