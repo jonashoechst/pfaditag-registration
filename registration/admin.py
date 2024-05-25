@@ -95,7 +95,6 @@ class EventForm(FlaskForm):
     group_id = SelectField(
         "Gliederung",
         validators=[DataRequired()],
-        coerce=int,
     )
     title = StringField(
         "Aktionstitel",
@@ -219,7 +218,6 @@ def events_edit(_id):
         group = models.Group.query.get(group_id)
         if group:
             form.group_id.data = group.id
-        db.session.add(event)
     else:
         event = models.Event.query.get(_id)
 
@@ -263,6 +261,7 @@ def events_edit(_id):
                 else:
                     setattr(event, field_id, field.data)
 
+            db.session.add(event)
             db.session.commit()
             flask.flash(f"Aktion '{event.title}' wurde gespeichert.", "success")
 
