@@ -69,6 +69,10 @@ def events():
 @public_bp.route('/event/<int:event_id>')
 def event(event_id):
     _event = models.Event.query.get(event_id)
+    if not _event:
+        flask.flash("Aktion konnte nicht gefunden werden.", "warning")
+        return flask.redirect(flask.url_for("public.index"))
+        
     return flask.render_template(
         'event.html',
         title=_event.title,
@@ -79,6 +83,10 @@ def event(event_id):
 @public_bp.route('/event/<int:event_id>.ics')
 def event_ics(event_id):
     _event = models.Event.query.get(event_id)
+    if not _event:
+        flask.flash("Aktion konnte nicht gefunden werden.", "warning")
+        return flask.redirect(flask.url_for("public.index"))
+        
 
     cal_event = icalendar.Event()
 
