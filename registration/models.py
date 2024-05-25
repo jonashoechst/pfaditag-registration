@@ -18,15 +18,15 @@ class Group(db.Model):
     parent: Mapped[Group] = db.relationship("Group", back_populates="children", remote_side=[id])
     children: Mapped[list[Group]] = db.relationship("Group", back_populates="parent")
     attributes: Mapped[dict] = db.Column(db.JSON, default={})
-    group_type: Mapped[str] = db.Column(db.String(255))
+    group_type: Mapped[str] = db.Column(db.String(255), nullable=False, default="")
 
-    name: Mapped[str] = db.Column(db.String(64))
-    street: Mapped[str] = db.Column(db.String(64))
-    zip: Mapped[str] = db.Column(db.String(5))
-    city: Mapped[str] = db.Column(db.String(64))
-    website: Mapped[str] = db.Column(db.String(64))
-    instagram: Mapped[str] = db.Column(db.String(64))
-    facebook: Mapped[str] = db.Column(db.String(64))
+    name: Mapped[str] = db.Column(db.String(64), nullable=False, default="")
+    street: Mapped[str] = db.Column(db.String(64), nullable=False, default="")
+    zip: Mapped[str] = db.Column(db.String(5), nullable=False, default="")
+    city: Mapped[str] = db.Column(db.String(64), nullable=False, default="")
+    website: Mapped[str] = db.Column(db.String(64), nullable=False, default="")
+    instagram: Mapped[str] = db.Column(db.String(64), nullable=False, default="")
+    facebook: Mapped[str] = db.Column(db.String(64), nullable=False, default="")
 
     display: Mapped[bool] = db.Column(db.Boolean, default=False, nullable=False)
 
@@ -68,18 +68,18 @@ class Event(db.Model):
     id: Mapped[int] = db.Column(db.Integer, primary_key=True)
 
     title: Mapped[str] = db.Column(db.String(64), index=True)
-    email: Mapped[str] = db.Column(db.String(64))
-    tel: Mapped[str] = db.Column(db.String(32))
+    email: Mapped[str] = db.Column(db.String(64), nullable=False, default="")
+    tel: Mapped[str] = db.Column(db.String(32), nullable=False, default="")
 
-    lat: Mapped[float] = db.Column(db.Numeric(8, 6))
-    lon: Mapped[float] = db.Column(db.Numeric(9, 6))
+    lat: Mapped[float] = db.Column(db.Numeric(8, 6), nullable=False)
+    lon: Mapped[float] = db.Column(db.Numeric(9, 6), nullable=False)
 
-    date: Mapped[datetime.date] = db.Column(db.Date, index=True, default=datetime.date(2023, 9, 23))
-    time: Mapped[datetime.date] = db.Column(db.Time, index=True, default=datetime.time(00, 00))
-    date_end: Mapped[datetime.date] = db.Column(db.Date, index=True, default=datetime.date(2023, 9, 23))
-    time_end: Mapped[datetime.date] = db.Column(db.Time, index=True, default=datetime.time(00, 00))
+    date: Mapped[datetime.date] = db.Column(db.Date, nullable=False, index=True, default=datetime.date(2024, 9, 20))
+    time: Mapped[datetime.date] = db.Column(db.Time, nullable=False, index=True, default=datetime.time(00, 00))
+    date_end: Mapped[datetime.date] = db.Column(db.Date, nullable=False, index=True, default=datetime.date(2024, 9, 22))
+    time_end: Mapped[datetime.date] = db.Column(db.Time, nullable=False, index=True, default=datetime.time(00, 00))
 
-    description: Mapped[str] = db.Column(db.String(2000))
+    description: Mapped[str] = db.Column(db.String(2000), nullable=False)
 
     group_id: Mapped[str] = db.Column(db.String(64), db.ForeignKey("group.id"))
     group: Mapped[Group] = db.relationship("Group", back_populates="events")
@@ -227,7 +227,7 @@ class User(UserMixin, db.Model):
 class UserPermission(db.Model):
     id: Mapped[int] = db.Column(db.Integer, primary_key=True)
     user_id: Mapped[str] = db.Column(db.String(100), db.ForeignKey(User.id))
-    group_id: Mapped[str] = db.Column(db.String(64), db.ForeignKey("group.id"))
+    group_id: Mapped[str] = db.Column(db.String(64), db.ForeignKey(Group.id))
 
     granted: Mapped[bool] = db.Column(db.Boolean, default=False, nullable=False)
 
