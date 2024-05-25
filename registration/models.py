@@ -13,8 +13,8 @@ db: SQLAlchemy
 
 
 class Group(db.Model):
-    id: Mapped[int] = db.Column(db.Integer, primary_key=True)
-    parent_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey("group.id"), nullable=True)
+    id: Mapped[str] = db.Column(db.String(64), primary_key=True)
+    parent_id: Mapped[str] = db.Column(db.String(64), db.ForeignKey("group.id"), nullable=True)
     parent: Mapped[Group] = db.relationship("Group", back_populates="children", remote_side=[id])
     children: Mapped[list[Group]] = db.relationship("Group", back_populates="parent")
     attributes: Mapped[dict] = db.Column(db.JSON, default={})
@@ -81,7 +81,7 @@ class Event(db.Model):
 
     description: Mapped[str] = db.Column(db.String(2000))
 
-    group_id: Mapped[int] = db.Column(db.Integer, db.ForeignKey('group.id'))
+    group_id: Mapped[str] = db.Column(db.String(64), db.ForeignKey("group.id"))
     group: Mapped[Group] = db.relationship("Group", back_populates="events")
 
     def __repr__(self) -> str:
@@ -225,9 +225,9 @@ class User(UserMixin, db.Model):
 
 
 class UserPermission(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String(100), db.ForeignKey(User.id))
-    group_id = db.Column(db.Integer, db.ForeignKey(Group.id))
+    id: Mapped[int] = db.Column(db.Integer, primary_key=True)
+    user_id: Mapped[str] = db.Column(db.String(100), db.ForeignKey(User.id))
+    group_id: Mapped[str] = db.Column(db.String(64), db.ForeignKey("group.id"))
 
     granted: Mapped[bool] = db.Column(db.Boolean, default=False, nullable=False)
 
@@ -238,9 +238,7 @@ class UserPermission(db.Model):
         "Returns a list of users that are allowed to grant this permission"
         users = []
         for pgroup in self.group.path:
-            pgroup: Group
             for perm in pgroup.permissions:
-                perm: UserPermission
                 if perm.granted and perm.user not in users:
                     users.append(perm.user)
 

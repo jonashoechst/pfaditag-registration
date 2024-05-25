@@ -179,7 +179,6 @@ def reset(username):
                 recipients=[_user.id],
             )
             msg.body = render_template("mail/reset.txt", user=_user)
-            print(msg)
             mail.send(msg)
 
             flask.flash('E-Mail zum Zurücksetzen des Passwortes wurde gesendet.', 'success')
@@ -330,7 +329,6 @@ def new_user():
                 bcc=[u.id for u in User.query.filter(User.is_superuser)],
             )
             msg.body = render_template("mail/hello.txt", user=_user)
-            print(msg)
             mail.send(msg)
 
             # send permission request request
@@ -341,7 +339,6 @@ def new_user():
                     recipients=[u.id for u in perm.query_grantable_users()],
                 )
                 perm_msg.body = render_template("mail/perm_request.txt", perm=perm)
-                print(perm_msg)
                 mail.send(perm_msg)
 
             flask.flash(f"Account {_user.id} wurde angelegt.", "success")
@@ -456,7 +453,6 @@ def edit_permission(permission_id: str):
                         recipients=[_perm.user_id],
                     )
                     perm_msg.body = render_template("mail/perm_granted.txt", perm=_perm)
-                    print(perm_msg)
                     mail.send(perm_msg)
 
             # create new permission
@@ -475,7 +471,6 @@ def edit_permission(permission_id: str):
                     bcc=bcc,
                 )
                 perm_msg.body = render_template("mail/perm_request.txt", perm=_perm)
-                print(perm_msg)
                 mail.send(perm_msg)
 
                 flask.flash("Berechtigung wurde angelegt.", "success")
