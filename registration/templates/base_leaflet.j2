@@ -6,6 +6,11 @@
 <link rel="stylesheet" href="{{url_for('.static', filename='leaflet/leaflet.css')}}">
 <link rel="stylesheet" href="{{url_for('.static', filename='leaflet-locatecontrol-dist/L.Control.Locate.min.css')}}">
 <link rel="stylesheet" href="{{url_for('.static', filename='leaflet-vector-markers.css')}}">
+<style>
+#map {
+    min-height: 400px;
+}
+</style>
 {% endblock %}
 
 {% block scripts %}

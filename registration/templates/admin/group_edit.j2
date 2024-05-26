@@ -4,15 +4,6 @@
 {% import "bootstrap5/form.html" as wtf %}
 {% from 'bootstrap5/form.html' import render_form_row, render_field %}
 
-{% block styles %}
-{{ super() }}
-<style>
-    #map {
-        min-height: 400px;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="row header">
     <div class="col-xs-12">
@@ -22,21 +13,31 @@
     </div>
 </div>
 
-<div class="row">
+
+<div class="row mb-5">
     <div class="col-sm-6 first-column mb-3">
-        <form action="" method="POST" class="form" role="form" enctype="multipart/form-data">
-            {{ form.csrf_token() }}
-            {{ render_form_row([form.group_type, form.name]) }}
-            {{ render_form_row([form.street]) }}
-            {{ render_form_row([form.zip, form.city]) }}
-            {{ render_form_row([form.website]) }}
-            {{ render_form_row([form.instagram]) }}
-            {{ render_form_row([form.facebook]) }}
-            {{ render_field(form.submit, button_style="success") }}
-        </form>
+        <div class="row mb-3">
+            <form action="" method="POST" class="form" role="form" enctype="multipart/form-data">
+                {{ form.csrf_token() }}
+                {{ render_form_row([form.group_type, form.name]) }}
+                {{ render_form_row([form.street]) }}
+                <div class="row">
+                    <div class="col">
+                    {{ render_field(form.zip) }}
+                    </div>
+                    <div class="col">
+                    {{ render_field(form.city) }}
+                    </div>
+                </div>
+                {{ render_form_row([form.website]) }}
+                {{ render_form_row([form.instagram]) }}
+                {{ render_form_row([form.facebook]) }}
+                {{ render_field(form.submit, button_style="success") }}
+            </form>
+        </div>
     </div>
-    <div class="col-sm-6 second-column mb-3">
-        <div id="map_disabled"></div>
+    <div class="col-sm-6 mb-3">
+        <div id="map" class="h-100"></div>
     </div>
 </div>
 
@@ -110,7 +111,6 @@
         map.setView([lat, lng], 11);
     } else {
         map.setView([51.3, 10.7], 6);
-        locator.start();
     }
 
     // allow user to click on map to set lat/lon
@@ -127,5 +127,31 @@
         $('#lon').val(e.latlng.lng);
     });
 
+    function updateFromAddress() {
+        address = `${$('#street').val()}, ${$('#zip').val()} ${$('#city').val()}`
+        encodedAddress = encodeURIComponent(address);
+        accessToken = 'pk.eyJ1IjoiaG9lY2hzdCIsImEiOiJjazVueDhyMWkwenpuM2RydzltNjhraDAzIn0.HntghYG9IBZvVd0bUJEY9Q'
+        geocodingURI = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + encodedAddress + ".json?limit=1&access_token=" + accessToken
+
+        $.getJSON(geocodingURI, function(data) {
+            try {
+                coords = data.features[0].geometry.coordinates.reverse()
+                alert(coords);
+
+                // update marker position or create new one
+                if (!window.marker) {
+                    window.marker = L.marker(coords).addTo(map);
+                } else {
+                    window.marker.setLatLng(coords);
+                }
+
+                // write lat/lon to form
+                $('#lat').val(coords[0]);
+                $('#lon').val(coords[1]);
+            } catch (error) {
+                alert("Konnte keine Koordinaten für die Adresse finden.");
+            }
+        });
+    }
 </script>
 {% endblock %}
