@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base.j2" %}
 
 {% block content %}
 <h1>{{ title }}</h1>
@@ -19,7 +19,7 @@
                 <input class="form-check-input" type="checkbox" value="" id="flexCheckCheckedDisabled" {% if user.is_superuser %}checked{% endif %} disabled> 
             </td>
             <td class="text-end">
-                {% include 'buttons/user_buttons.html' %}
+                {% include 'buttons/user_buttons.j2' %}
             </td>
         </tr>
         {% endfor %}

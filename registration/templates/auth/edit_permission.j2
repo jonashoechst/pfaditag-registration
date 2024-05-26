@@ -1,6 +1,4 @@
-{% set title = "Account anlegen" %}
-
-{% extends "base.html" %}
+{% extends "base.j2" %}
 {% import "bootstrap5/form.html" as wtf %}
 
 {% block content %}
@@ -12,13 +10,10 @@
 </div>
 
 <div class="row">
-    <div class="col-sm-6 first-column mb-3">
+    <div class="col-sm-6 first-column">
         <form action="" method="POST" class="form" role="form" enctype="multipart/form-data">
             {{ form.csrf_token() }}
-            {{ wtf.render_form_row([form.id]) }}
-            {{ wtf.render_form_row([form.name]) }}
-            {{ wtf.render_form_row([form.password]) }}
-            {{ wtf.render_form_row([form.confirm]) }}
+            {{ wtf.render_form_row([form.user_id]) }}
             {{ wtf.render_form_row([form.group_id]) }}
             <div class="row">
                 <div class="col">
@@ -29,13 +24,12 @@
                     </div>
                 </div>
             </div>
+            {{ wtf.render_form_row([form.granted]) }}
             {{ wtf.render_field(form.submit, button_style='success') }}
+            {{ wtf.render_field(form.delete, button_style='danger') }}
         </form>
     </div>
-    <div class="col-sm-6 second-column mb-3">
-    </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}

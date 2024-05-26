@@ -1,4 +1,4 @@
-{% extends "base_leaflet.html" %}
+{% extends "base_leaflet.j2" %}
 {% import "bootstrap5/form.html" as wtf %}
 {% from 'bootstrap5/form.html' import render_form_row, render_field %}
 
@@ -16,12 +16,13 @@
 <div class="row header">
     <div class="col-xs-12">
         <h1>
-            {% if _id == "new"  %}
+            {% if _id == "new" %}
             Neue Aktion anlegen
             {% else %}
             Aktion bearbeiten
-            
-            <a href="{{ url_for('public.event', event_id=_id) }}" class="btn btn-outline-primary"><i class="fa-solid fa-link"></i></a>
+
+            <a href="{{ url_for('public.event', event_id=_id) }}" class="btn btn-outline-primary"><i
+                    class="fa-solid fa-link"></i></a>
             {% endif %}
         </h1>
     </div>
@@ -30,17 +31,16 @@
 <div class="row">
     <div class="col-sm-6 first-column">
         <form action="" method="POST" class="form" role="form" enctype="multipart/form-data">
-        {{ form.csrf_token() }}
-        {{ render_form_row([form.group_id]) }}
-        {{ render_form_row([form.title]) }}
-        {{ render_form_row([form.email, form.tel]) }}
-        {{ render_form_row([form.date, form.time]) }}
-        {{ render_form_row([form.date_end, form.time_end]) }}
-        {{ render_form_row([form.description]) }}
-        {{ render_form_row([form.lat, form.lon]) }}
-        {{ render_field(form.submit) }}
-        {{ render_field(form.delete, button_style='danger') }}
-
+            {{ form.csrf_token() }}
+            {{ render_form_row([form.group_id]) }}
+            {{ render_form_row([form.title]) }}
+            {{ render_form_row([form.email, form.tel]) }}
+            {{ render_form_row([form.date, form.time]) }}
+            {{ render_form_row([form.date_end, form.time_end]) }}
+            {{ render_form_row([form.description]) }}
+            {{ render_form_row([form.lat, form.lon]) }}
+            {{ render_field(form.submit) }}
+            {{ render_field(form.delete, button_style='danger') }}
         </form>
     </div>
     <div class="col-sm-6 second-column">
@@ -66,14 +66,14 @@
     }).addTo(map);
     var locator = L.control.locate({ locateOptions: { maxZoom: 9 } }).addTo(map);
 
-    var eventStyle = L.VectorMarkers.icon({ icon: 'circle', markerColor: 'var(--bs-primary)'});
+    var eventStyle = L.VectorMarkers.icon({ icon: 'circle', markerColor: 'var(--bs-primary)' });
     var marker;
 
     // add marker if lat/lon is set
     function update_marker() {
         lat = $('#lat').val();
         lng = $('#lon').val();
-        
+
         if (lat && lng) {
             if (marker) {
                 marker.setLatLng([lat, lng]);

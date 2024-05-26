@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base.j2" %}
 
 {% block content %}
 <h1>Übersicht Aktionen</h1>
@@ -17,10 +17,10 @@
         {% for event in events %}
         <tr>
             <th scope="row">{{ event.title }}</th>
-            <td>{{ event.group.name }}</td>
+            <td>{{ event.group }}</td>
             <td>{{ event.group.zip }} {{ event.group.city }}</td>
             <td class="text-end">{{ event.date.year }}</td>
-            <td class="text-end">{% include 'buttons/event_buttons.html' %}</td>
+            <td class="text-end">{% include 'buttons/event_buttons.j2' %}</td>
         </tr>
         {% endfor %}
     </tbody>

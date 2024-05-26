@@ -124,7 +124,7 @@ def login():
         return flask.redirect(flask.url_for("auth.login"))
 
     return flask.render_template(
-        "generic_form.html",
+        "generic_form.j2",
         form=form,
         title="Login",
     )
@@ -167,7 +167,7 @@ def reset(username):
 
         # return passwort enter form
         return flask.render_template(
-            "generic_form.html",
+            "generic_form.j2",
             form=form,
             title="Passwort zurücksetzen",
         )
@@ -196,7 +196,7 @@ def reset(username):
         return flask.redirect(flask.url_for("auth.reset", username=username))
 
     return flask.render_template(
-        "generic_form.html",
+        "generic_form.j2",
         form=form,
         title="Passwort zurücksetzen",
     )
@@ -278,7 +278,7 @@ def edit_user(user_id):
         if field_id in _user.__dict__:
             field.data = _user.__dict__[field_id]
 
-    return flask.render_template("auth/edit_user.html", form=form, user=_user, permissions=_user.permissions)
+    return flask.render_template("auth/edit_user.j2", form=form, user=_user, permissions=_user.permissions)
 
 
 class RegisterForm(FlaskForm):
@@ -357,7 +357,7 @@ def new_user():
     roots = db.session.query(Group).filter(None == Group.parent_id).all()
     tree_data = [group_tree(group) for group in roots]
 
-    return flask.render_template("auth/new_user.html", form=form, tree_data=json.dumps(tree_data))
+    return flask.render_template("auth/new_user.j2", form=form, tree_data=json.dumps(tree_data))
 
 
 @auth_bp.route("/users")
@@ -368,7 +368,7 @@ def users():
         return flask.redirect(flask.url_for("auth.edit_user", user_id=current_user.id))
 
     _users = User.query.all()
-    return flask.render_template("auth/users.html", users=_users, title="Übersicht Accounts")
+    return flask.render_template("auth/users.j2", users=_users, title="Übersicht Accounts")
 
 
 @login_manager.user_loader
@@ -404,7 +404,7 @@ class PermissionForm(FlaskForm):
 def group_tree(group: Group) -> dict:
     return dict(
         id=group.id,
-        text=group.name,
+        text=group.display_name,
         children=[group_tree(sgroup) for sgroup in group.children],
     )
 
@@ -503,4 +503,4 @@ def edit_permission(permission_id: str):
     roots = db.session.query(Group).filter(None == Group.parent_id).all()
     tree_data = [group_tree(group) for group in roots]
 
-    return flask.render_template("auth/edit_permission.html", form=form, title=_title, tree_data=json.dumps(tree_data))
+    return flask.render_template("auth/edit_permission.j2", form=form, title=_title, tree_data=json.dumps(tree_data))

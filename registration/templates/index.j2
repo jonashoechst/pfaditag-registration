@@ -1,4 +1,4 @@
-{% extends "base_leaflet.html" %}
+{% extends "base_leaflet.j2" %}
 
 {% block opener %}
 <section class="colored-block p-5">
@@ -18,7 +18,8 @@
         </div>
         <div class="container p-3">
             <p class="text-center lead">
-            Beim PfadiTag öffnen Pfadfinderstämme ihre Türen und laden Kinder & Jugendliche ein Pfadfinden auszuprobieren!
+                Beim PfadiTag öffnen Pfadfinderstämme ihre Türen und laden Kinder & Jugendliche ein Pfadfinden
+                auszuprobieren!
             </p>
         </div>
     </div>
@@ -35,7 +36,10 @@
         </div>
         <div class="col-sm-8 p-3">
             <div class="ratio ratio-16x9">
-                <iframe src="https://www.youtube-nocookie.com/embed/tiSduOOPS-c" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                <iframe src="https://www.youtube-nocookie.com/embed/tiSduOOPS-c" title="YouTube video player"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
             </div>
         </div>
     </div>
@@ -44,15 +48,22 @@
 <div id="detail" class="container p-3">
     <div class="row align-items-center h-100">
         <div class="col-sm-8 p-3">
-            <p>Mehr Eigenverantwortung und Selbstbewusstsein, ein friedliches Miteinander, der sorgsame Umgang mit der Natur sowie der Verzicht auf Smartphone, Laptop und Co. – das Konzept Pfadfinden kann eine unglaubliche Bereicherung für Kinder und Jugendliche sein.</p>
-            <p>Mit dem "PfadiTag" möchten der Verband Christlicher Pfadfinderinnen und Pfadfinder (VCP) und der Bund der Pfadfinderinnen und Pfadfinder (BdP) nun mehr Aufmerksamkeit erreichen. Schon im vergangenen Jahr haben bundesweit mehr als 70 Gruppen aus dem VCP am PfadiTag teilgenommen.</p>
-            <p>Am Wochenende vom 20. bis 22. September 2024 geht es in die nächste Runde, diesmal mit allen Stämmen in Deutschland. Unter dem Motto „... auf ins Abenteuer!" organisieren die Gruppen individuelle Aktionen, von Geländespielen über Singerunden bis hin zum Ganztagesprogramm.</p>
-            <p>Auf dieser Website sind alle Aktionen, die im Rahmen des PfadiTag 2024 stattfinden aufgezeigt. Zur Anmeldung bei einer Aktion gibt es Kontaktdaten direkt zu den Personen vor Ort.</p>
+            <p>Mehr Eigenverantwortung und Selbstbewusstsein, ein friedliches Miteinander, der sorgsame Umgang mit der
+                Natur sowie der Verzicht auf Smartphone, Laptop und Co. – das Konzept Pfadfinden kann eine unglaubliche
+                Bereicherung für Kinder und Jugendliche sein.</p>
+            <p>Mit dem "PfadiTag" möchten der Verband Christlicher Pfadfinderinnen und Pfadfinder (VCP) und der Bund der
+                Pfadfinderinnen und Pfadfinder (BdP) nun mehr Aufmerksamkeit erreichen. Schon im vergangenen Jahr haben
+                bundesweit mehr als 70 Gruppen aus dem VCP am PfadiTag teilgenommen.</p>
+            <p>Am Wochenende vom 20. bis 22. September 2024 geht es in die nächste Runde, diesmal mit allen Stämmen in
+                Deutschland. Unter dem Motto „... auf ins Abenteuer!" organisieren die Gruppen individuelle Aktionen,
+                von Geländespielen über Singerunden bis hin zum Ganztagesprogramm.</p>
+            <p>Auf dieser Website sind alle Aktionen, die im Rahmen des PfadiTag 2024 stattfinden aufgezeigt. Zur
+                Anmeldung bei einer Aktion gibt es Kontaktdaten direkt zu den Personen vor Ort.</p>
         </div>
         <div class="col-sm-4 float-end p-3">
-                <h1 class="text-end">PfadiTag 2024</h1>
-                <p class="text-end">Aktionen von Gruppen vor Ort in ganz Deutschland - schau dich um!</p>
-                <a class="btn btn-primary text-white float-end" href="#events">Aktion finden</a>
+            <h1 class="text-end">PfadiTag 2024</h1>
+            <p class="text-end">Aktionen von Gruppen vor Ort in ganz Deutschland - schau dich um!</p>
+            <a class="btn btn-primary text-white float-end" href="#events">Aktion finden</a>
         </div>
     </div>
 </div>
@@ -74,12 +85,14 @@
                 </div>
             </div>
             <div class="col-sm mx-auto">
-            <div class="input-group mb-3">
-                <input type="text" class="form-control" placeholder="Hallo Liebe Pfadfinder, ..." disabled>
-                <div class="input-group-append">
-                    <a class="btn btn-secondary" href="mailto:hallo@pfaditag.de?subject=%5BPfadiTag%202024%5D%20Fragen&body=Hallo%20Liebe%20Pfadfinder%2C%0D%0A%0D%0A">E-Mail schreiben</a>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" placeholder="Hallo Liebe Pfadfinder, ..." disabled>
+                    <div class="input-group-append">
+                        <a class="btn btn-secondary"
+                            href="mailto:hallo@pfaditag.de?subject=%5BPfadiTag%202024%5D%20Fragen&body=Hallo%20Liebe%20Pfadfinder%2C%0D%0A%0D%0A">E-Mail
+                            schreiben</a>
+                    </div>
                 </div>
-            </div>
             </div>
         </div>
     </div>
@@ -102,17 +115,17 @@
         accessToken: 'pk.eyJ1IjoiaG9lY2hzdCIsImEiOiJjazVueDhyMWkwenpuM2RydzltNjhraDAzIn0.HntghYG9IBZvVd0bUJEY9Q'
     }).addTo(map);
 
-    var eventStyle = L.VectorMarkers.icon({ icon: 'circle', markerColor: 'var(--bs-primary)'});
-    var oldEventStyle = L.VectorMarkers.icon({ icon: 'circle', markerColor: 'var(--bs-gray-500)'});
-    var groupStyle = L.VectorMarkers.icon({ icon: 'circle', markerColor: 'var(--bs-secondary)'});
+    var eventStyle = L.VectorMarkers.icon({ icon: 'circle', markerColor: 'var(--bs-primary)' });
+    var oldEventStyle = L.VectorMarkers.icon({ icon: 'circle', markerColor: 'var(--bs-gray-500)' });
+    var groupStyle = L.VectorMarkers.icon({ icon: 'circle', markerColor: 'var(--bs-secondary)' });
 
     // create marker for every event
     {% for event in events %}
     var marker_event_{{ event.id }} = L.marker([{{ event.lat }}, {{ event.lon }}], { icon: {{ "eventStyle" if event.is_current else "oldEventStyle" }} }).addTo(map);
     marker_event_{{ event.id }}.bindPopup(`
 <h4>{{ event.title }}</h4>
-<h6>{{ event.group.name }}</h6>
-{% include 'event_details.html' %}
+<h6>{{ event.group }}</h6>
+{% include 'event_details.j2' %}
 `);
     {% endfor %}
 </script>

@@ -2,7 +2,7 @@
 {% block content %}
 Hallo {{ perm.user.name }},
 
-Der Nutzer {{ current_user.name }} ({{ current_user.id }}) hat dir die Berechtigung für die Gliederung {{ perm.group.name }} erteilt!
+Der Nutzer {{ current_user.name }} ({{ current_user.id }}) hat dir die Berechtigung für die Gliederung {{ perm.group }} erteilt!
 
 Du kannst die Details der Gliederung hier bearbeiten: {{ url_for('admin.group_edit', group_id=perm.group_id, _external=True) }}
 Hier kannst du eine neue Aktion für die Gliederung anlegen: {{ url_for('admin.events_edit', _id='new', group_id=perm.group_id, _external=True) }}

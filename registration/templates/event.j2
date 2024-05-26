@@ -1,4 +1,4 @@
-{% extends "base_leaflet.html" %}
+{% extends "base_leaflet.j2" %}
 
 {% block styles %}
 {{ super() }}
@@ -15,9 +15,9 @@
         <h1>
             {{ event.title }}
         </h1>
-        <h3>{{ event.group.name }}</h3>
+        <h3>{{ event.group }}</h3>
 
-        {% include 'event_details.html' %}
+        {% include 'event_details.j2' %}
     </div>
     <div class="col-sm-6 second-column">
         <div class="my-3 h-100">
@@ -42,7 +42,7 @@
     }).addTo(map);
     var locator = L.control.locate({ locateOptions: { maxZoom: 9 } }).addTo(map);
 
-    var eventStyle = L.VectorMarkers.icon({ icon: 'circle', markerColor: 'var(--bs-primary)'});
+    var eventStyle = L.VectorMarkers.icon({ icon: 'circle', markerColor: 'var(--bs-primary)' });
     var marker = L.marker([{{ event.lat }}, {{ event.lon }}], { icon: eventStyle }).addTo(map);
     map.setView([{{ event.lat }}, {{ event.lon }}], 13);
 </script>

@@ -2,7 +2,7 @@
 {% block content %}
 Hallo,
 
-Die Nutzer*in {{ perm.user.name }} ({{ perm.user.id }}) hat die Berechtigung für die Gliederung {{ perm.group.name }} angefragt. 
+Die Nutzer*in {{ perm.user.name }} ({{ perm.user.id }}) hat die Berechtigung für die Gliederung {{ perm.group }} angefragt. 
 
 Bitte prüfe die Berechtigung und Bestätige Sie unter folgendem Link: {{ url_for('auth.edit_permission', permission_id=perm.id, _external=True) }}
 {% endblock %}

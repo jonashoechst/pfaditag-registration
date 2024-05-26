@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base.j2" %}
 
 {% block content %}
 <h1>{{ title or "Übersicht Gliederungen" }}</h1>
@@ -15,17 +15,16 @@
     <tbody>
         {% for group in groups %}
         <tr>
-            <th scope="row">{{ group.name }}</th>
+            <th scope="row">{{ group }}</th>
             <td>{{ group.zip }} {{ group.city }}</td>
             <td class="align-middle">
-            {% for event in group.events if event.is_current %}
+                {% for event in group.events if event.is_current %}
                 <a href="{{ url_for('admin.events_edit', _id=event.id) }}">{{ event.title }}</a>
-            {% endfor %}
+                {% endfor %}
             </td>
-            <td class="text-end">{% include 'buttons/group_buttons.html' %}</td>
+            <td class="text-end">{% include 'buttons/group_buttons.j2' %}</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 {% endblock %}
-

@@ -1,7 +1,8 @@
-{% set title = group.name + " bearbeiten" %}
+{% set title = group.display_name + " bearbeiten" %}
 
-{% extends "base_leaflet.html" %}
+{% extends "base_leaflet.j2" %}
 {% import "bootstrap5/form.html" as wtf %}
+{% from 'bootstrap5/form.html' import render_form_row, render_field %}
 
 {% block styles %}
 {{ super() }}
@@ -23,7 +24,16 @@
 
 <div class="row">
     <div class="col-sm-6 first-column mb-3">
-        {{ wtf.render_form(form, button_map={'submit':'success', 'delete': 'danger'}) }}
+        <form action="" method="POST" class="form" role="form" enctype="multipart/form-data">
+            {{ form.csrf_token() }}
+            {{ render_form_row([form.group_type, form.name]) }}
+            {{ render_form_row([form.street]) }}
+            {{ render_form_row([form.zip, form.city]) }}
+            {{ render_form_row([form.website]) }}
+            {{ render_form_row([form.instagram]) }}
+            {{ render_form_row([form.facebook]) }}
+            {{ render_field(form.submit, button_style="success") }}
+        </form>
     </div>
     <div class="col-sm-6 second-column mb-3">
         <div id="map_disabled"></div>
@@ -34,7 +44,8 @@
     <div class="col mb-3">
         <h1 class="float-start">Berechtigungen</h1>
         <div class="btn-group float-end">
-        <a href="{{ url_for('auth.edit_permission', permission_id="new", group_id=group.id) }}" class="btn btn-outline-secondary"><i class="fa-solid fa-plus"></i></a>
+            <a href="{{ url_for('auth.edit_permission', permission_id='new', group_id=group.id) }}"
+                class="btn btn-outline-secondary"><i class="fa-solid fa-plus"></i></a>
         </div>
     </div>
 </div>
@@ -56,11 +67,13 @@
                     <th>{{ perm.user.name }}</th>
                     <td>{{ perm.user.id }}</td>
                     <td>
-                        <input class="form-check-input" type="checkbox" value="" id="flexCheckCheckedDisabled" {% if perm.granted %}checked{% endif %} disabled> 
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckCheckedDisabled" {% if
+                            perm.granted %}checked{% endif %} disabled>
                     </td>
                     <td class="text-end">
                         <div class="btn-group">
-                            <a href="{{ url_for('auth.edit_permission', user_id=perm.user_id, permission_id=perm.id,) }}" class="btn btn-outline-secondary"><i class="fa-solid fa-pen-to-square"></i></a>
+                            <a href="{{ url_for('auth.edit_permission', user_id=perm.user_id, permission_id=perm.id,) }}"
+                                class="btn btn-outline-secondary"><i class="fa-solid fa-pen-to-square"></i></a>
                         </div>
                     </td>
                 </tr>

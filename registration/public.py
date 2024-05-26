@@ -15,7 +15,7 @@ def index():
     if not current_user.is_authenticated:
         _events = [e for e in _events if e.is_current]
     return flask.render_template(
-        "index.html",
+        "index.j2",
         events=_events,
     )
 
@@ -23,7 +23,7 @@ def index():
 @public_bp.route("/impressum")
 def impressum():
     return flask.render_template(
-        "impressum.html",
+        "impressum.j2",
         title="Impressum",
     )
 
@@ -31,7 +31,7 @@ def impressum():
 @public_bp.route("/datenschutz")
 def datenschutz():
     return flask.render_template(
-        "datenschutz.html",
+        "datenschutz.j2",
         title="Datenschutzerklärung",
     )
 
@@ -39,7 +39,7 @@ def datenschutz():
 @public_bp.route("/faq")
 def faq():
     return flask.render_template(
-        "faq.html",
+        "faq.j2",
         title="Häufig gestellte Fragen (FAQ)",
     )
 
@@ -47,7 +47,7 @@ def faq():
 @public_bp.route("/faq_intern")
 def faq_intern():
     return flask.render_template(
-        "faq_intern.html",
+        "faq_intern.j2",
         title="Häufig gestellte Fragen (FAQ)",
     )
 
@@ -60,7 +60,7 @@ def events():
         _events = [e for e in models.Event.query.all() if e.is_current]
 
     return flask.render_template(
-        "admin/events.html",
+        "admin/events.j2",
         title="Aktionen",
         events=_events,
     )
@@ -74,7 +74,7 @@ def event(event_id):
         return flask.redirect(flask.url_for("public.index"))
 
     return flask.render_template(
-        "event.html",
+        "event.j2",
         title=_event.title,
         event=_event,
     )
@@ -103,7 +103,7 @@ def event_ics(event_id):
         cal_event["description"] += "\nWebsite: " + _event.group.website
 
     cal_event["organizer"] = icalendar.vCalAddress(f"mailto:{_event.email}")
-    cal_event["organizer"].params["cn"] = icalendar.vText(f"{_event.group.name}")
+    cal_event["organizer"].params["cn"] = icalendar.vText(f"{_event.group}")
 
     cal_event["location"] = icalendar.vText(_event.group.city)
     cal_event["geo"] = f"{_event.lat},{_event.lon}"

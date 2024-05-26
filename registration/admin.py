@@ -33,12 +33,31 @@ admin_bp = flask.Blueprint("admin", __name__, url_prefix="/admin", static_folder
 
 
 class GroupForm(FlaskForm):
+    group_type = SelectField(
+        "Ebene",
+        validators=[
+            Length(max=64),
+        ],
+        choices=[
+            "",
+            "Land",
+            "Landesverband",
+            "Region",
+            "Gau",
+            "Bezirk",
+            "Stamm",
+            "Siedlung",
+            "Neuanfang",
+            "Aufbaugruppe",
+        ],
+    )
     name = StringField(
         "Name",
         validators=[
             DataRequired(),
-            Length(max=64),
+            Length(max=255),
         ],
+        description="Name der Gliederung, je nach Nutzung in der Gruppierung auch mit Ortsname.",
     )
     street = StringField(
         "Straße, Nr.",
@@ -57,7 +76,7 @@ class GroupForm(FlaskForm):
     city = StringField(
         "Ort",
         validators=[
-            DataRequired(),
+            Optional(),
             Length(max=64),
         ],
     )
@@ -171,9 +190,9 @@ def groups():
         if not current_user.has_group_permission(group.id):
             flask.flash(f"Du hast keine Berechtigung die Gliederung von {group} anzuzeigen.", "warning")
         else:
-            return flask.render_template("admin/groups.html", groups=group.subtree, title=f"Gliederungen {group.name}")
+            return flask.render_template("admin/groups.j2", groups=group.subtree, title=f"Gliederungen {group}")
 
-    return flask.render_template("admin/groups.html", groups=current_user.query_groups())
+    return flask.render_template("admin/groups.j2", groups=current_user.query_groups())
 
 
 @admin_bp.route("/groups/edit/<group_id>", methods=["GET", "POST"])
@@ -194,7 +213,7 @@ def group_edit(group_id):
                 setattr(group, field_id, field.data)
 
             db.session.commit()
-            flask.flash(f"Gliederung '{group.name}' wurde gespeichert.", "success")
+            flask.flash(f"Gliederung '{group}' wurde gespeichert.", "success")
 
             return flask.redirect(flask.url_for("admin.groups"))
 
@@ -203,7 +222,7 @@ def group_edit(group_id):
         if field_id in group.__dict__:
             field.data = group.__dict__[field_id]
 
-    return flask.render_template("admin/group_edit.html", form=form, group=group)
+    return flask.render_template("admin/group_edit.j2", form=form, group=group)
 
 
 @admin_bp.route("/events/edit/<_id>", methods=["GET", "POST"])
@@ -245,7 +264,7 @@ def events_edit(_id):
                 flask.flash(
                     "Das Ende der Aktion liegt vor dem Beginn. Die Aktion konnte nicht gespeichert werden.", "danger"
                 )
-                return flask.render_template("admin/events_edit.html", form=form, _id=_id)
+                return flask.render_template("admin/events_edit.j2", form=form, _id=_id)
 
             # update fields in model
             for field_id, field in form._fields.items():
@@ -272,7 +291,7 @@ def events_edit(_id):
         if field_id in event.__dict__:
             field.data = event.__dict__[field_id]
 
-    return flask.render_template("admin/events_edit.html", form=form, _id=_id)
+    return flask.render_template("admin/events_edit.j2", form=form, _id=_id)
 
 
 class MailForm(FlaskForm):
@@ -331,4 +350,4 @@ class MailForm(FlaskForm):
 
 #             flask.flash(f"Mail '{msg.subject}' wurde nur an die eigene Adresse gesendet.", "warning")
 
-#     return flask.render_template('generic_form.html', title="E-Mail senden", form=form, subtitle="Empfängergruppen")
+#     return flask.render_template('generic_form.j2', title="E-Mail senden", form=form, subtitle="Empfängergruppen")

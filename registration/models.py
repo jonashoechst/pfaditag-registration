@@ -42,6 +42,15 @@ class Group(db.Model):
     def __repr__(self) -> str:
         return f"<Group {self.id} ({self.name})>"
 
+    def __str__(self) -> str:
+        if self.group_type:
+            return self.group_type + " " + self.name
+        return self.name
+
+    @property
+    def display_name(self) -> str:
+        return str(self)
+
     @property
     def subtree(self) -> list[Group]:
         return [self] + [gc for c in self.children for gc in c.subtree]
