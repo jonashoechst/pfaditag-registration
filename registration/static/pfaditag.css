@@ -14,3 +14,18 @@
 .leaflet-bottom {
     z-index: 999 !important;
 }
+
+.vh-90 {
+    height: 90vh;
+}
+
+.container iframe,
+.container object,
+.container embed {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    clip-path: inset(1px 1px);
+}
