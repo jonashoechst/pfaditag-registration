@@ -7,6 +7,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" media="(prefers-color-scheme: light)">
+    <link rel="icon" href="{{ url_for('static', filename='favicon-dark.ico') }}" media="(prefers-color-scheme: dark)">
+    <link rel="icon" type="image/png" sizes="385x385" href="{{ url_for('static', filename='logo-pfaditag-pad.png') }}" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/png" sizes="385x385" href="{{ url_for('static', filename='logo-pfaditag-pad-dark.png') }}" media="(prefers-color-scheme: dark)">
     {% block styles %}
     <link rel="stylesheet" href="{{url_for('.static', filename='pfaditag.css')}}">
     <link rel="stylesheet" href="{{url_for('.static', filename='bootstrap-5.3.0-dist/css/bootstrap.min.css')}}" />
