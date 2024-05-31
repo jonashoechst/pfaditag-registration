@@ -1,3 +1,5 @@
+{% set title = "Impressum" %}
+
 {% extends "base_leaflet.j2" %}
 
 {% block content %}
@@ -5,7 +7,7 @@
 <h1>Impressum</h1>
 
 <h2>Angaben gem&auml;&szlig; &sect; 5 TMG</h2>
-<p>Verband Christlicher Pfadfinderinnen und Pfadfinder (VCP) e.V.<br />
+<p>Verband Christlicher Pfadfinder*innen (VCP) e.V.<br />
 Wichernweg 3<br />
 34121 Kassel</p>
 
@@ -24,10 +26,12 @@ Telefax: 0561-78437-40<br />
 E-Mail: info@vcp.de</p>
 
 <h2>Redaktionell verantwortlich</h2>
-<p>Jonas Höchst<br />
-Kilian Frank<br />
-Melissa Weber</p>
-
+<p>
+{% for editor in editors %}
+    {{ editor.name }}</br>
+{% endfor %}
+</p>
+    
 <p>Für die eingetragenen Aktionen und die dazu gehörenden Texte und Bilder sind die jeweiligen Gruppen verantwortlich.</p>
 
 <p>Quelle: <a href="https://www.e-recht24.de">e-recht24.de</a></p>

@@ -1,9 +1,10 @@
 import datetime
 import flask
 import icalendar
-from . import models
 from flask_login import current_user
 from typing import List
+
+from .models import Group, User, Event, UserPermission
 
 public_bp = flask.Blueprint("public", __name__, url_prefix="", static_folder="static")
 
@@ -11,7 +12,7 @@ public_bp = flask.Blueprint("public", __name__, url_prefix="", static_folder="st
 @public_bp.route("/index")
 @public_bp.route("/")
 def index():
-    _events: List[models.Event] = models.Event.query.all()
+    _events: List[Event] = Event.query.all()
     if not current_user.is_authenticated:
         _events = [e for e in _events if e.is_current]
     return flask.render_template(
@@ -22,9 +23,18 @@ def index():
 
 @public_bp.route("/impressum")
 def impressum():
+    editors: list[User] = list(User.query.filter(User.is_superuser))
+    # get tree roots
+    for root in Group.query.filter(None == Group.parent_id):
+        root: Group
+        for perm in root.permissions:
+            perm: UserPermission
+            if perm.granted and perm.user not in editors:
+                editors.append(perm.user)
+
     return flask.render_template(
         "impressum.j2",
-        title="Impressum",
+        editors=editors,
     )
 
 
@@ -57,7 +67,7 @@ def events():
     if current_user.is_authenticated:
         _events = current_user.query_events()
     else:
-        _events = [e for e in models.Event.query.all() if e.is_current]
+        _events = [e for e in Event.query.all() if e.is_current]
 
     return flask.render_template(
         "admin/events.j2",
@@ -68,7 +78,7 @@ def events():
 
 @public_bp.route("/event/<int:event_id>")
 def event(event_id):
-    _event = models.Event.query.get(event_id)
+    _event = Event.query.get(event_id)
     if not _event:
         flask.flash("Aktion konnte nicht gefunden werden.", "warning")
         return flask.redirect(flask.url_for("public.index"))
@@ -82,7 +92,7 @@ def event(event_id):
 
 @public_bp.route("/event/<int:event_id>.ics")
 def event_ics(event_id):
-    _event = models.Event.query.get(event_id)
+    _event = Event.query.get(event_id)
     if not _event:
         flask.flash("Aktion konnte nicht gefunden werden.", "warning")
         return flask.redirect(flask.url_for("public.index"))
