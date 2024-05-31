@@ -42,7 +42,6 @@ def impressum():
 def datenschutz():
     return flask.render_template(
         "datenschutz.j2",
-        title="Datenschutzerklärung",
     )
 
 
@@ -50,7 +49,6 @@ def datenschutz():
 def faq():
     return flask.render_template(
         "faq.j2",
-        title="Häufig gestellte Fragen (FAQ)",
     )
 
 
@@ -58,7 +56,6 @@ def faq():
 def faq_intern():
     return flask.render_template(
         "faq_intern.j2",
-        title="Häufig gestellte Fragen (FAQ)",
     )
 
 
@@ -71,7 +68,6 @@ def events():
 
     return flask.render_template(
         "admin/events.j2",
-        title="Aktionen",
         events=_events,
     )
 

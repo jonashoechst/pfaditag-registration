@@ -368,7 +368,7 @@ def users():
         return flask.redirect(flask.url_for("auth.edit_user", user_id=current_user.id))
 
     _users = User.query.all()
-    return flask.render_template("auth/users.j2", users=_users, title="Übersicht Accounts")
+    return flask.render_template("auth/users.j2", users=_users)
 
 
 @login_manager.user_loader
