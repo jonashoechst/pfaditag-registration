@@ -15,8 +15,8 @@
     <link rel="stylesheet" href="{{url_for('.static', filename='pfaditag.css')}}">
     <link rel="stylesheet" href="{{url_for('.static', filename='bootstrap-5.3.0-dist/css/bootstrap.min.css')}}" />
     <link rel="stylesheet" href="{{url_for('.static', filename='fontawesome-free-6.4.0-web/css/all.min.css')}}" />
-    <link rel="stylesheet"
-        href="{{url_for('.static', filename='DataTables-1.13.4/css/dataTables.bootstrap5.min.css')}}" />
+    <link rel="stylesheet" href="{{url_for('.static', filename='datatables/2.0.8/css/dataTables.bootstrap5.min.css')}}" />
+    <link rel="stylesheet" href="{{url_for('.static', filename='responsive/3.0.2/css/responsive.bootstrap5.min.css')}}" />
     <link rel="stylesheet" href="{{url_for('.static', filename='gijgo@1.9.14/css/gijgo.min.css')}}" />
     {% endblock %}
 
@@ -176,8 +176,10 @@
     <script src="{{url_for('.static', filename='bootstrap-5.3.0-dist/js/bootstrap.bundle.min.js')}}"></script>
     <script src="{{url_for('.static', filename='jquery-3.7.0.min.js')}}"></script>
     <script src="{{url_for('.static', filename='gijgo@1.9.14/js/gijgo.min.js')}}"></script>
-    <script src="{{url_for('.static', filename='DataTables-1.13.4/js/jquery.dataTables.min.js')}}"></script>
-    <script src="{{url_for('.static', filename='DataTables-1.13.4/js/dataTables.bootstrap5.min.js')}}"></script>
+    <script src="{{url_for('.static', filename='datatables/2.0.8/js/dataTables.min.js')}}"></script>
+    <script src="{{url_for('.static', filename='datatables/2.0.8/js/dataTables.bootstrap5.min.js')}}"></script>
+    <script src="{{url_for('.static', filename='responsive/3.0.2/js/dataTables.responsive.min.js')}}"></script>
+    <script src="{{url_for('.static', filename='responsive/3.0.2/js/responsive.bootstrap5.js')}}"></script>
     <script>
         // confirm deletion
         $('#delete').on('click', function () { return confirm('Bist du sicher, dass du das löschen möchtest?'); });
@@ -192,15 +194,13 @@
                     "infoEmpty": "Keine Daten vorhanden",
                     "infoFiltered": "(aus _MAX_ Einträgen)",
                     "lengthMenu": "_MENU_ Einträge",
-                    "paginate": {
-                        "first": "Erste",
-                        "last": "Letzte",
-                        "previous": "Vorherige",
-                        "next": "Nächste"
-                    }
+
                 },
+                responsive: true,
                 "order": []
             });
+            $('#datatable').show();
+            $(window).trigger('resize');
         });
     </script>
     <script>
