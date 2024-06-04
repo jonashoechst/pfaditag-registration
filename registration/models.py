@@ -1,13 +1,15 @@
 from __future__ import annotations
+
 import datetime
+import hmac
 import secrets
 
 import flask
 from flask_login import UserMixin
-from werkzeug.security import generate_password_hash, check_password_hash
-
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import Mapped
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from . import db
 
 db: SQLAlchemy
@@ -146,11 +148,26 @@ class User(UserMixin, db.Model):
     token_expiration: Mapped[datetime.datetime] = db.Column(db.DateTime, index=False, unique=False, nullable=True)
 
     def set_password(self, password: str):
-        self.password = generate_password_hash(password, method="sha256")
+        self.password = generate_password_hash(password)
 
     def check_password(self, password: str) -> bool:
         if not password:
             return False
+
+        method, salt, hashval = self.password.split("$", 2)
+        if method == "sha256":
+            flask.flash(
+                "Du hast dein Passwort schon länger nicht geändert. "
+                + 'Du kannst es in <a href="'
+                + flask.url_for("auth.edit_user", user_id=self.id)
+                + '">deinen Accounteinstellungen</a> neu setzen.',
+                "warning",
+            )
+
+            usalt = salt.encode("utf-8")
+            upass = password.encode("utf-8")
+            return hmac.compare_digest(hmac.new(usalt, upass, "sha256").hexdigest(), hashval)
+
         return check_password_hash(self.password, password)
 
     def __repr__(self) -> str:
