@@ -1,39 +1,37 @@
 import datetime
 import json
-import flask
-from flask_login import login_required, current_user, login_user, logout_user
-from flask_mail import Message
-from flask import current_app, render_template
 
+import flask
+from flask import current_app, render_template
+from flask_login import current_user, login_required, login_user, logout_user
+from flask_mail import Message
 from flask_wtf import FlaskForm
 from wtforms import (
-    StringField,
-    SubmitField,
-    PasswordField,
     BooleanField,
     Field,
     HiddenField,
+    PasswordField,
+    StringField,
+    SubmitField,
 )
 from wtforms.validators import (
     DataRequired,
     Email,
-    Length,
     EqualTo,
+    Length,
     Optional,
 )
 
-
 from . import login_manager, mail
 from .models import (
-    db,
+    Group,
     User,
     UserPermission,
-    Group,
+    db,
 )
 
 # Blueprint Configuration
 auth_bp = flask.Blueprint("auth", __name__, url_prefix="/auth", static_folder="static")
-current_user: User
 
 
 class ProfileForm(FlaskForm):
@@ -219,7 +217,18 @@ def edit_user(user_id):
         flask.flash("Du bist nicht eingeloggt.", "alert")
         return flask.redirect(flask.url_for("auth.login"))
 
-    _user = User.query.filter_by(id=user_id).first()
+    _user: User | None = db.session.get(User, user_id)
+
+    if not _user:
+        flask.flash("Du hast keine Berechtigung, diesen Account zu bearbeiten.", "alert")
+        return flask.redirect(flask.url_for("auth.users"))
+    if _user.id == current_user.id:
+        pass
+    elif current_user.is_superuser:
+        pass
+    else:
+        flask.flash("Du hast keine Berechtigung, diesen Account zu bearbeiten.", "alert")
+        return flask.redirect(flask.url_for("auth.users"))
 
     # disable editing the email adress
     form._fields.pop("id")
@@ -230,14 +239,6 @@ def edit_user(user_id):
 
     form.confirm.flags = None
     form.confirm.validators = [EqualTo("password", message="Die Passwörter stimmen nicht überein.")]
-
-    if _user.id == current_user.id:
-        pass
-    elif current_user.is_superuser:
-        pass
-    else:
-        flask.flash("Du hast keine Berechtigung, diesen Account zu bearbeiten.", "alert")
-        return flask.redirect(flask.url_for("auth.users"))
 
     # POST: delete user
     if form.delete.data:
@@ -321,7 +322,7 @@ def new_user():
             db.session.add(_user)
 
             # create initial group permission
-            perm: UserPermission
+            perm: UserPermission | None = None
             if form.group_id.data:
                 perm = UserPermission()
                 perm.user_id = _user.id
@@ -354,7 +355,7 @@ def new_user():
             flask.flash(f"Account {_user.id} wurde angelegt.", "success")
             return flask.redirect(flask.url_for("auth.login", _id=_user.id))
 
-    roots = db.session.query(Group).filter(None == Group.parent_id).all()
+    roots = db.session.query(Group).filter(Group.parent_id.is_(None)).all()
     tree_data = [group_tree(group) for group in roots]
 
     return flask.render_template("auth/new_user.j2", form=form, tree_data=json.dumps(tree_data))
@@ -500,7 +501,7 @@ def edit_permission(permission_id: str):
 
     _title = "Berechtigung bearbeiten" if permission_id != "new" else "Berechtigung anlegen"
 
-    roots = db.session.query(Group).filter(None == Group.parent_id).all()
+    roots = db.session.query(Group).filter(Group.parent_id.is_(None)).all()
     tree_data = [group_tree(group) for group in roots]
 
     return flask.render_template("auth/edit_permission.j2", form=form, title=_title, tree_data=json.dumps(tree_data))

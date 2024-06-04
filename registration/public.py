@@ -1,10 +1,11 @@
 import datetime
+from typing import List
+
 import flask
 import icalendar
 from flask_login import current_user
-from typing import List
 
-from .models import Group, User, Event, UserPermission
+from .models import Event, Group, User, UserPermission
 
 public_bp = flask.Blueprint("public", __name__, url_prefix="", static_folder="static")
 

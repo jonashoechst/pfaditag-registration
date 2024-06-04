@@ -1,33 +1,31 @@
 import datetime
+from typing import Any
+
 import flask
-from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileAllowed, FileSize
 from flask_login import current_user, login_required
-from flask_mail import Message
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileAllowed, FileField, FileSize
 from wtforms import (
-    StringField,
-    EmailField,
-    TelField,
-    SubmitField,
-    TextAreaField,
-    SelectField,
-    DateField,
-    TimeField,
     BooleanField,
+    DateField,
+    EmailField,
+    SelectField,
+    StringField,
+    SubmitField,
+    TelField,
+    TextAreaField,
+    TimeField,
 )
 from wtforms.validators import (
-    DataRequired,
     URL,
-    Optional,
+    DataRequired,
     Email,
     Length,
+    Optional,
 )
 
 from . import models
 from .models import db
-from . import mail
-
-current_user: models.User
 
 admin_bp = flask.Blueprint("admin", __name__, url_prefix="/admin", static_folder="static")
 
@@ -39,16 +37,16 @@ class GroupForm(FlaskForm):
             Length(max=64),
         ],
         choices=[
-            "",
-            "Land",
-            "Landesverband",
-            "Region",
-            "Gau",
-            "Bezirk",
-            "Stamm",
-            "Siedlung",
-            "Neuanfang",
-            "Aufbaugruppe",
+            ("", ""),
+            ("Land", "Land"),
+            ("Landesverband", "Landesverband"),
+            ("Region", "Region"),
+            ("Gau", "Gau"),
+            ("Bezirk", "Bezirk"),
+            ("Stamm", "Stamm"),
+            ("Siedlung", "Siedlung"),
+            ("Neuanfang", "Neuanfang"),
+            ("Aufbaugruppe", "Aufbaugruppe"),
         ],
     )
     name = StringField(
@@ -238,10 +236,10 @@ def events_edit(_id):
         if group:
             form.group_id.data = group.id
     else:
-        event = models.Event.query.get(_id)
+        event: Any | None = models.Event.query.get(_id)
 
         # check if user is allows to edit event
-        if event not in current_user.query_events():
+        if not event or event not in current_user.query_events():
             flask.flash("Du bist nicht berechtigt, diese Aktion zu bearbeiten.", "danger")
             return flask.redirect(flask.request.referrer or flask.url_for("public.events"))
 
@@ -251,7 +249,7 @@ def events_edit(_id):
     if form.delete.data:
         db.session.delete(event)
         db.session.commit()
-        flask.flash(f"Aktion '{event.title}' erfolgreich gelöscht.", "success")
+        flask.flash("Aktion wurde erfolgreich gelöscht.", "success")
         return flask.redirect(flask.url_for("public.events"))
 
     # POST: submit
@@ -319,35 +317,3 @@ class MailForm(FlaskForm):
     )
 
     submit = SubmitField("Senden")
-
-
-# @admin_bp.route('/mail', methods=['GET', 'POST'])
-# @login_required
-# def send_mail():
-#     form = MailForm()
-
-#     if form.submit.data:
-#         if form.validate_on_submit():
-#             recipients = []
-
-#             if form.recv_event_mails.data:
-#                 recipients.extend([e.email for e in current_user.query_events()])
-
-#             msg = Message(
-#                 subject=f"[{flask.current_app.config['APP_TITLE']}] {form.subject.data}",
-#                 sender=f"{current_user.name} <{flask.current_app.config['MAIL_USERNAME']}>",
-#                 recipients=recipients,
-#                 cc=[current_user.id],
-#                 reply_to=current_user.id,
-#             )
-#             msg.body = form.text.data
-#             print(msg)
-#             mail.send(msg)
-
-#             if len(recipients) > 0:
-#                 flask.flash(f"Mail '{msg.subject}' wurde an {len(recipients)} Adressen gesendet.", "success")
-#                 return flask.redirect(flask.url_for('public.events'))
-
-#             flask.flash(f"Mail '{msg.subject}' wurde nur an die eigene Adresse gesendet.", "warning")
-
-#     return flask.render_template('generic_form.j2', title="E-Mail senden", form=form, subtitle="Empfängergruppen")

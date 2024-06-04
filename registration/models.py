@@ -7,7 +7,7 @@ import secrets
 import flask
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import Mapped, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from . import db
@@ -18,8 +18,8 @@ db: SQLAlchemy
 class Group(db.Model):
     id: Mapped[str] = db.Column(db.String(64), primary_key=True)
     parent_id: Mapped[str] = db.Column(db.String(64), db.ForeignKey("group.id"), nullable=True)
-    parent: Mapped[Group] = db.relationship("Group", back_populates="children", remote_side=[id])
-    children: Mapped[list[Group]] = db.relationship("Group", back_populates="parent")
+    parent: Mapped[Group] = relationship("Group", back_populates="children", remote_side=[id])
+    children: Mapped[list[Group]] = relationship("Group", back_populates="parent")
     attributes: Mapped[dict] = db.Column(db.JSON, default={})
     group_type: Mapped[str] = db.Column(db.String(255), nullable=False, default="")
 
@@ -33,9 +33,9 @@ class Group(db.Model):
 
     display: Mapped[bool] = db.Column(db.Boolean, default=False, nullable=False)
 
-    events: Mapped[list[Event]] = db.relationship("Event", back_populates="group")
-    # users: Mapped[list[User]] = db.relationship('User', secondary="user_permission", back_populates="groups")
-    permissions: Mapped[list[UserPermission]] = db.relationship("UserPermission")
+    events: Mapped[list[Event]] = relationship("Event", back_populates="group")
+    # users: Mapped[list[User]] = relationship('User', secondary="user_permission", back_populates="groups")
+    permissions: Mapped[list[UserPermission]] = relationship("UserPermission")
 
     @property
     def users(self) -> list[User]:
@@ -87,14 +87,14 @@ class Event(db.Model):
     lon: Mapped[float] = db.Column(db.Numeric(9, 6), nullable=False)
 
     date: Mapped[datetime.date] = db.Column(db.Date, nullable=False, index=True, default=datetime.date(2024, 9, 20))
-    time: Mapped[datetime.date] = db.Column(db.Time, nullable=False, index=True, default=datetime.time(00, 00))
+    time: Mapped[datetime.time] = db.Column(db.Time, nullable=False, index=True, default=datetime.time(00, 00))
     date_end: Mapped[datetime.date] = db.Column(db.Date, nullable=False, index=True, default=datetime.date(2024, 9, 22))
-    time_end: Mapped[datetime.date] = db.Column(db.Time, nullable=False, index=True, default=datetime.time(00, 00))
+    time_end: Mapped[datetime.time] = db.Column(db.Time, nullable=False, index=True, default=datetime.time(00, 00))
 
     description: Mapped[str] = db.Column(db.String(2000), nullable=False)
 
     group_id: Mapped[str] = db.Column(db.String(64), db.ForeignKey("group.id"))
-    group: Mapped[Group] = db.relationship("Group", back_populates="events")
+    group: Mapped[Group] = relationship("Group", back_populates="events")
 
     def __repr__(self) -> str:
         return f"<Event {self.id} ({self.title})>"
@@ -133,14 +133,14 @@ class Event(db.Model):
 
 
 class User(UserMixin, db.Model):
-    id: Mapped[int] = db.Column(db.String(100), unique=True, primary_key=True)
+    id: Mapped[str] = db.Column(db.String(100), unique=True, primary_key=True)
     password: Mapped[str] = db.Column(db.String(200), primary_key=False, unique=False, nullable=False)
     name: Mapped[str] = db.Column(db.String(100), nullable=False, unique=False)
-    # groups: Mapped[list[Group]] = db.relationship('Group', secondary="user_permission", back_populates="users")
+    # groups: Mapped[list[Group]] = relationship('Group', secondary="user_permission", back_populates="users")
 
     # permissions
     is_superuser: Mapped[bool] = db.Column(db.Boolean, default=False)
-    permissions: Mapped[list[UserPermission]] = db.relationship("UserPermission")
+    permissions: Mapped[list[UserPermission]] = relationship("UserPermission")
 
     created_on: Mapped[datetime.datetime] = db.Column(db.DateTime, index=False, unique=False, nullable=True)
     last_login: Mapped[datetime.datetime] = db.Column(db.DateTime, index=False, unique=False, nullable=True)
@@ -248,7 +248,7 @@ class User(UserMixin, db.Model):
 
     def has_event_permission(self, event: Event) -> bool:
         """Returns a boolean indicating the user has permissions to access the group"""
-        return self.has_group_permission(event.group)
+        return self.has_group_permission(event.group.id)
 
 
 class UserPermission(db.Model):
@@ -258,12 +258,12 @@ class UserPermission(db.Model):
 
     granted: Mapped[bool] = db.Column(db.Boolean, default=False, nullable=False)
 
-    user: Mapped[User] = db.relationship("User", back_populates="permissions")
-    group: Mapped[Group] = db.relationship("Group", back_populates="permissions")
+    user: Mapped[User] = relationship("User", back_populates="permissions")
+    group: Mapped[Group] = relationship("Group", back_populates="permissions")
 
     def query_grantable_users(self) -> list[User]:
         "Returns a list of users that are allowed to grant this permission"
-        users = []
+        users: list[User] = []
         for pgroup in self.group.path:
             for perm in pgroup.permissions:
                 if perm.granted and perm.user not in users:
