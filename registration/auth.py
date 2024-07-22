@@ -84,9 +84,6 @@ class LoginForm(FlaskForm):
     id = ProfileForm.id
     password = PasswordField(
         "Password",
-        validators=[
-            Length(min=8, max=200, message="Das Passwort muss zwischen 8 und 200 Zeichen haben."),
-        ],
     )
     submit = SubmitField("Login")
     reset = SubmitField("Passwort vergessen?")
