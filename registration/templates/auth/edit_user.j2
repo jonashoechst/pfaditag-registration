@@ -24,7 +24,7 @@
     <div class="col mb-3">
         <h1 class="float-start">Berechtigungen</h1>
         <div class="btn-group float-end">
-        <a href="{{ url_for('auth.edit_permission', permission_id="new", user_id=current_user.id) }}" class="btn btn-outline-secondary"><i class="fa-solid fa-plus"></i></a>
+        <a href="{{ url_for('auth.edit_permission', permission_id="new", user_id=user.id) }}" class="btn btn-outline-secondary"><i class="fa-solid fa-plus"></i></a>
         </div>
     </div>
 </div>
