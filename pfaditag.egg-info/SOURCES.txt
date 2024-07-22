@@ -1,0 +1,7 @@
+README.md
+pyproject.toml
+pfaditag.egg-info/PKG-INFO
+pfaditag.egg-info/SOURCES.txt
+pfaditag.egg-info/dependency_links.txt
+pfaditag.egg-info/requires.txt
+pfaditag.egg-info/top_level.txt
