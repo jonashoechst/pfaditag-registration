@@ -155,9 +155,8 @@ def login():
         return flask.redirect(flask.url_for("auth.login"))
 
     return flask.render_template(
-        "generic_form.j2",
+        "auth/login.j2",
         form=form,
-        title="Login",
     )
 
 
@@ -311,6 +310,7 @@ def edit_user(user_id):
 class RegisterForm(FlaskForm):
     id = StringField(
         "E-Mail Adresse",
+        description="Deine E-Mail Adresse wird gleichzeitig dein Benutzername.",
         validators=[
             Length(min=6, max=100),
             Email(message="Bitte gib eine valide E-Mail Adresse an.", allow_smtputf8=False),
@@ -329,6 +329,7 @@ class RegisterForm(FlaskForm):
     )
     password = PasswordField(
         "Password",
+        description="Mindestens 8 Zeichen. Verwende eine Kombination aus Buchstaben, Zahlen und Sonderzeichen.",
         validators=[
             DataRequired(),
             Length(min=8, max=200, message="Das Passwort muss zwischen 8 und 200 Zeichen haben."),
@@ -337,11 +338,12 @@ class RegisterForm(FlaskForm):
     )
     confirm = PasswordField(
         "Password (wiederholen)",
+        description="Bitte gib das gleiche Passwort nochmals ein.",
         validators=[DataRequired(), EqualTo("password", message="Die Passwörter stimmen nicht überein.")],
         render_kw={"autocomplete": "new-password"},
     )
     group_id = HiddenField(
-        "Gliederung", description="Wahle eine Gruppe aus, für die du eine Berechtigung beantragen möchtest."
+        "Gliederung", description="Wähle eine Gruppe aus, für die du eine Berechtigung beantragen möchtest."
     )
 
     submit = SubmitField("Registrieren")

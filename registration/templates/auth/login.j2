@@ -1,0 +1,60 @@
+{% set title = "Login" %}
+
+{% extends "base.j2" %}
+{% import "bootstrap5/form.html" as wtf %}
+
+{% block content %}
+<div class="row header">
+    <div class="col-xs-12">
+        <h1>{{ title }}</h1>
+        <h5>{{ subtitle }}</h5>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-6 first-column mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Anmeldung</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4" role="alert">
+                    <strong>ℹ️ Wer braucht einen Account?</strong>
+                    <p class="mb-2 mt-2">Du brauchst <strong>keinen Account</strong>, um bei einer Aktion vom Pfaditag mitzumachen!</p>
+                    <p class="mb-0">Ein Account ist nur erforderlich, wenn du als Stamm oder Gruppe eigene Aktionen eintragen möchtest.</p>
+                </div>
+
+                <h6 class="card-subtitle mb-3 text-muted">Zugang zu deinem Account</h6>
+                
+                <div class="mb-3">
+                    <strong>📧 E-Mail Adresse</strong>
+                    <p class="mb-2">Gib die E-Mail Adresse ein, die du bei der Registrierung verwendet hast.</p>
+                </div>
+
+                <div class="mb-3">
+                    <strong>🔐 Passwort</strong>
+                    <p class="mb-2">Gib dein Passwort ein. Falls du dein Passwort vergessen hast, kannst du es über den Button "Passwort vergessen?" zurücksetzen.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 second-column mb-3">
+        <form action="" method="POST" class="form" role="form">
+            {{ form.csrf_token() }}
+            {{ wtf.render_form_row([form.id]) }}
+            {{ wtf.render_form_row([form.password]) }}
+            <div class="mb-3">
+                {{ wtf.render_field(form.submit, button_style='success') }}
+                {{ wtf.render_field(form.reset, button_style='secondary') }}
+            </div>
+        </form>
+        
+        <div class="alert alert-primary mt-3" role="alert">
+            <strong>✨ Noch keinen Account?</strong>
+            <p class="mb-0 mt-2">Falls du Aktionen eintragen möchtest, kannst du dich <a href="{{ url_for('auth.new_user') }}" class="alert-link">hier registrieren</a>.</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

@@ -13,6 +13,56 @@
 
 <div class="row">
     <div class="col-sm-6 first-column mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Hinweise zur Registrierung</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4" role="alert">
+                    <strong>ℹ️ Wer braucht einen Account?</strong>
+                    <p class="mb-2 mt-2">Du brauchst <strong>keinen Account</strong>, um bei einer Aktion vom Pfaditag mitzumachen!</p>
+                    <p class="mb-0">Ein Account ist nur erforderlich, wenn du als Stamm oder Gruppe eigene Aktionen eintragen möchtest.</p>
+                </div>
+
+                <div class="alert alert-warning mt-3" role="alert">
+                    <strong>⚠️ Wichtig:</strong> Wenn du bereits einen Account hast, melde dich bitte über die <a href="{{ url_for('auth.login') }}" class="alert-link">Login-Seite</a> an.
+                </div>
+                
+                <h6 class="card-subtitle mb-3 text-muted">So funktioniert die Account-Erstellung</h6>
+                
+                <div class="mb-3">
+                    <strong>📧 E-Mail Adresse</strong>
+                    <p class="mb-2">Verwende deine persönliche E-Mail Adresse. Diese wird gleichzeitig dein Benutzername für die Anmeldung.</p>
+                </div>
+
+                <div class="mb-3">
+                    <strong>👤 Name</strong>
+                    <p class="mb-2">Bitte gib deinen vollständigen Vor- und Nachnamen an, damit wir dich eindeutig zuordnen können.</p>
+                </div>
+
+                <div class="mb-3">
+                    <strong>🔐 Passwort</strong>
+                    <p class="mb-2">Wähle ein sicheres Passwort mit mindestens 8 Zeichen. Empfohlen wird eine Kombination aus Buchstaben, Zahlen und Sonderzeichen.</p>
+                </div>
+
+                <div class="mb-3">
+                    <strong>🏛️ Gliederung</strong>
+                    <p class="mb-2">Wähle die Gruppe aus, für die du eine Berechtigung beantragen möchtest. Du kannst die Suche verwenden, um schnell deine Gruppe zu finden.</p>
+                </div>
+
+                <div class="alert alert-success mt-4" role="alert">
+                    <strong>ℹ️ Was passiert nach der Registrierung?</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Du erhältst eine Bestätigungs-E-Mail</li>
+                        <li>Deine Berechtigungsanfrage wird an die zuständigen Personen gesendet</li>
+                        <li>Nach Freigabe kannst du dich anmelden und die Funktionen nutzen</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 second-column mb-3">
         <form action="" method="POST" class="form" role="form" enctype="multipart/form-data">
             {{ form.csrf_token() }}
             {{ wtf.render_form_row([form.id]) }}
@@ -32,8 +82,6 @@
             </div>
             {{ wtf.render_field(form.submit, button_style='success') }}
         </form>
-    </div>
-    <div class="col-sm-6 second-column mb-3">
     </div>
 </div>
 
