@@ -29,3 +29,30 @@
     height: 100%;
     clip-path: inset(1px 1px);
 }
+
+/* Ensure tree animations work smoothly */
+#group_tree ul {
+    overflow: hidden;
+}
+
+/* Tree selection styling - only highlight the selected node, not children */
+#group_tree ul.gj-list-bootstrap li.active {
+    background-color: transparent;
+    color: inherit;
+}
+
+#group_tree ul.gj-list-bootstrap li.active > [data-role=wrapper] {
+    background-color: #0d6efd;
+    color: #fff;
+    border-radius: 0.25rem;
+}
+
+#group_tree ul.gj-list-bootstrap li.active ul.gj-list-bootstrap li {
+    background-color: transparent;
+    color: inherit;
+}
+
+#group_tree ul.gj-list-bootstrap li.active ul.gj-list-bootstrap li > [data-role=wrapper] {
+    background-color: transparent;
+    color: inherit;
+}

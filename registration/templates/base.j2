@@ -205,35 +205,180 @@
     </script>
     <script>
         function initGroupTree(treeData) {
-            // build tree
-            tree = $('#group_tree').tree({
-                uiLibrary: 'bootstrap5',
-                dataSource: treeData,
-                cascadeSelection: false,
-                border: true,
-                primaryKey: 'id',
-                selectionType: 'single',
-                select: function (e, node, id) {
-                    $('#group_id').val(id);
+            var originalTreeData = treeData;
+            var tree = null;
+            var searchTimeout = null;
+
+            // Helper function to filter tree data recursively
+            function filterTreeData(nodes, searchText) {
+                if (!searchText) return nodes;
+                
+                var filtered = [];
+                searchText = searchText.toLowerCase();
+                
+                for (var i = 0; i < nodes.length; i++) {
+                    var node = nodes[i];
+                    var nodeText = node.text.toLowerCase();
+                    var childrenMatch = node.children ? filterTreeData(node.children, searchText) : [];
+                    
+                    // Include node if it matches or has matching children
+                    if (nodeText.indexOf(searchText) !== -1 || childrenMatch.length > 0) {
+                        var filteredNode = {
+                            id: node.id,
+                            text: node.text,
+                            children: childrenMatch
+                        };
+                        filtered.push(filteredNode);
+                    }
                 }
+                
+                return filtered;
+            }
+
+            // Helper function to expand all nodes recursively
+            function expandAllNodes(tree, node) {
+                if (node && node.length > 0) {
+                    tree.expand(node);
+                    var children = node.find('ul > li');
+                    children.each(function() {
+                        expandAllNodes(tree, $(this));
+                    });
+                }
+            }
+
+            // Function to build/rebuild the tree
+            function buildTree(data) {
+                // Destroy existing tree if it exists
+                if (tree) {
+                    tree.destroy(true);
+                }
+
+                // Build tree
+                tree = $('#group_tree').tree({
+                    uiLibrary: 'bootstrap5',
+                    dataSource: data,
+                    cascadeSelection: false,
+                    border: true,
+                    primaryKey: 'id',
+                    selectionType: 'single',
+                    select: function (e, node, id) {
+                        $('#group_id').val(id);
+                        // Expand/collapse node when clicked (not just the plus symbol)
+                        if (node && node.find('ul').length > 0) {
+                            if (tree.getChildren(node).length > 0) {
+                                if (node.find('ul:visible').length > 0) {
+                                    tree.collapse(node);
+                                } else {
+                                    tree.expand(node);
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Apply selection from group_id field to tree
+                var selectedId = $('#group_id').val();
+                if (selectedId) {
+                    var group_node = tree.getNodeById(selectedId);
+                    if (group_node && group_node.length > 0) {
+                        tree.select(group_node);
+
+                        // Expand nodes in tree to show selection
+                        var node = group_node.parent();
+                        while (node && node.length > 0 && node[0].id != "group_tree") {
+                            tree.expand(node);
+                            node = node.parent();
+                        }
+                    }
+                }
+
+                // Disable tree if group_id is disabled
+                if ($('#group_id')[0] && $('#group_id')[0].disabled) {
+                    tree.disableAll();
+                }
+
+                return tree;
+            }
+
+            // Initial tree build
+            buildTree(originalTreeData);
+
+            // Override expand/collapse to use animations
+            var originalExpand = tree.expand;
+            var originalCollapse = tree.collapse;
+            
+            tree.expand = function(node, cascadeSelection, refresh) {
+                var ul = node.find('> ul');
+                if (ul.length && !ul.is(':visible')) {
+                    // First call original expand to set up the DOM
+                    originalExpand.call(tree, node, cascadeSelection, refresh);
+                    // Then animate the newly visible ul
+                    ul = node.find('> ul');
+                    if (ul.length) {
+                        ul.hide().slideDown(250);
+                    }
+                } else {
+                    originalExpand.call(tree, node, cascadeSelection, refresh);
+                }
+            };
+            
+            tree.collapse = function(node, cascadeSelection, refresh) {
+                var ul = node.find('> ul');
+                if (ul.length && ul.is(':visible')) {
+                    ul.slideUp(250, function() {
+                        originalCollapse.call(tree, node, cascadeSelection, refresh);
+                    });
+                } else {
+                    originalCollapse.call(tree, node, cascadeSelection, refresh);
+                }
+            };
+
+            // Add search functionality
+            $('#group_tree_search').on('input', function() {
+                var searchText = $(this).val();
+                
+                // Debounce the search to avoid rebuilding tree on every keystroke
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    var filteredData = filterTreeData(originalTreeData, searchText);
+                    tree = buildTree(filteredData);
+                    
+                    // Re-apply animation overrides after rebuild
+                    var originalExpand = tree.expand;
+                    var originalCollapse = tree.collapse;
+                    
+                    tree.expand = function(node, cascadeSelection, refresh) {
+                        var ul = node.find('> ul');
+                        if (ul.length && !ul.is(':visible')) {
+                            // First call original expand to set up the DOM
+                            originalExpand.call(tree, node, cascadeSelection, refresh);
+                            // Then animate the newly visible ul
+                            ul = node.find('> ul');
+                            if (ul.length) {
+                                ul.hide().slideDown(250);
+                            }
+                        } else {
+                            originalExpand.call(tree, node, cascadeSelection, refresh);
+                        }
+                    };
+                    
+                    tree.collapse = function(node, cascadeSelection, refresh) {
+                        var ul = node.find('> ul');
+                        if (ul.length && ul.is(':visible')) {
+                            ul.slideUp(250, function() {
+                                originalCollapse.call(tree, node, cascadeSelection, refresh);
+                            });
+                        } else {
+                            originalCollapse.call(tree, node, cascadeSelection, refresh);
+                        }
+                    };
+                    
+                    // If searching, expand all nodes to show results
+                    if (searchText) {
+                        expandAllNodes(tree, $('#group_tree'));
+                    }
+                }, 300);
             });
-
-            // apply selection from group_id field to tree
-            group_node = tree.getNodeById($('#group_id').val());
-            tree.select(group_node);
-
-            // expand nodes in tree
-            node = group_node.parent();
-            do {
-                tree.expand(node);
-                node = node.parent();
-            }
-            while (node[0].id != "group_tree");
-
-            // disable tree if group_id is disabled
-            if ($('#group_id')[0].disabled) {
-                tree.disableAll();
-            }
         }
     </script>
     {% endblock %}
