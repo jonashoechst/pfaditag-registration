@@ -100,11 +100,29 @@ def login():
 
     form = LoginForm()
 
+    # Pre-fill email if provided (e.g., after password reset)
+    prefill_email = flask.request.args.get("prefill_email")
+    if prefill_email and not form.id.data:
+        form.id.data = prefill_email
+
     # if reset password
     if form.reset.data and form.validate_on_submit():
         _user = User.query.filter_by(id=form.id.data).first()
         if _user:
-            return flask.redirect(flask.url_for("auth.reset", username=form.id.data))
+            # Generate token and send reset email immediately
+            _user.set_token()
+            db.session.commit()
+
+            msg = Message(
+                subject=f"[{current_app.config['APP_TITLE']}] Passwort zurücksetzen",
+                sender=f"{current_app.config['APP_TITLE']} <{current_app.config['MAIL_USERNAME']}>",
+                recipients=[_user.id],
+            )
+            msg.body = render_template("mail/reset.txt", user=_user)
+            mail.send(msg)
+
+            flask.flash("E-Mail zum Zurücksetzen des Passwortes wurde gesendet.", "success")
+            return flask.redirect(flask.url_for("auth.login"))
 
         flask.flash("Es existiert keine Nutzer*in mit dieser E-Mail Adresse.", "alert")
         return flask.redirect(flask.url_for("auth.login"))
@@ -132,8 +150,19 @@ def login():
 
 class PasswordResetForm(FlaskForm):
     id = ProfileForm.id
-    password = ProfileForm.password
-    confirm = ProfileForm.confirm
+    password = PasswordField(
+        "Password",
+        validators=[
+            DataRequired(),
+            Length(min=8, max=200, message="Das Passwort muss zwischen 8 und 200 Zeichen haben."),
+        ],
+        render_kw={"autocomplete": "new-password"},
+    )
+    confirm = PasswordField(
+        "Password (wiederholen)",
+        validators=[DataRequired(), EqualTo("password", message="Die Passwörter stimmen nicht überein.")],
+        render_kw={"autocomplete": "new-password"},
+    )
     submit = SubmitField("Passwort zurücksetzen")
 
 
@@ -156,45 +185,19 @@ def reset(username):
     form = PasswordResetForm()
     form.id.data = username
 
-    # if token exits and is valid: allow reset
-    if token and _user.verify_token(token):
-        # if form is valid / posted
-        if form.validate_on_submit():
-            _user.set_password(form.password.data)
-            db.session.commit()
-            flask.flash("Passwort erfolgreich geändert.", "success")
-            return flask.redirect(flask.url_for("auth.login"))
+    # Token is required - if not present or invalid, redirect to login
+    if not token or not _user.verify_token(token):
+        flask.flash("Ungültiger oder abgelaufener Reset-Link. Bitte fordere einen neuen an.", "warning")
+        return flask.redirect(flask.url_for("auth.login"))
 
-        # return passwort enter form
-        return flask.render_template(
-            "generic_form.j2",
-            form=form,
-            title="Passwort zurücksetzen",
-        )
-
-    form._fields.pop("password")
-    form._fields.pop("confirm")
-
-    # Validate reset attempt
+    # Token is valid - allow password reset
     if form.validate_on_submit():
-        if _user:
-            _user.set_token()
-            db.session.commit()
+        _user.set_password(form.password.data)
+        db.session.commit()
+        flask.flash("Passwort erfolgreich geändert. Du kannst dich jetzt mit deinem neuen Passwort anmelden.", "success")
+        return flask.redirect(flask.url_for("auth.login", prefill_email=username))
 
-            msg = Message(
-                subject=f"[{current_app.config['APP_TITLE']}] Passwort zurücksetzen",
-                sender=f"{current_app.config['APP_TITLE']} <{current_app.config['MAIL_USERNAME']}>",
-                recipients=[_user.id],
-            )
-            msg.body = render_template("mail/reset.txt", user=_user)
-            mail.send(msg)
-
-            flask.flash("E-Mail zum Zurücksetzen des Passwortes wurde gesendet.", "success")
-            return flask.redirect(flask.url_for("auth.reset", username=username))
-
-        flask.flash("Passwort konnte nicht zurückgesetzt werden.", "danger")
-        return flask.redirect(flask.url_for("auth.reset", username=username))
-
+    # Show password reset form
     return flask.render_template(
         "generic_form.j2",
         form=form,
@@ -287,8 +290,19 @@ def edit_user(user_id):
 class RegisterForm(FlaskForm):
     id = ProfileForm.id
     name = ProfileForm.name
-    password = ProfileForm.password
-    confirm = ProfileForm.confirm
+    password = PasswordField(
+        "Password",
+        validators=[
+            DataRequired(),
+            Length(min=8, max=200, message="Das Passwort muss zwischen 8 und 200 Zeichen haben."),
+        ],
+        render_kw={"autocomplete": "new-password"},
+    )
+    confirm = PasswordField(
+        "Password (wiederholen)",
+        validators=[DataRequired(), EqualTo("password", message="Die Passwörter stimmen nicht überein.")],
+        render_kw={"autocomplete": "new-password"},
+    )
     group_id = HiddenField(
         "Gliederung", description="Wahle eine Gruppe aus, für die du eine Berechtigung beantragen möchtest."
     )
