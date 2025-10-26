@@ -35,24 +35,95 @@
     overflow: hidden;
 }
 
-/* Tree selection styling - only highlight the selected node, not children */
+/* Tree selection styling - disable all active/selection styling since we use select buttons */
 #group_tree ul.gj-list-bootstrap li.active {
-    background-color: transparent;
-    color: inherit;
+    background-color: transparent !important;
+    color: inherit !important;
 }
 
-#group_tree ul.gj-list-bootstrap li.active > [data-role=wrapper] {
-    background-color: #0d6efd;
-    color: #fff;
-    border-radius: 0.25rem;
+#group_tree ul.gj-list-bootstrap li.active > [data-role=wrapper],
+#group_tree ul.gj-list-bootstrap li.active > span,
+#group_tree ul.gj-list-bootstrap li.active > div {
+    background-color: transparent !important;
+    color: inherit !important;
 }
 
 #group_tree ul.gj-list-bootstrap li.active ul.gj-list-bootstrap li {
-    background-color: transparent;
-    color: inherit;
+    background-color: transparent !important;
+    color: inherit !important;
 }
 
 #group_tree ul.gj-list-bootstrap li.active ul.gj-list-bootstrap li > [data-role=wrapper] {
-    background-color: transparent;
-    color: inherit;
+    background-color: transparent !important;
+    color: inherit !important;
+}
+
+/* Node select button styling - Bootstrap-native rounded buttons */
+#group_tree .node-select-btn {
+    font-size: 0.875rem;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease-in-out;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Override outline-secondary to use neutral gray */
+#group_tree .node-select-btn.btn-outline-secondary {
+    color: var(--bs-gray-600);
+    border-color: var(--bs-gray-400);
+}
+
+#group_tree .node-select-btn.btn-outline-secondary:hover {
+    color: var(--bs-gray-800);
+    background-color: var(--bs-gray-200);
+    border-color: var(--bs-gray-500);
+}
+
+#group_tree .node-select-btn:hover {
+    transform: translateY(-50%) scale(1.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#group_tree .node-select-btn:active {
+    transform: translateY(-50%) scale(0.98);
+}
+
+#group_tree .node-select-btn:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* Transitive selection styling - subtle blue for child nodes */
+#group_tree ul.gj-list-bootstrap li[data-id].transitively-selected > span,
+#group_tree ul.gj-list-bootstrap li[data-id].transitively-selected > div,
+#group_tree ul.gj-list-bootstrap li[data-id].transitively-selected > [data-role=wrapper] {
+    background-color: rgba(var(--bs-primary-rgb), 0.06) !important;
+    border-left: 2px solid rgba(var(--bs-primary-rgb), 0.3) !important;
+    padding-left: 8px !important;
+}
+
+/* Direct selection styling - prominent green for selected node */
+#group_tree ul.gj-list-bootstrap li[data-id].selected-parent > span,
+#group_tree ul.gj-list-bootstrap li[data-id].selected-parent > div,
+#group_tree ul.gj-list-bootstrap li[data-id].selected-parent > [data-role=wrapper] {
+    background-color: rgba(var(--bs-success-rgb), 0.15) !important;
+    border-left: 4px solid rgba(var(--bs-success-rgb), 0.7) !important;
+    padding-left: 8px !important;
+    font-weight: 500 !important;
+}
+
+/* Make room for select button by adding padding to node text */
+#group_tree li[data-id] > span,
+#group_tree li[data-id] > div {
+    padding-right: 40px;
+    display: block;
+}
+
+/* Cursor pointer for clickable nodes */
+#group_tree li[data-id] > span:not(.node-select-btn),
+#group_tree li[data-id] > div:not(.node-select-btn) {
+    cursor: pointer;
 }
