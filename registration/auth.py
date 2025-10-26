@@ -113,7 +113,7 @@ def login():
     if form.submit.data and form.validate_on_submit():
         _user = User.query.filter_by(id=form.id.data).first()
         if _user and _user.check_password(password=form.password.data):
-            login_user(_user)
+            login_user(_user, remember=True)
             _user.last_login = datetime.datetime.now()
             db.session.commit()
 
