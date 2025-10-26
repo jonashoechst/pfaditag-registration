@@ -408,10 +408,7 @@ def new_user():
             flask.flash(f"Account {_user.id} wurde angelegt.", "success")
             return flask.redirect(flask.url_for("auth.login", _id=_user.id))
 
-    roots = db.session.query(Group).filter(Group.parent_id.is_(None)).all()
-    tree_data = [group_tree(group) for group in roots]
-
-    return flask.render_template("auth/new_user.j2", form=form, tree_data=json.dumps(tree_data))
+    return flask.render_template("auth/new_user.j2", form=form, tree_data=get_group_tree_json())
 
 
 @auth_bp.route("/users")
@@ -456,11 +453,102 @@ class PermissionForm(FlaskForm):
 
 
 def group_tree(group: Group) -> dict:
+    """Legacy recursive function - consider using build_group_tree_optimized() instead."""
     return dict(
         id=group.id,
         text=group.display_name,
         children=[group_tree(sgroup) for sgroup in group.children],
     )
+
+
+def build_group_tree_optimized(max_depth: int = 20) -> list[dict]:
+    """
+    Build group tree with fetch-once strategy to avoid N+1 queries.
+    
+    Fetches all groups in a single query and builds the tree structure in memory.
+    This is much more efficient than the recursive approach with lazy loading.
+    
+    Includes safeguards:
+    - Depth limiting to prevent excessive nesting
+    - Cycle detection to prevent infinite recursion from circular references
+    
+    Args:
+        max_depth: Maximum depth of tree to build (default: 20)
+    
+    Returns:
+        List of root-level group nodes with nested children.
+    """
+    # Single query to fetch all groups
+    all_groups = db.session.query(Group).all()
+    
+    # Build lookup dictionary: parent_id -> list of children
+    groups_by_parent = {}
+    for group in all_groups:
+        parent_id = group.parent_id or 'root'
+        groups_by_parent.setdefault(parent_id, []).append(group)
+    
+    def build_node(group: Group, depth: int = 0, visited: set = None) -> dict:
+        """
+        Recursively build tree node with children.
+        
+        Args:
+            group: The group to build node for
+            depth: Current depth in the tree
+            visited: Set of visited group IDs for cycle detection
+        
+        Returns:
+            Dictionary representing the tree node
+        """
+        if visited is None:
+            visited = set()
+        
+        # Cycle detection: check if we've already visited this group in current path
+        if group.id in visited:
+            return {
+                'id': group.id,
+                'text': group.display_name + ' ⚠️ (circular reference)',
+                'children': []
+            }
+        
+        # Depth limit: prevent excessive nesting
+        if depth >= max_depth:
+            children = groups_by_parent.get(group.id, [])
+            text = group.display_name
+            if children:
+                text += f' ⚠️ (+{len(children)} more, depth limit reached)'
+            return {
+                'id': group.id,
+                'text': text,
+                'children': []
+            }
+        
+        # Add current group to visited set for this path
+        visited_copy = visited.copy()
+        visited_copy.add(group.id)
+        
+        # Recursively build children
+        return {
+            'id': group.id,
+            'text': group.display_name,
+            'children': [
+                build_node(child, depth + 1, visited_copy) 
+                for child in groups_by_parent.get(group.id, [])
+            ]
+        }
+    
+    # Build tree starting from root nodes (those without parent)
+    return [build_node(group) for group in groups_by_parent.get('root', [])]
+
+
+def get_group_tree_json() -> str:
+    """
+    Get group tree as JSON string for use in templates.
+    
+    Returns:
+        JSON-serialized group tree structure.
+    """
+    tree_data = build_group_tree_optimized()
+    return json.dumps(tree_data)
 
 
 @auth_bp.route("/auth/permission/<permission_id>", methods=["GET", "POST"])
@@ -554,7 +642,4 @@ def edit_permission(permission_id: str):
 
     _title = "Berechtigung bearbeiten" if permission_id != "new" else "Berechtigung anlegen"
 
-    roots = db.session.query(Group).filter(Group.parent_id.is_(None)).all()
-    tree_data = [group_tree(group) for group in roots]
-
-    return flask.render_template("auth/edit_permission.j2", form=form, title=_title, tree_data=json.dumps(tree_data))
+    return flask.render_template("auth/edit_permission.j2", form=form, title=_title, tree_data=get_group_tree_json())
