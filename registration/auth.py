@@ -594,11 +594,15 @@ def edit_permission(permission_id: str):
 
             # if permissions should be altered, check user permissions
             if _perm.granted != form.granted.data:
-                if current_user.has_group_permission(_perm.group_id):
+                # Only check permissions if trying to grant (set to True)
+                if form.granted.data:  # Trying to grant permission
+                    if current_user.has_group_permission(_perm.group_id):
+                        _perm.granted = form.granted.data
+                    else:
+                        flask.flash("Du hast keine Berechtigung, diese Berechtigung zu bearbeiten.", "warning")
+                        return flask.redirect(flask.url_for("auth.edit_user", user_id=_perm.user_id))
+                else:  # Requesting permission or revoking - allowed without permission check
                     _perm.granted = form.granted.data
-                else:
-                    flask.flash("Du hast keine Berechtigung, diese Berechtigung zu bearbeiten.", "warning")
-                    return flask.redirect(flask.url_for("auth.edit_user", user_id=_perm.user_id))
 
                 if _perm.granted and permission_id != "new":
                     perm_msg = Message(
