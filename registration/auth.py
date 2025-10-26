@@ -384,7 +384,7 @@ def load_user(user_id):
 @login_manager.unauthorized_handler
 def unauthorized():
     flask.flash("Du musst angemeldet sein, um diese Seite aufrufen zu können.", "info")
-    return flask.redirect(flask.url_for("auth.login"))
+    return flask.redirect(flask.url_for("auth.login", next=flask.request.url))
 
 
 class PermissionForm(FlaskForm):
