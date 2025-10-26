@@ -42,6 +42,7 @@ class ProfileForm(FlaskForm):
             Email(message="Bitte gib eine valide E-Mail Adresse an.", allow_smtputf8=False),
             DataRequired(),
         ],
+        render_kw={"autocomplete": "email"},
     )
     name = StringField(
         "Name",
@@ -50,6 +51,7 @@ class ProfileForm(FlaskForm):
             DataRequired(),
             Length(max=100),
         ],
+        render_kw={"autocomplete": "name"},
     )
     password = PasswordField(
         "Password",
@@ -57,10 +59,12 @@ class ProfileForm(FlaskForm):
             DataRequired(),
             Length(min=8, max=200, message="Das Passwort muss zwischen 8 und 200 Zeichen haben."),
         ],
+        render_kw={"autocomplete": "new-password"},
     )
     confirm = PasswordField(
         "Password (wiederholen)",
         validators=[DataRequired(), EqualTo("password", message="Die Passwörter stimmen nicht überein.")],
+        render_kw={"autocomplete": "new-password"},
     )
     is_superuser = BooleanField(
         "Superuser",
@@ -81,9 +85,18 @@ def disable_field(field: Field, disabled=True):
 
 
 class LoginForm(FlaskForm):
-    id = ProfileForm.id
+    id = StringField(
+        "E-Mail Adresse",
+        validators=[
+            Length(min=6, max=100),
+            Email(message="Bitte gib eine valide E-Mail Adresse an.", allow_smtputf8=False),
+            DataRequired(),
+        ],
+        render_kw={"autocomplete": "email"},
+    )
     password = PasswordField(
         "Password",
+        render_kw={"autocomplete": "current-password"},
     )
     submit = SubmitField("Login")
     reset = SubmitField("Passwort vergessen?")
@@ -149,7 +162,15 @@ def login():
 
 
 class PasswordResetForm(FlaskForm):
-    id = ProfileForm.id
+    id = StringField(
+        "E-Mail Adresse",
+        validators=[
+            Length(min=6, max=100),
+            Email(message="Bitte gib eine valide E-Mail Adresse an.", allow_smtputf8=False),
+            DataRequired(),
+        ],
+        render_kw={"autocomplete": "email"},
+    )
     password = PasswordField(
         "Password",
         validators=[
@@ -288,8 +309,24 @@ def edit_user(user_id):
 
 
 class RegisterForm(FlaskForm):
-    id = ProfileForm.id
-    name = ProfileForm.name
+    id = StringField(
+        "E-Mail Adresse",
+        validators=[
+            Length(min=6, max=100),
+            Email(message="Bitte gib eine valide E-Mail Adresse an.", allow_smtputf8=False),
+            DataRequired(),
+        ],
+        render_kw={"autocomplete": "email"},
+    )
+    name = StringField(
+        "Name",
+        description="Bitte Vor- und Nachname angeben, damit wir dich zuordnen können.",
+        validators=[
+            DataRequired(),
+            Length(max=100),
+        ],
+        render_kw={"autocomplete": "name"},
+    )
     password = PasswordField(
         "Password",
         validators=[
