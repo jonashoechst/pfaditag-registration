@@ -30,7 +30,7 @@ mail = Mail()
 
 def create_app():
     app = Flask(__name__)
-    app.config['APP_TITLE'] = "PfadiTag 2025"
+    app.config['APP_TITLE'] = "PfadiTag 2026"
     app.config.from_prefixed_env()
 
     Bootstrap5(app)
