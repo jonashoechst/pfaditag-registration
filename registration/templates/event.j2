@@ -38,7 +38,7 @@
         id: 'mapbox/light-v10',
         tileSize: 512,
         zoomOffset: -1,
-        accessToken: 'pk.eyJ1IjoiaG9lY2hzdCIsImEiOiJjazVueDhyMWkwenpuM2RydzltNjhraDAzIn0.HntghYG9IBZvVd0bUJEY9Q'
+        accessToken: '{{ config["MAPBOX_ACCESS_TOKEN"] }}'
     }).addTo(map);
     var locator = L.control.locate({ locateOptions: { maxZoom: 9 } }).addTo(map);
 

@@ -96,7 +96,7 @@
         id: 'mapbox/light-v10',
         tileSize: 512,
         zoomOffset: -1,
-        accessToken: 'pk.eyJ1IjoiaG9lY2hzdCIsImEiOiJjazVueDhyMWkwenpuM2RydzltNjhraDAzIn0.HntghYG9IBZvVd0bUJEY9Q'
+        accessToken: '{{ config["MAPBOX_ACCESS_TOKEN"] }}'
     }).addTo(map);
     var locator = L.control.locate({ locateOptions: { maxZoom: 9 } }).addTo(map);
 
@@ -130,7 +130,7 @@
     function updateFromAddress() {
         address = `${$('#street').val()}, ${$('#zip').val()} ${$('#city').val()}`
         encodedAddress = encodeURIComponent(address);
-        accessToken = 'pk.eyJ1IjoiaG9lY2hzdCIsImEiOiJjazVueDhyMWkwenpuM2RydzltNjhraDAzIn0.HntghYG9IBZvVd0bUJEY9Q'
+        accessToken = '{{ config["MAPBOX_ACCESS_TOKEN"] }}'
         geocodingURI = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + encodedAddress + ".json?limit=1&access_token=" + accessToken
 
         $.getJSON(geocodingURI, function(data) {

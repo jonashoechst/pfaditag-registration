@@ -31,6 +31,8 @@ mail = Mail()
 def create_app():
     app = Flask(__name__)
     app.config['APP_TITLE'] = "PfadiTag 2026"
+    app.config['EVENT_DATE_RANGE'] = "18. - 20. September 2026"
+    app.config['MAPBOX_ACCESS_TOKEN'] = "pk.eyJ1IjoiaG9lY2hzdCIsImEiOiJjazVueDhyMWkwenpuM2RydzltNjhraDAzIn0.HntghYG9IBZvVd0bUJEY9Q"
     app.config.from_prefixed_env()
 
     Bootstrap5(app)
